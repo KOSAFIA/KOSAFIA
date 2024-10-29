@@ -1,0 +1,31 @@
+.game-room {
+    display: flex;
+    height: 100vh;
+}
+
+.player-area {
+    display: grid;
+    gap: 50px;
+    padding: 20px;
+    align-items: center;
+    justify-items: center; 
+    max-height: 220px;
+    overflow: hidden;
+    grid-template-columns: repeat(4, 1fr); /* 4개의 열 */
+    grid-template-rows: repeat(2, 1fr); /* 2개의 행 */
+}
+
+.chat-area {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #ccc;
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
