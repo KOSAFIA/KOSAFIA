@@ -1,68 +1,70 @@
 package com.kosafia.gameapp.utiles.socket;
-
-import com.kosafia.gameapp.models.gameState.GameConstants.ChatType;
-import com.kosafia.gameapp.models.chat.ChatMessageDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
-import java.time.LocalDateTime;
-import java.util.UUID;
+// import com.kosafia.gameapp.dto.ChatMessage;
+// import com.kosafia.gameapp.dto.RoomUpdateMessage;
+// import com.kosafia.gameapp.dto.PlayerStatusMessage;
+import com.kosafia.gameapp.models.socketenum.GamePhase;
 
 /**
- * WebSocket 메시지 전송을 위한 유틸리티 클래스
- * 다양한 유형의 메시지를 적절한 대상에게 전송하는 메서드들을 제공
+ * WebSocket 메시지 전송을 담당하는 유틸리티 클래스
+ * 모든 실시간 메시지 전송은 이 클래스를 통해 이루어짐
+ * 책임: 다양한 종류의 WebSocket 메시지를 적절한 대상에게 전송
  */
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class WebSocketUtil {
-    // Spring의 메시지 전송을 위한 템플릿
     private final SimpMessageSendingOperations messagingTemplate;
-    
+
     /**
-     * 전체 공개 채팅 메시지 전송
-     * @param roomId 게임방 ID
-     * @param message 전송할 채팅 메시지
+     * 로비 전체에 메시지를 전송
+     * @param message 전송할 메시지 객체
      */
-    public void sendPublicMessage(String roomId, ChatMessageDTO message) {
-        String destination = String.format("/topic/room/%s/public", roomId);
-        messagingTemplate.convertAndSend(destination, message);
+    public void sendToLobby(Object message) {
+        log.debug("Sending message to lobby: {}", message);
+        messagingTemplate.convertAndSend("/topic/lobby", message);
     }
-    
+
     /**
-     * 마피아 전용 채팅 메시지 전송
+     * 특정 게임방에 메시지를 전송
      * @param roomId 게임방 ID
-     * @param message 전송할 채팅 메시지
+     * @param message 전송할 메시지 객체
      */
-    public void sendMafiaMessage(String roomId, ChatMessageDTO message) {
-        String destination = String.format("/topic/room/%s/mafia", roomId);
-        messagingTemplate.convertAndSend(destination, message);
+    public void sendToRoom(String roomId, Object message) {
+        log.debug("Sending message to room {}: {}", roomId, message);
+        messagingTemplate.convertAndSend("/topic/room/" + roomId, message);
     }
-    
+
     /**
-     * 시스템 메시지 전송
+     * 게임 진행 중 특정 페이즈의 메시지를 전송
      * @param roomId 게임방 ID
-     * @param message 시스템 메시지 내용
-     */
-    public void sendSystemMessage(String roomId, String message) {
-        String destination = String.format("/topic/room/%s/system", roomId);
-        // 시스템 메시지 DTO 생성
-        ChatMessageDTO systemMessage = ChatMessageDTO.builder()
-                .messageId(UUID.randomUUID().toString())
-                .roomId(roomId)
-                .message(message)
-                .type(ChatType.SYSTEM)
-                .timestamp(LocalDateTime.now())
-                .build();
-        messagingTemplate.convertAndSend(destination, systemMessage);
-    }
-    
-    /**
-     * 특정 사용자에게 개인 메시지 전송
-     * @param userId 수신자 ID
+     * @param phase 게임 페이즈
      * @param message 전송할 메시지
      */
-    public void sendPrivateMessage(String userId, String message) {
-        String destination = String.format("/queue/private/%s", userId);
-        messagingTemplate.convertAndSendToUser(userId, destination, message);
+    public void sendToGame(String roomId, GamePhase phase, Object message) {
+        log.debug("Sending game message to room {} in phase {}: {}", 
+                 roomId, phase, message);
+        messagingTemplate.convertAndSend(
+            "/topic/game/" + roomId + "/" + phase.toString().toLowerCase(), 
+            message
+        );
+    }
+
+    /**
+     * 특정 역할을 가진 플레이어들에게만 메시지 전송
+     * @param roomId 게임방 ID
+     * @param role 대상 역할(마피아, 의사, 경찰 등)
+     * @param message 전송할 메시지
+     */
+    public void sendToRole(String roomId, String role, Object message) {
+        log.debug("Sending role-specific message to {} in room {}: {}", 
+                 role, roomId, message);
+        messagingTemplate.convertAndSend(
+            "/topic/game/" + roomId + "/role/" + role, 
+            message
+        );
     }
 }
