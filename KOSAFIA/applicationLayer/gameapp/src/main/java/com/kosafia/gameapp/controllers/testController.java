@@ -1,4 +1,4 @@
-package com.kosafia.gameapp.controller;
+package com.kosafia.gameapp.controllers;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
