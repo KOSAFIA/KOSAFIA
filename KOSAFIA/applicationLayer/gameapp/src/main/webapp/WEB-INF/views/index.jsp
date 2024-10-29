@@ -36,6 +36,6 @@
 </head>
 <body>
     <h1>Welcome to KOSAFIA!</h1>
-    <a href="/game" class="game-link">Enter Game</a>
+    <a href="/react" class="game-link">Enter Game</a>
 </body>
 </html>
