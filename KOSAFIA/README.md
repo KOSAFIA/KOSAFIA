@@ -13,7 +13,7 @@
 │   └── package.json                        # 브라우저 레이어의 종속성 및 스크립트 정의 파일
 │   └── deploy.bat                          # 리액트 빌드파일을 서버 어플리케이션에 탑승시키는 파일 그냥 실행
 ├── 📁 applicationLayer/gameapp             # Spring Boot 서버 애플리케이션 폴더
-│   ├── 📁 src/main/java                    # 자바 소스 코딩 파일 (예: 님들이 작성할 자바 파일들 -> 클래스의 역할별로 )
+│   ├── 📁 src/main/java                    # 자바 소스 코딩 파일 (예: 님들이 작성할 자바 파일들 -> 클래스의 책임단위로 카테고리화 -> 만약 전체와 구별하고 싶다면 본인 도메인 명을 이용해서 구조 추가 ex: config/socket/websocketconfig )
 │   │   ├── 📁 config                           # 서버 설정 파일 (예: Redis, MySQL 설정)
 │   │   ├── 📁 controllers                      # REST API 및 WebSocket 엔드포인트
 │   │   ├── 📁 services                         # 서비스 로직
@@ -22,7 +22,13 @@
 │   │   ├── 📁 sockets                          # WebSocket 핸들러 및 설정
 │   │   ├── 📁 cache                            # Redis 관련 캐싱 로직
 │   └── 📁 src/main/resources                        # 정적 파일(React 빌드 파일 포함)
-│        └── application.properties          # 애플리케이션 설정 파일
+│   │   └── application.properties          # 애플리케이션 설정 파일
+│   │   └── 📁 mapper                        
+│   │   │   └── 📁 user 
+│   │       └── 📁 room 등등등                        # xml 파일들의 위치
+│   │   └── 📁 static                        # 정적 파일(React 빌드 파일들이 들어감)    
+│   └── 📁 src/main/webapp/WEB-INF/views      # JSP 파일들 들어감.            
+│   │
 ├── 📁 database                             # 데이터베이스 관련 파일
 │   ├── schema.sql                          # MySQL 스키마 정의 파일
 │   ├── data.sql                            # 초기 데이터 로드 파일
