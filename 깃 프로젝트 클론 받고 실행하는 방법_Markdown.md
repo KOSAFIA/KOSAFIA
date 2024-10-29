@@ -1,4 +1,4 @@
-<h2>순서
+<h2>순서</h2>
 
 1. 깃 클론 레포지토리
 
@@ -10,15 +10,22 @@
 
 5. gameapp 어플리케이션의 spring boot run 확인
 
+<hr>
+<hr>
+<hr>
 
-깃 클론 레포지토리
+<h2>깃 클론 레포지토리</h2>
 
 vscode 나 인텔리제이를 쓸경우 자체 깃(혹은 익스텐션)의 성능이 우수하여 쉬움 예제 링크 \
 [https://bba-jin.tistory.com/50](https://bba-jin.tistory.com/50) \
  \
+ 
+<hr>
+<hr>
+<hr>
 
 
-browser 어플리케이션 npm start \
+<h2>browser 어플리케이션 npm start </h2>\
  \
 리액트 라이브러리가 싱글로 잘 작동하는지 확인
 
@@ -30,8 +37,12 @@ browser 어플리케이션 npm start \
 
 4. 기본은 되어 있으니 이상한 이슈는 각자 해결
 
+<hr>
+<hr>
+<hr>
 
-browser 어플리케이션의 build - deploy
+
+<h2>browser 어플리케이션의 build - deploy</h2>
 
 리액트 어플리케이션에서 코드를 수정작업했다면 게임어플리케이션에 탑승 시켜야함.
 
@@ -40,7 +51,13 @@ browser 어플리케이션의 build - deploy
 2. browser 위치에 있는 deploy.bat 파일 실행
 
 
-gameapp 어플리케이션의 gradle 클린 빌드
+<hr>
+<hr>
+<hr>
+
+
+
+<h2>gameapp 어플리케이션의 gradle 클린 빌드</h2>
 
 applicationlayer 안에 gameapp으로 들어가면 스프링부트 스타터로 생성한 게임앱이 있음.
 
@@ -59,7 +76,12 @@ jdk 17이 java-home으로 세팅 되어 있다면, 혹은 IDE가 jdk17을 인식
 2. gameapp 위치에서 ./gradlew clean build 입력
 
 
-gameapp 어플리케이션의 spring boot run 확인
+<hr>
+<hr>
+<hr>
+
+
+<h2>gameapp 어플리케이션의 spring boot run 확인</h2>
 
 1. gameapp 위치에서 ./gradlew bootRun 입력
 
