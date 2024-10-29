@@ -1,3 +1,7 @@
+-- CREATE DATABASE kosafia_db;
+-- DROP DATABASE kosafia_db;
+use kosafia_db;
+
 CREATE TABLE `Users` (
     `user_id` INT NOT NULL AUTO_INCREMENT COMMENT '사용자 ID',
     `room_id` INT NOT NULL COMMENT '방 ID',
