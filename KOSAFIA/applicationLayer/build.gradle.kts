@@ -4,3 +4,39 @@
  * This is a general purpose Gradle build.
  * Learn more about Gradle by exploring our Samples at https://docs.gradle.org/8.10.2/samples
  */
+
+plugins {
+    id("org.springframework.boot") version "3.1.5"
+    id("io.spring.dependency-management") version "1.1.0"
+    id("java") // Java 플러그인 추가
+}
+
+group = "com.kosa.kosafia"
+version = "0.0.1-SNAPSHOT"
+java.sourceCompatibility = JavaVersion.VERSION_17
+
+repositories {
+    mavenCentral()
+    maven { url = uri("https://plugins.gradle.org/m2/") }
+}
+
+dependencies {
+    // Spring Boot Starter
+    implementation("org.springframework.boot:spring-boot-starter-web") // Spring MVC
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa") // JPA
+    implementation("org.springframework.boot:spring-boot-starter-data-redis") //Redis
+
+    // MySQL Driver
+    runtimeOnly("mysql:mysql-connector-java:8.0.33")
+
+    // WebSocket
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+
+    // Test dependencies
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+}
+
+tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
+    mainClass.set("com.kosa.kosafia.ApplicationKt") // 패키지 및 클래스 이름으로 수정
+}
+
