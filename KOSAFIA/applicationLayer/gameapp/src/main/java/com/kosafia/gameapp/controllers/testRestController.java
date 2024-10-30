@@ -26,7 +26,7 @@ public class testRestController {
 
     private final KnyLoginService knyLoginService;
 
-    @GetMapping("api/returnwelcome")
+    @GetMapping("/api/returnwelcome")
     public ResponseEntity<Map<String, String>> getMethodName() {
 
         Map<String, String> response = new HashMap<>();
@@ -42,7 +42,7 @@ public class testRestController {
      * @return 로그인 결과
      */
     
-    @PostMapping("api/knylogin")
+    @PostMapping("/api/knylogin")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpSession session) {
         try {
             // 1. 필수 입력값 검증

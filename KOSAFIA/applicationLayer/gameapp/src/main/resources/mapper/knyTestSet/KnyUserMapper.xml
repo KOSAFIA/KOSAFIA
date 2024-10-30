@@ -1,18 +1,14 @@
-<!-- src/main/resources/mapper/user/UserMapper.xml -->
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
 <mapper namespace="com.kosafia.gameapp.knyTestSet.KnyUserMapper">
     <!-- 이메일로 사용자 조회 -->
-    <select id="findByEmail" resultType="com.kosafia.gameapp.knyTestSet.KnyUserDTO">
+    <select id="findUserByEmail" resultType="com.kosafia.gameapp.knyTestSet.KnyUserDTO">
         SELECT 
-            user_email as email,
-            username as name,
-            user_id as userpk,
-            room_id as roompk,
+            user_email,
+            username,
+            password,
             status,
-            is_ready
-            password
+            created_at
         FROM 
             Users 
         WHERE 

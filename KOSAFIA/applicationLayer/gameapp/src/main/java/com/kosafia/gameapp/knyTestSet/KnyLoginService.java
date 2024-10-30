@@ -35,17 +35,16 @@ public class KnyLoginService {
             }
 
             // 4. 사용자 상태 확인 (1: 활동, 0: 탈퇴)
-            if (!user.getStatus()) {
+            if (user.isStatus()) {
                 log.info("비활성화된 계정: {}", loginRequest.getEmail());
                 return null;
             }
 
             // 5. 로그인 성공 시 응답 생성
             return LoginResponse.builder()
-                    .userId(user.getUserpk())
-                    .email(user.getEmail())
-                    .username(user.getName())
-                    .roomId(user.getRoompk())
+                    .userId(user.getUser_id())
+                    .email(user.getUser_email())
+                    .username(user.getUsername())
                     .build();
 
         } catch (Exception e) {

@@ -1,5 +1,6 @@
 package com.kosafia.gameapp.knyTestSet;
 
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -9,11 +10,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class KnyUserDTO {
 
-    private String email;
-    private String name;
-    private Integer userpk;
-    private Integer roompk;
-    private Boolean status;
-    private Boolean is_ready;
+    private Integer user_id;
+    private String user_email;
+    private String username;
     private String password;
+    private boolean status;
+    private boolean timestamp;
 }
