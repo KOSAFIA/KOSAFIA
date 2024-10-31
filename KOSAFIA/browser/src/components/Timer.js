@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/components/Timer.css';
 
-const stages = ["낮", "밤", "마피아투표", "최후의변론", "사형투표"];
-const stageDurations = { 낮: 60, 밤: 60, 마피아투표: 30, 최후의변론: 60, 사형투표: 10 };    // 단계별 시간 세팅
+// 각 단계의 이름과 그에 해당하는 이미지 경로를 매핑
+const   stages = [
+  { name: "낮", image: "/img/day.png" },
+  { name: "마피아투표", image: "/img/vote.png" },
+  { name: "최후의변론", image: "/img/discussion.png" },
+  { name: "사형투표", image: "/img/judgement.png" },
+  { name: "밤", image: "/img/night.png" },
+];
+
+const stageDurations = { 
+  낮: 60, 
+  밤: 60, 
+  마피아투표: 30, 
+  최후의변론: 60, 
+  사형투표: 10 
+};
 
 const Timer = () => {
-  const [time, setTime] = useState(stageDurations[stages[0]]);
+  const [time, setTime] = useState(stageDurations[stages[0].name]);
   const [stageIndex, setStageIndex] = useState(0);
   const [dayCount, setDayCount] = useState(1);
 
@@ -23,7 +37,7 @@ const Timer = () => {
           if (nextStageIndex === 0) {
             setDayCount((prevDay) => prevDay + 1);
           }
-          return stageDurations[stages[nextStageIndex]];
+          return stageDurations[stages[nextStageIndex].name];
         }
       });
     }, 1000);
@@ -31,13 +45,22 @@ const Timer = () => {
     return () => clearInterval(interval);
   }, [stageIndex]);
 
-  // 시간은 0:09초 와 같은 형태로 나타나게 설정
   return (
     <div className="timer">
-      <span>⏰</span>
-      <span>{`0:${time.toString().padStart(2, '0')}`}</span>
+      {/* 현재 단계에 맞는 이미지 표시 */}
+      <div className="stage-image">
+        <img src={stages[stageIndex].image} alt={stages[stageIndex].name} />
+      </div>
+
+      {/* 시간을 표시하는 곳 */}
+      <div className="time-display">
+        <span>⏰</span>
+        <span>{`0:${time.toString().padStart(2, '0')}`}</span>
+      </div>
+
+      {/* 낮 & 밤 & ... 표시하는 곳 */}
       <div className="stage-info">
-        {dayCount}일차 {stages[stageIndex]}
+        {dayCount}일차 {stages[stageIndex].name}
       </div>
     </div>
   );
