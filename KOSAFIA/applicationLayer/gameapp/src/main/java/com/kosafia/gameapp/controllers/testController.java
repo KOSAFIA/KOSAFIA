@@ -17,11 +17,12 @@ public class testController {
     public String helloworld(){
         log.info("dsfdfsdfsdfsdf");
         System.out.println("hello wolrd");
-        return "index";
+        return "forward:/index.html";
     }
 
-    @GetMapping("/react")
+    @GetMapping({"/react", "/react/**"})
     public String reactHello() {
+        log.info("리액트 페이지로 들어가");
         return "forward:/index.html";
     }
     
