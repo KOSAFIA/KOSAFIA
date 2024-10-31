@@ -1,6 +1,25 @@
 .timer {
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center; 
-  }
+  font-size: 23px;
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+  width: 100%;
+}
+
+.time-display {
+  display: flex;
+  align-items: center; 
+  justify-content: center; /* 가운데 정렬 */
+  flex: 1; /* 남은 공간을 차지하게 함 */
+}
+
+.timer .stage-info {
+  margin-left: auto; /* 오른쪽 끝으로 위치 */
+  margin: 20px;
+}
+
+.stage-image img {
+  width: 50px; /* 원하는 크기로 조정 */
+  height: auto; /* 비율에 맞게 높이 자동 조정 */
+  border-radius: 8px; /* 이미지 모서리를 둥글게 */
+}
