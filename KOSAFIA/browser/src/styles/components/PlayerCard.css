@@ -19,16 +19,71 @@
     border-radius: 8px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
     text-align: center; 
+    cursor: pointer;
 }
+
 .player-avatar {
     width:120px;
     height: 120px;
     background-color: #e0e0e0;
     border-radius: 50%;
     margin-bottom: 5px;
+    background-size: contain;  /* 이미지 비율 유지하며 div에 맞춤 */
+    background-position: center; /* 중앙에 위치하도록 설정 */
+    background-repeat: no-repeat; /* 이미지 반복 방지 */
 }
 
 .player-name {
     font-size: 25px;
     font-weight: bold;
+}
+
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7); /* 배경을 어둡게 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* 가장 위에 표시 */
+    backdrop-filter: blur(4px); /* 배경 흐림 효과 추가 */
+}
+
+.popup-content {
+    background: white;
+    width : 1000px;
+    height: 800px;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.role-selection {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+.role-option {
+    width: 80px; /* 각 역할의 너비 */
+    height: 80px; /* 각 역할의 높이 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #f0f0f0; /* 기본 배경 색 */
+    position: relative; /* 포지션 설정 */
+}
+
+.role-option span {
+    position: absolute;
+    color: #000; /* 텍스트 색상 */
+    font-weight: bold; /* 텍스트 두께 */
 }
