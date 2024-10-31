@@ -31,7 +31,7 @@ function Login() {
       });
 
       if (response.ok) {
-        navigate("/home"); // 로그인 성공 시 홈 페이지로 리디렉션
+        navigate("/LoginOk"); // 로그인 성공 시 LoginOk 페이지로 리디렉션
       } else {
         const errorData = await response.text();
         setError(errorData || "로그인 실패. 다시 시도하세요.");
