@@ -1,0 +1,59 @@
+.popup-content {
+    position: fixed; /* 화면에 고정 */
+    top: 50%; /* 화면 중앙에 위치 */
+    left: 50%; /* 화면 중앙에 위치 */
+    transform: translate(-50%, -50%); /* 중앙 정렬 */
+    background-color: white; /* 배경 색상 */
+    padding: 20px; /* 패딩 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 효과 */
+    z-index: 1000; /* 다른 요소들 위에 표시 */
+}
+
+.role-selection {
+    display: flex; /* Flexbox를 사용 */
+    flex-direction: row; /* 세로로 정렬 */
+    gap: 10px; /* 역할 간 간격 */
+}
+
+.role-option {
+    width: 200px;
+    height: 200px;
+    display: flex; /* Flexbox를 사용 */
+    align-items: center; /* 수직 중앙 정렬 */
+    cursor: pointer; /* 마우스 커서가 포인터로 변경 */
+    flex-direction: column; /* 세로 방향으로 정렬 */
+    justify-content: center; /* 수직 중앙 정렬 */
+}
+
+.role-option img {
+    width: 50px; /* 이미지 크기 */
+    height: 50px; /* 이미지 크기 */
+    margin-bottom: 10px; /* 이미지와 역할 이름 사이 간격 */
+}
+
+.role-option span {
+    font-size: 16px; /* 글자 크기 */
+    text-align: center; /* 중앙 정렬 */
+    padding-top: 250px;
+}
+
+/* 배경 덮개 추가 */
+.popup-overlay {
+    position: fixed; /* 화면에 고정 */
+    top: 0; /* 전체 화면을 덮도록 */
+    left: 0; /* 전체 화면을 덮도록 */
+    width: 100vw; /* 전체 너비 */
+    height: 100vh; /* 전체 높이 */
+    background-color: rgba(0, 0, 0, 0.5); /* 반투명 배경 */
+    z-index: 999; /* 모달보다 아래에 위치 */
+}
+
+button {
+    margin-top : 30px;
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}

@@ -62,38 +62,10 @@ dependencies {
 	// implementation 'org.springframework.boot:spring-boot-starter-security'
 	// testImplementation 'org.springframework.security:spring-security-test'
 
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-	// //STOMP를 위한 의존성 추가 실시간 기능 강화
-	//--> 이제 필요 없어졌다는거 확인 위에 소켓에 내장된 라이브러리
-	// implementation 'org.webjars:stomp-websocket:2.3.4'
-	// implementation 'org.webjars:sockjs-client:1.5.1'
+//	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+//	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
-}
-
-// //==리액트용 추가=아직 실험중===
-// node {
-//     version = '18.16.0'  // 노드 버전
-//     npmVersion = '9.5.1'  // npm 버전
-//     download = true
-//     workDir = file("${project.projectDir}/frontend")  // 노드 설치 위치
-//     nodeModulesDir = file("${project.projectDir}/frontend")  // node_modules 위치
-// }
-
-// task copyReactBuild(type: Copy) {
-//     from "${project.projectDir}/browser/build"  // React 빌드 결과물 위치
-//     into "${project.projectDir}/src/main/resources/static"  // 스프링 부트 정적 파일 위치
-// }
-
-// task buildReact(type: Exec) {
-//     workingDir "${project.projectDir}/browser"  // React 프로젝트 위치
-//     commandLine 'npm', 'run', 'build'
-//     dependsOn 'npm_install'
-// }
-
-// copyReactBuild.dependsOn buildReact
-// bootJar.dependsOn copyReactBuild
+//tasks.named('test') {
+//	useJUnitPlatform()
+//}
