@@ -2,62 +2,31 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useBaseSocket } from '../../../contexts/kny/socket/BaseSocketContext';
 export const useBaseChat = ({ topic, destination }) => {
-    // 메시지 목록 상태
-    const [messages, setMessages] = useState([]);
-    // 소켓 컨텍스트에서 필요한 기능들 가져오기
     const { connected, subscribe, publish } = useBaseSocket();
-    // 구독 객체 참조 저장
-    const subscription = useRef(null);
+    const [messages, setMessages] = useState([]);
 
-    // 메시지 수신 시 처리할 콜백
-    const handleMessage = useCallback((message) => {
-        setMessages(prev => [...prev, message]);
-    }, []);
-
-    // 토픽 구독 설정
     useEffect(() => {
-        if (!connected || !topic) return;
+        if (!connected) return;
 
-        // 이전 구독 해제
-        if (subscription.current) {
-            subscription.current.unsubscribe();
-        }
-
-        // 새로운 구독 설정
-        subscription.current = subscribe(topic, handleMessage);
-
-        // 컴포넌트 언마운트 시 구독 해제
-        return () => {
-            if (subscription.current) {
-                subscription.current.unsubscribe();
-                subscription.current = null;
-            }
-        };
-    }, [connected, topic, subscribe, handleMessage]);
-
-    // 메시지 전송 함수
-    const sendMessage = useCallback((content) => {
-        if (!connected || !destination) {
-            console.warn('Cannot send message: not connected or no destination');
-            return false;
-        }
-
-        return publish(destination, {
-            content,
-            timestamp: new Date().toISOString()
+        const subscription = subscribe(topic, (message) => {
+            console.log('Received message:', message);
+            setMessages(prev => [...prev, message]);
         });
-    }, [connected, destination, publish]);
 
-    // 메시지 목록 초기화
-    const clearMessages = useCallback(() => {
-        setMessages([]);
-    }, []);
+        return () => subscription?.unsubscribe();
+    }, [topic, connected, subscribe]);
+
+    const sendMessage = useCallback((message) => {
+        if (!connected) return false;
+        
+        // 메시지 직접 전송 - 추가 래핑 없이
+        return publish(destination, message);
+    }, [connected, publish, destination]);
 
     return {
+        connected,
         messages,
-        sendMessage,
-        clearMessages,
-        connected
+        sendMessage
     };
 };
 

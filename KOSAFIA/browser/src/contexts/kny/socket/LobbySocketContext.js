@@ -21,7 +21,8 @@
 // /topic/rooms: 방 목록
 
 /// contexts/kny/socket/LobbySocketContext.js
-import React, { createContext, useContext } from 'react';
+// contexts/kny/socket/LobbySocketContext.js
+import React, { createContext, useContext, useEffect } from 'react';
 import { BaseSocketProvider, useBaseSocket } from './BaseSocketContext';
 
 // 로비 설정
@@ -39,24 +40,33 @@ const LOBBY_CONFIG = {
     }
 };
 
-// 로비 컨텍스트 생성
 const LobbySocketContext = createContext(null);
 
-// 로비 프로바이더
-export const LobbySocketProvider = ({ children }) => {
-    return (
-        <BaseSocketProvider config={LOBBY_CONFIG}>
-            <LobbyInnerProvider>
-                {children}
-            </LobbyInnerProvider>
-        </BaseSocketProvider>
-    );
-};
-
-// 내부 프로바이더
 const LobbyInnerProvider = ({ children }) => {
     const baseSocket = useBaseSocket();
     const sessionUser = JSON.parse(sessionStorage.getItem('USER_INFO'));
+
+    // 로비 입장 시 자동으로 입장 메시지 전송
+    useEffect(() => {
+        if (baseSocket.connected && sessionUser) {
+            baseSocket.publish(LOBBY_CONFIG.destinations.enter, {
+                type: 'ENTER',
+                userId: sessionUser.userId,
+                username: sessionUser.username,
+                timestamp: new Date().toISOString()
+            });
+
+            // 언마운트 시 퇴장 메시지 전송
+            return () => {
+                baseSocket.publish(LOBBY_CONFIG.destinations.leave, {
+                    type: 'LEAVE',
+                    userId: sessionUser.userId,
+                    username: sessionUser.username,
+                    timestamp: new Date().toISOString()
+                });
+            };
+        }
+    }, [baseSocket.connected, sessionUser]);
 
     const value = {
         ...baseSocket,
@@ -72,7 +82,16 @@ const LobbyInnerProvider = ({ children }) => {
     );
 };
 
-// 로비 소켓 훅
+export const LobbySocketProvider = ({ children }) => {
+    return (
+        <BaseSocketProvider config={LOBBY_CONFIG}>
+            <LobbyInnerProvider>
+                {children}
+            </LobbyInnerProvider>
+        </BaseSocketProvider>
+    );
+};
+
 export const useLobbySocket = () => {
     const context = useContext(LobbySocketContext);
     if (!context) {

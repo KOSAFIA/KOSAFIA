@@ -24,14 +24,13 @@ export const useLobbyChat = () => {
             console.warn('Cannot send message: No session user');
             return false;
         }
-
-        // 로비 채팅 메시지 포맷으로 변환하여 전송
+            // 메시지 직접 전송 - 중첩 구조 제거
         return baseSendMessage({
-            type: 'CHAT',
-            userId: sessionUser.userId,
-            username: sessionUser.username,
-            content: content,
-            timestamp: new Date().toISOString()
+        type: 'CHAT',
+        userId: sessionUser.userId,
+        username: sessionUser.username,
+        content: String(content),  // 문자열로 명시적 변환
+        timestamp: new Date().toISOString()
         });
     }, [sessionUser, baseSendMessage]);
 

@@ -2,7 +2,6 @@ import TestLogin from '../../components/kny/test/TestLogin';
 import LobbyChat from '../../components/kny/chat/LobbyChat';
 import UserList from '../../components/kny/list/UserList';
 import { LobbySocketProvider } from '../../contexts/kny/socket/LobbySocketContext';
-import { BaseSocketProvider } from '../../contexts/kny/socket/BaseSocketContext';
 
 const Kny22 = () => {
     return (
