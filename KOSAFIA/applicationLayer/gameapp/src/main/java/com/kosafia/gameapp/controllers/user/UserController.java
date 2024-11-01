@@ -9,8 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -20,29 +20,33 @@ public class UserController {
     @Autowired
     private UserMapper userMapper;
 
-    // // 로그인 엔드포인트
-    // @PostMapping("/login")
-    // public ResponseEntity<String> login(@RequestBody Map<String, String>
-    // loginData, HttpSession session) {
-    // String email = loginData.get("email");
-    // String password = loginData.get("password");
+    // 회원가입 엔드포인트
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody Map<String, String> userData) {
+        String email = userData.get("email");
+        String username = userData.get("username");
+        String password = userData.get("password");
 
-    // // MySQL에서 사용자 조회
-    // User user = userMapper.findByEmail(email);
+        // 이메일 중복 검사
+        User existingUser = userMapper.findByEmail(email);
+        if (existingUser != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용 중인 이메일입니다.");
+        }
 
-    // // 사용자 인증
-    // if (user != null && user.getPassword().equals(password) && user.getStatus()
-    // == 1) {
-    // session.setAttribute("user", user); // 세션에 사용자 정보 저장
-    // return ResponseEntity.ok("로그인 성공");
-    // } else {
-    // // 로그인 실패 시 세션을 비워둠
-    // session.invalidate(); // 세션 초기화
-    // return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 실패: 이메일이나
-    // 비밀번호가 잘못되었습니다.");
-    // }
-    // }
+        // 새로운 사용자 객체 생성
+        User newUser = new User();
+        newUser.setUserEmail(email);
+        newUser.setUsername(username);
+        newUser.setPassword(password); // 실제 환경에서는 비밀번호 암호화 필요
+        newUser.setStatus(1); // 활성 상태
+        newUser.setCreatedAt(LocalDateTime.now());
 
+        // 사용자 정보를 데이터베이스에 저장
+        userMapper.insertUser(newUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body("회원가입 성공");
+    }
+
+    // 로그인 엔드포인트
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody Map<String, String> loginData, HttpServletRequest request) {
         String email = loginData.get("email");

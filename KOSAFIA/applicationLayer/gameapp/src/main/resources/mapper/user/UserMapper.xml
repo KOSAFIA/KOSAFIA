@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kosafia.gameapp.mapper.user.UserMapper">
+  
     <select id="findByEmail" parameterType="String" resultType="com.kosafia.gameapp.models.user.User">
         SELECT * FROM Users WHERE user_email = #{email}
     </select>
+
+    <insert id="insertUser" parameterType="com.kosafia.gameapp.models.user.User" useGeneratedKeys="true" keyProperty="userId">
+    INSERT INTO Users (user_email, username, password, status, created_at)
+    VALUES (#{userEmail}, #{username}, #{password}, #{status}, #{createdAt})
+</insert>
+
 </mapper>

@@ -133,9 +133,9 @@ function Register() {
 
             <p className="mt-3 mb-5">
               이미 계정이 있으신가요?{" "}
-              <a href="/custom-login" className="text-muted">
+              <Link to="/custom-login" className="text-muted">
                 로그인
-              </a>
+              </Link>
             </p>
 
             <div className="d-flex flex-row justify-content-start w-100">
