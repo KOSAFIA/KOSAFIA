@@ -316,3 +316,7 @@ gradle-app.setting
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,eclipse,intellij,visualstudiocode,java,gradle,maven,redis,react
+
+#김남영 추가 깃 이그노어에 리액트 빌드파일은 추기셍 추가되지 않게 설정 음...빌드 파일이니까 포함되지 않게
+KOSAFIA/applicationLayer/gameapp/src/main/resources/static
+
