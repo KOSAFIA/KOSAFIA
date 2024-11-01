@@ -101,6 +101,7 @@ public class UserController {
 
         return ResponseEntity.ok(userData);
     }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // 닉네임 업데이트 엔드포인트
     @PutMapping("/update-username")
@@ -139,5 +140,27 @@ public class UserController {
         userMapper.updateUser(user); // UserMapper에 updateUser 메서드 필요
 
         return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // 회원탈퇴 엔드포인트
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deactivateUser(@RequestBody Map<String, String> requestData, HttpSession session) {
+        String password = requestData.get("password");
+        User user = (User) session.getAttribute("user");
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        User dbUser = userMapper.findByEmail(user.getUserEmail());
+        if (dbUser != null && dbUser.getPassword().equals(password)) {
+            userMapper.deactivateUser(dbUser.getUserId()); // 상태를 0으로 업데이트
+            session.invalidate(); // 세션을 무효화하여 로그아웃 처리
+            return ResponseEntity.ok("회원탈퇴가 성공적으로 완료되었습니다.");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
+        }
     }
 }

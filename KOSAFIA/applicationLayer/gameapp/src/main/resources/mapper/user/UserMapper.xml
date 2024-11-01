@@ -17,4 +17,10 @@
     WHERE user_id = #{userId}
 </update>
 
+   <update id="deactivateUser" parameterType="long">
+        UPDATE Users
+        SET status = 0
+        WHERE user_id = #{userId}
+    </update>
+
 </mapper>

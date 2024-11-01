@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
+import { useNavigate } from "react-router-dom"; // 로그인 화면으로 이동하기 위해 useNavigate 사용
 import "../styles/components/Mypage.css";
 
 Modal.setAppElement("#root");
@@ -15,6 +16,10 @@ function Mypage() {
   const [message, setMessage] = useState("");
   const [isPasswordChangeSuccess, setIsPasswordChangeSuccess] = useState(false);
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+
+  const navigate = useNavigate(); // 로그인 화면으로 이동하기 위해 navigate 설정
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -85,8 +90,8 @@ function Mypage() {
       if (response.ok) {
         setMessage("비밀번호가 성공적으로 변경되었습니다.");
         setIsPasswordChangeSuccess(true);
-        setIsPasswordModalOpen(false); // 비밀번호 수정 모달 닫기
-        setIsSuccessPopupOpen(true); // 성공 팝업 열기
+        setIsPasswordModalOpen(false);
+        setIsSuccessPopupOpen(true);
       } else {
         setMessage("비밀번호 변경에 실패했습니다.");
         setIsPasswordChangeSuccess(false);
@@ -98,24 +103,60 @@ function Mypage() {
     }
   };
 
+  // 회원탈퇴 처리 함수
+  const handleAccountDeletion = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/user/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ password: deletePassword }),
+      });
+
+      if (response.ok) {
+        setMessage("회원탈퇴가 성공적으로 완료되었습니다.");
+        setIsDeleteModalOpen(false);
+        setIsSuccessPopupOpen(true); // 성공 팝업 열기
+      } else {
+        setMessage("회원탈퇴에 실패했습니다. 비밀번호를 확인해주세요.");
+      }
+    } catch (error) {
+      console.error("회원탈퇴 오류:", error);
+      setMessage("회원탈퇴 중 오류가 발생했습니다.");
+    }
+  };
+  // 비밀번호 변경 모달 열기
   const openPasswordModal = () => {
     setIsPasswordModalOpen(true);
-    setMessage(""); // 모달을 열 때 이전 메시지 초기화
-    setIsPasswordChangeSuccess(false); // 비밀번호 변경 성공 상태 초기화
+    setMessage("");
+    setIsPasswordChangeSuccess(false);
   };
-
+  // 회원탈퇴 모달 열기
+  const openDeleteModal = () => {
+    setIsDeleteModalOpen(true);
+    setDeletePassword("");
+    setMessage("");
+  };
+  // 비밀번호 변경 모달 닫기
   const closePasswordModal = () => {
     setIsPasswordModalOpen(false);
     setCurrentPassword("");
     setNewPassword("");
     setConfirmNewPassword("");
-    setMessage(""); // 모달을 닫을 때 메시지 초기화
+    setMessage("");
   };
-
+  // 회원탈퇴 모달 닫기
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setDeletePassword("");
+    setMessage("");
+  };
+  // 성공 팝업 닫기
   const closeSuccessPopup = () => {
-    setIsSuccessPopupOpen(false); // 성공 팝업 닫기
-    setIsPasswordChangeSuccess(false); // 상태 초기화하여 두 번째 모달 방지
-    setMessage(""); // 메시지 초기화
+    setIsSuccessPopupOpen(false);
+    setIsPasswordChangeSuccess(false);
+    setMessage("");
+    navigate("/custom-login"); // 성공 팝업 닫을 때 로그인 화면으로 이동
   };
 
   return (
@@ -145,6 +186,7 @@ function Mypage() {
 
       <div>
         <button onClick={openPasswordModal}>비밀번호 수정</button>
+        <button onClick={openDeleteModal}>회원탈퇴</button>
       </div>
 
       <Modal
@@ -193,6 +235,32 @@ function Mypage() {
             취소
           </button>
         </form>
+      </Modal>
+
+      {/* 회원탈퇴 모달 */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onRequestClose={closeDeleteModal}
+        contentLabel="회원탈퇴"
+        className="password-modal"
+        overlayClassName="password-modal-overlay"
+      >
+        <h2>회원탈퇴</h2>
+        <p>계정을 삭제하려면 비밀번호를 입력하세요.</p>
+        <input
+          type="password"
+          placeholder="비밀번호"
+          value={deletePassword}
+          onChange={(e) => setDeletePassword(e.target.value)}
+          required
+        />
+        <button type="button" onClick={handleAccountDeletion}>
+          회원탈퇴
+        </button>
+        <button type="button" onClick={closeDeleteModal}>
+          취소
+        </button>
+        {message && <p className="modal-message">{message}</p>}
       </Modal>
 
       {/* 성공 팝업 모달 */}
