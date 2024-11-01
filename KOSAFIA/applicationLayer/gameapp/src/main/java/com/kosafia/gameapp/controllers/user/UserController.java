@@ -1,17 +1,12 @@
 package com.kosafia.gameapp.controllers.user;
 
-import com.kosafia.gameapp.models.user.User;
-import com.kosafia.gameapp.mapper.user.UserMapper;
+import com.kosafia.gameapp.services.user.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletRequest;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -19,7 +14,7 @@ import java.util.Map;
 public class UserController {
 
     @Autowired
-    private UserMapper userMapper;
+    private UserService userService;
 
     // 회원가입 엔드포인트
     @PostMapping("/register")
@@ -28,38 +23,21 @@ public class UserController {
         String username = userData.get("username");
         String password = userData.get("password");
 
-        // 이메일 중복 검사
-        User existingUser = userMapper.findByEmail(email);
-        if (existingUser != null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용 중인 이메일입니다.");
+        String result = userService.registerUser(email, username, password);
+        if ("회원가입 성공".equals(result)) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(result);
         }
-
-        // 새로운 사용자 객체 생성
-        User newUser = new User();
-        newUser.setUserEmail(email);
-        newUser.setUsername(username);
-        newUser.setPassword(password); // 실제 환경에서는 비밀번호 암호화 필요
-        newUser.setStatus(1); // 활성 상태
-        newUser.setCreatedAt(LocalDateTime.now());
-
-        // 사용자 정보를 데이터베이스에 저장
-        userMapper.insertUser(newUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body("회원가입 성공");
     }
 
     // 로그인 엔드포인트
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Map<String, String> loginData, HttpServletRequest request) {
+    public ResponseEntity<String> login(@RequestBody Map<String, String> loginData, HttpSession session) {
         String email = loginData.get("email");
         String password = loginData.get("password");
 
-        // MySQL에서 사용자 조회
-        User user = userMapper.findByEmail(email);
-
-        // 사용자 인증
-        if (user != null && user.getPassword().equals(password) && user.getStatus() == 1) {
-            HttpSession session = request.getSession(true); // 로그인 성공 시에만 세션 생성
-            session.setAttribute("user", user);
+        if (userService.loginUser(email, password, session)) {
             return ResponseEntity.ok("로그인 성공");
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 실패: 이메일이나 비밀번호가 잘못되었습니다.");
@@ -69,98 +47,53 @@ public class UserController {
     // 로그아웃 엔드포인트
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpSession session) {
-        session.invalidate(); // 세션 종료
+        userService.logoutUser(session);
         return ResponseEntity.ok("로그아웃 성공");
     }
-
-    // 세션 상태 확인 (테스트용)
-    @GetMapping("/session")
-    public ResponseEntity<String> checkSession(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user != null) {
-            return ResponseEntity.ok("로그인된 사용자: " + user.getUsername());
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 필요");
-        }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // 프로필 조회 엔드포인트
     @GetMapping("/profile")
     public ResponseEntity<Map<String, Object>> getProfile(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-
-        if (user == null) {
+        Map<String, Object> userData = userService.getUserProfile(session);
+        if (userData != null) {
+            return ResponseEntity.ok(userData);
+        } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
-
-        Map<String, Object> userData = new HashMap<>();
-        userData.put("user_email", user.getUserEmail());
-        userData.put("username", user.getUsername());
-
-        return ResponseEntity.ok(userData);
     }
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // 닉네임 업데이트 엔드포인트
     @PutMapping("/update-username")
     public ResponseEntity<String> updateUsername(@RequestBody Map<String, String> requestData, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
         String newUsername = requestData.get("username");
-        user.setUsername(newUsername);
-        userMapper.updateUser(user); // UserMapper에 updateUser 메서드 필요
-
-        return ResponseEntity.ok("닉네임이 성공적으로 변경되었습니다.");
+        String result = userService.updateUsername(newUsername, session);
+        if ("로그인이 필요합니다.".equals(result)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+        }
+        return ResponseEntity.ok(result);
     }
 
     // 비밀번호 업데이트 엔드포인트
     @PutMapping("/update-password")
     public ResponseEntity<String> updatePassword(@RequestBody Map<String, String> requestData, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
         String currentPassword = requestData.get("currentPassword");
         String newPassword = requestData.get("newPassword");
 
-        // 현재 비밀번호 확인
-        if (!user.getPassword().equals(currentPassword)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("현재 비밀번호가 일치하지 않습니다.");
+        String result = userService.updatePassword(currentPassword, newPassword, session);
+        if ("로그인이 필요합니다.".equals(result) || "현재 비밀번호가 일치하지 않습니다.".equals(result)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
         }
-
-        user.setPassword(newPassword);
-        userMapper.updateUser(user); // UserMapper에 updateUser 메서드 필요
-
-        return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
+        return ResponseEntity.ok(result);
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // 회원탈퇴 엔드포인트
     @DeleteMapping("/delete")
     public ResponseEntity<String> deactivateUser(@RequestBody Map<String, String> requestData, HttpSession session) {
         String password = requestData.get("password");
-        User user = (User) session.getAttribute("user");
-
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        String result = userService.deactivateUser(password, session);
+        if ("로그인이 필요합니다.".equals(result) || "비밀번호가 일치하지 않습니다.".equals(result)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
         }
-
-        User dbUser = userMapper.findByEmail(user.getUserEmail());
-        if (dbUser != null && dbUser.getPassword().equals(password)) {
-            userMapper.deactivateUser(dbUser.getUserId()); // 상태를 0으로 업데이트
-            session.invalidate(); // 세션을 무효화하여 로그아웃 처리
-            return ResponseEntity.ok("회원탈퇴가 성공적으로 완료되었습니다.");
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
-        }
+        return ResponseEntity.ok(result);
     }
 }

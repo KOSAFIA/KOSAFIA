@@ -64,6 +64,12 @@ dependencies {
 
 //	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 //	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// BCryptPasswordEncoder를 사용하기 위해 필요한 Spring Security 의존성을 추가
+ implementation 'org.springframework.boot:spring-boot-starter-security'
+
+
+
 }
 
 //tasks.named('test') {

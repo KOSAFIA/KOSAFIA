@@ -25,14 +25,16 @@ function LoginOk() {
           setUsername(data.username);
         } else {
           console.error("사용자 정보를 불러오는 데 실패했습니다.");
+          navigate("/custom-login"); // 로그인 실패 시 로그인 페이지로 리디렉션
         }
       } catch (error) {
         console.error("사용자 정보 로드 오류:", error);
+        navigate("/custom-login"); // 오류 발생 시 로그인 페이지로 리디렉션
       }
     };
 
     fetchUserInfo();
-  }, []);
+  }, [navigate]);
 
   // 로그아웃 핸들러 함수
   const handleLogout = async () => {
@@ -65,34 +67,15 @@ function LoginOk() {
   };
 
   return (
-    <div>
+    <div className="login-ok-container">
       <h1>홈 페이지</h1>
       {username && <p>{username}님, 환영합니다!</p>}
 
-      <button
-        onClick={handleLogout}
-        style={{
-          color: "blue",
-          cursor: "pointer",
-          textDecoration: "underline",
-          background: "none",
-          border: "none",
-          marginBottom: "20px",
-        }}
-      >
+      <button className="logout-button" onClick={handleLogout}>
         로그아웃
       </button>
 
-      <button
-        onClick={openMypageModal}
-        style={{
-          color: "blue",
-          cursor: "pointer",
-          textDecoration: "underline",
-          background: "none",
-          border: "none",
-        }}
-      >
+      <button className="mypage-button" onClick={openMypageModal}>
         마이페이지
       </button>
 

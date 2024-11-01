@@ -5,6 +5,7 @@ import App from "./App"; //하은
 import Login from "./user/Login"; // Login 컴포넌트를 불러옵니다.
 import Register from "./user/Register"; // Register 컴포넌트를 불러옵니다.
 import LoginOk from "./user/LoginOk"; //로그인 성공시 나오는 화면
+import Mypage from "./user/Mypage"; 
 import Kny22 from './pages/kny/Kny22';
 
 import { BrowserRouter, Routes, Route } from "react-router-dom"; // React Router 라이브러리에서 필요한 컴포넌트를 불러옵니다.
