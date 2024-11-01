@@ -17,7 +17,7 @@ public class testController {
     public String helloworld(){
         log.info("dsfdfsdfsdfsdf");
         System.out.println("hello wolrd");
-        return "index";
+        return "forward:/index.html";
     }
 
     @GetMapping("/react")
