@@ -2,16 +2,21 @@
   font-size: 23px;
   display: flex;
   align-items: center;
-  justify-content: center; 
+  justify-content: center;
   width: 100%;
 }
 
 .time-display {
   display: flex;
-  align-items: center; 
+  align-items: center;
   justify-content: center; /* 가운데 정렬 */
   flex: 1; /* 남은 공간을 차지하게 함 */
 }
+
+.time-display .button {
+  margin-bottom: 24px;
+}
+
 
 .timer .stage-info {
   margin-left: auto; /* 오른쪽 끝으로 위치 */
