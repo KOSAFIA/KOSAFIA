@@ -11,4 +11,10 @@
     VALUES (#{userEmail}, #{username}, #{password}, #{status}, #{createdAt})
 </insert>
 
+<update id="updateUser" parameterType="com.kosafia.gameapp.models.user.User">
+    UPDATE Users
+    SET username = #{username}, password = #{password}
+    WHERE user_id = #{userId}
+</update>
+
 </mapper>

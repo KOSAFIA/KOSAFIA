@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -81,5 +82,62 @@ public class UserController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 필요");
         }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // 프로필 조회 엔드포인트
+    @GetMapping("/profile")
+    public ResponseEntity<Map<String, Object>> getProfile(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("user_email", user.getUserEmail());
+        userData.put("username", user.getUsername());
+
+        return ResponseEntity.ok(userData);
+    }
+
+    // 닉네임 업데이트 엔드포인트
+    @PutMapping("/update-username")
+    public ResponseEntity<String> updateUsername(@RequestBody Map<String, String> requestData, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        String newUsername = requestData.get("username");
+        user.setUsername(newUsername);
+        userMapper.updateUser(user); // UserMapper에 updateUser 메서드 필요
+
+        return ResponseEntity.ok("닉네임이 성공적으로 변경되었습니다.");
+    }
+
+    // 비밀번호 업데이트 엔드포인트
+    @PutMapping("/update-password")
+    public ResponseEntity<String> updatePassword(@RequestBody Map<String, String> requestData, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        String currentPassword = requestData.get("currentPassword");
+        String newPassword = requestData.get("newPassword");
+
+        // 현재 비밀번호 확인
+        if (!user.getPassword().equals(currentPassword)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        user.setPassword(newPassword);
+        userMapper.updateUser(user); // UserMapper에 updateUser 메서드 필요
+
+        return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
     }
 }
