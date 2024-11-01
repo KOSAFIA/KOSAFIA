@@ -1,11 +1,15 @@
-// src/components/ChatBox.js
-
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import '../styles/components/ChatBox.css';
 
-const ChatBox = () => {
+const ChatBox = forwardRef((props, ref) => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
+
+    useImperativeHandle(ref, () => ({
+        receiveMessage: (message) => {
+            setMessages((prevMessages) => [...prevMessages, message]);
+        },
+    }));
 
     const handleSendMessage = () => {
         if (input.trim() === '') return;
@@ -33,6 +37,6 @@ const ChatBox = () => {
             </div>
         </div>
     );
-};
+});
 
 export default ChatBox;
