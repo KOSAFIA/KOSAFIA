@@ -8,22 +8,23 @@ import LoginOk from "./user/LoginOk"; //로그인 성공시 나오는 화면
 import Kny22 from './pages/kny/Kny22';
 
 import { BrowserRouter, Routes, Route } from "react-router-dom"; // React Router 라이브러리에서 필요한 컴포넌트를 불러옵니다.
+import Kny333 from "./pages/kny/kny333";
 
 //이하은
 // ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 
-// 차수현
-// root ID를 가진 DOM 요소에 React 컴포넌트를 렌더링합니다.
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/custom-login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/LoginOk" element={<LoginOk />} />
-    </Routes>
-  </BrowserRouter>
-);
+// // 차수현
+// // root ID를 가진 DOM 요소에 React 컴포넌트를 렌더링합니다.
+// ReactDOM.createRoot(document.getElementById("root")).render(
+//   <BrowserRouter>
+//     <Routes>
+//       <Route path="/" element={<Login />} />
+//       <Route path="/custom-login" element={<Login />} />
+//       <Route path="/register" element={<Register />} />
+//       <Route path="/LoginOk" element={<LoginOk />} />
+//     </Routes>
+//   </BrowserRouter>
+// );
 
 // // React 18의 새로운 루트 API 사용
 // const container = document.getElementById('root');
@@ -37,3 +38,17 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 // } else {
 //     console.error('Root element not found');
 // }
+
+
+//김남영 게임방 테스트
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/custom-login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      {/* <Route path="/LoginOk" element={<LoginOk />} /> */} ///차수현
+      <Route path="/LoginOk" element={<Kny333/>} /> ///김남영 테스트
+    </Routes>
+  </BrowserRouter>
+);
