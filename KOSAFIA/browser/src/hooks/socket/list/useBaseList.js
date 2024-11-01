@@ -1,7 +1,7 @@
 // hooks/base/useBaseList.js
 // hooks/socket/list/useBaseList.js
 import { useState, useEffect, useCallback } from 'react';
-import { useBaseSocket } from '../../../contexts/kny/socket/BaseSocketContext';
+import { useBaseSocket } from '../../../contexts/socket/BaseSocketContext';
 
 export const useBaseList = ({ topic, initialList = [] }) => {
     const [list, setList] = useState(initialList);

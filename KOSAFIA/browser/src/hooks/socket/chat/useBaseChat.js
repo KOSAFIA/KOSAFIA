@@ -1,6 +1,6 @@
 // hooks/base/useBaseChat.js
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useBaseSocket } from '../../../contexts/kny/socket/BaseSocketContext';
+import { useBaseSocket } from '../../../contexts/socket/BaseSocketContext';
 export const useBaseChat = ({ topic, destination }) => {
     const { connected, subscribe, publish } = useBaseSocket();
     const [messages, setMessages] = useState([]);

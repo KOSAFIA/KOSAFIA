@@ -1,7 +1,7 @@
 // hooks/lobby/useUserList.js
 // hooks/socket/list/useUserList.js
 import { useBaseList } from './useBaseList';
-import { useLobbySocket } from '../../../contexts/kny/socket/LobbySocketContext';
+import { useLobbySocket } from '../../../contexts/socket/LobbySocketContext';
 
 export const useUserList = () => {
     const { topics, sessionUser } = useLobbySocket();

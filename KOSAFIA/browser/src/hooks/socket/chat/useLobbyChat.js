@@ -1,7 +1,7 @@
 // hooks/lobby/useLobbyChat.js
 import { useCallback } from 'react';
 import { useBaseChat } from './useBaseChat';
-import { useLobbySocket } from '../../../contexts/kny/socket/LobbySocketContext';
+import { useLobbySocket } from '../../../contexts/socket/LobbySocketContext';
 
 export const useLobbyChat = () => {
     // 로비 소켓 컨텍스트에서 설정값과 세션 정보 가져오기
