@@ -27,7 +27,7 @@
 
 import React from 'react';
 import BaseChat from './BaseChat';
-import { useLobbyChat } from '../../hooks/socket/chat/useLobbyChat';
+import { useLobbyChat } from '../../../hooks/socket/chat/useLobbyChat';
 
 const LobbyChat = () => {
    // 로비 채팅을 위한 상태와 메서드들

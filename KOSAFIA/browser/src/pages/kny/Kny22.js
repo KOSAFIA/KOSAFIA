@@ -1,5 +1,5 @@
 import TestLogin from '../../components/test/TestLogin';
-import LobbyChat from '../../components/chat/LobbyChat';
+import LobbyChat from '../../components/socket/chat/LobbyChat';
 import UserList from '../../components/socket/list/UserList';
 import { LobbySocketProvider } from '../../contexts/socket/LobbySocketContext';
 
