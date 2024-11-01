@@ -2,6 +2,9 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.5'
 	id 'io.spring.dependency-management' version '1.1.6'
+
+	//노드 플러그인도 추가 리액트용 아직 테스트 덜됨 베타
+	//id 'com.github.node-gradle.node' version '3.3.0'  // node plugin 추가
 }
 
 group = 'com.kosafia'
@@ -28,6 +31,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	compileOnly 'org.projectlombok:lombok'
+	//그리고 추가로 소켓에서 데이터 주고 받을때 이거 추가해보라그래서 추가해봄
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 
 	//레디스 의존성 살려놔
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
