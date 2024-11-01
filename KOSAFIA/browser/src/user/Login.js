@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Link 추가
 import "../styles/components/Login.css";
 import {
   MDBBtn,
@@ -7,7 +7,6 @@ import {
   MDBCard,
   MDBCardBody,
   MDBCardImage,
-  MDBRow,
   MDBCol,
   MDBIcon,
   MDBInput,
@@ -55,11 +54,18 @@ function Login() {
         <MDBCol md="6" className="login-card-body">
           <MDBCardBody className="d-flex flex-column align-items-center">
             <div className="d-flex flex-row mt-2">
-              <MDBIcon fas icon="cubes fa-3x me-3" style={{ color: "#ff6219" }} />
+              <MDBIcon
+                fas
+                icon="cubes fa-3x me-3"
+                style={{ color: "#ff6219" }}
+              />
               <span className="h1 fw-bold">Login</span>
             </div>
 
-            <h5 className="fw-normal my-4 pb-3" style={{ letterSpacing: "1px" }}>
+            <h5
+              className="fw-normal my-4 pb-3"
+              style={{ letterSpacing: "1px" }}
+            >
               Sign into your account
             </h5>
 
@@ -84,16 +90,21 @@ function Login() {
               />
 
               {error && <p className="text-danger mb-3">{error}</p>}
-              <MDBBtn color="dark" type="submit" className="mb-4 px-5" size="lg">
+              <MDBBtn
+                color="dark"
+                type="submit"
+                className="mb-4 px-5"
+                size="lg"
+              >
                 Login
               </MDBBtn>
             </form>
 
             <p className="mt-3 mb-5">
               계정이 없으신가요?{" "}
-              <a href="/register" className="text-muted">
+              <Link to="/register" className="text-muted">
                 회원가입
-              </a>
+              </Link>
             </p>
           </MDBCardBody>
         </MDBCol>
