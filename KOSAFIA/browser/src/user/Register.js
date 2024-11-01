@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // 리디렉션을 위해 useNavigate 훅 사용
+import { Link, useNavigate } from "react-router-dom"; // 리디렉션을 위해 useNavigate 훅 사용
 import "../styles/components/Login.css";
 
 import {
