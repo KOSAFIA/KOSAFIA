@@ -1,12 +1,14 @@
 package com.kosafia.gameapp.models.gameroom;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+// @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, 
+// include = JsonTypeInfo.As.PROPERTY, 
+// property = "@class")
 public class GameRoomDto {
 
     private Long roomId;

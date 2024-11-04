@@ -1,5 +1,7 @@
 package com.kosafia.gameapp.controllers.gameroom;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +28,7 @@ public class GameRoomController {
         return ResponseEntity.ok(createdRoom);
     }
 
+    //아이디 조회
     @GetMapping("/{roomId}")
     public ResponseEntity<GameRoomDto> getRoomById(@PathVariable Long roomId) {
         GameRoomDto room = gameRoomService.getRoomById(roomId);
@@ -37,4 +40,27 @@ public class GameRoomController {
         gameRoomService.deleteRoom(roomId);
         return ResponseEntity.noContent().build();
     }
+
+    //전체 조회
+    @GetMapping
+    public ResponseEntity<List<GameRoomDto>> getAllRooms() {
+        List<GameRoomDto> rooms = gameRoomService.getAllRooms();
+        return ResponseEntity.ok(rooms);
+    }
+
+    //검색어 조회
+    @GetMapping("/search")
+    public ResponseEntity<List<GameRoomDto>> getRoomsBySearch(@RequestParam String searchKeyword) {
+        List<GameRoomDto> rooms = gameRoomService.getRoomsBySearch(searchKeyword);
+        return ResponseEntity.ok(rooms);
+    }
+
+    //대기방 조회
+    @GetMapping("/waiting")
+    public ResponseEntity<List<GameRoomDto>> getWaitingRooms() {
+        List<GameRoomDto> rooms = gameRoomService.getWaitingRooms();
+        return ResponseEntity.ok(rooms);
+    }
+
+
 }

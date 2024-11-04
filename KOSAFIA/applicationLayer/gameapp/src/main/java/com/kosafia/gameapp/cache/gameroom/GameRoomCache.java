@@ -22,6 +22,12 @@ public class GameRoomCache {
         redisTemplate.opsForValue().set(roomKey, gameRoom);
     }
 
+    //방번호로 조회
+    public GameRoom getGameRoom(Long roomId) {
+        String roomKey = "room:" + roomId;
+        return redisTemplate.opsForValue().get(roomKey);
+    }
+
     //삭제
     public void deleteGameRoom(Long roomId) {
         String roomKey = "room:" + roomId;
@@ -37,13 +43,7 @@ public class GameRoomCache {
         return keys.stream()
                 .map(key -> redisTemplate.opsForValue().get(key))
                 .collect(Collectors.toList());
-    }
-    
-    //방번호로 조회
-    public GameRoom getGameRoom(Long roomId) {
-        String roomKey = "room:" + roomId;
-        return redisTemplate.opsForValue().get(roomKey);
-    }
+    }    
 
     //대기방 조회
     public List<GameRoom> getWaitingGameRooms() {

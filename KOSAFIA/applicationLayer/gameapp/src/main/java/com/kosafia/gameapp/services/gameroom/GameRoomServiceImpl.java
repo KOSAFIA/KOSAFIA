@@ -1,12 +1,14 @@
 package com.kosafia.gameapp.services.gameroom;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.kosafia.gameapp.cache.gameroom.GameRoomCache;
-import com.kosafia.gameapp.mappers.gameroom.GameRoomMapper;
+import com.kosafia.gameapp.mapper.gameroom.GameRoomMapper;
 import com.kosafia.gameapp.models.gameroom.GameRoom;
 import com.kosafia.gameapp.models.gameroom.GameRoomDto;
 
@@ -54,4 +56,31 @@ public class GameRoomServiceImpl  implements GameRoomService{
         gameRoomMapper.deleteGameRoom(roomId);
       
     }
+
+
+    @Override
+    public List<GameRoomDto> getAllRooms() {
+        List<GameRoom> gameRooms = gameRoomCache.getAllGameRooms();
+        // if (gameRooms.isEmpty()) {
+        //     gameRooms = gameRoomMapper.selectAllGameRooms();
+        //     gameRooms.forEach(gameRoomCache::saveGameRoom);
+        // }
+        return gameRooms.stream().map(GameRoomDto::new).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<GameRoomDto> getRoomsBySearch(String searchKeyword) {
+        List<GameRoom> gameRooms = gameRoomMapper.selectGameRoomsBySearch(searchKeyword);
+        return gameRooms.stream().map(GameRoomDto::new).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<GameRoomDto> getWaitingRooms() {
+        List<GameRoom> gameRooms = gameRoomMapper.selectWaitingGameRooms();
+        return gameRooms.stream().map(GameRoomDto::new).collect(Collectors.toList());
+    }
+
+    
+
+
 }
