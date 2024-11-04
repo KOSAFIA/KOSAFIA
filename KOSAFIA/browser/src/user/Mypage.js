@@ -8,19 +8,20 @@ Modal.setAppElement("#root");
 function Mypage() {
   const [userEmail, setUserEmail] = useState("");
   const [username, setUsername] = useState("");
-  const [isEditingUsername, setIsEditingUsername] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [message, setMessage] = useState("");
-  const [isPasswordChangeSuccess, setIsPasswordChangeSuccess] = useState(false);
-  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deletePassword, setDeletePassword] = useState("");
+  const [isEditingUsername, setIsEditingUsername] = useState(false); // 닉네임 편집 모드 여부
+  const [currentPassword, setCurrentPassword] = useState(""); // 현재 비밀번호 상태
+  const [newPassword, setNewPassword] = useState(""); // 새 비밀번호 상태
+  const [confirmNewPassword, setConfirmNewPassword] = useState(""); // 새 비밀번호 확인 상태
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false); // 비밀번호 변경 모달 열림 여부
+  const [message, setMessage] = useState(""); // 메시지 상태 (성공/오류 메시지 표시)
+  const [isPasswordChangeSuccess, setIsPasswordChangeSuccess] = useState(false); // 비밀번호 변경 성공 여부
+  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false); // 성공 팝업 모달 열림 여부
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // 회원탈퇴 모달 열림 여부
+  const [deletePassword, setDeletePassword] = useState(""); // 회원탈퇴 시 입력할 비밀번호
 
   const navigate = useNavigate(); // 로그인 화면으로 이동하기 위해 navigate 설정
 
+  // 사용자 정보를 서버에서 가져오는 함수
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -42,9 +43,10 @@ function Mypage() {
       }
     };
 
-    fetchUserProfile();
+    fetchUserProfile(); // 컴포넌트가 렌더링될 때 사용자 정보 가져오기
   }, []);
 
+  // 닉네임 저장 함수
   const handleUsernameSave = async () => {
     try {
       const response = await fetch(
@@ -53,7 +55,7 @@ function Mypage() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ username }),
+          body: JSON.stringify({ username }), // 새 닉네임을 서버에 전송
         }
       );
 
@@ -69,8 +71,10 @@ function Mypage() {
     }
   };
 
+  // 비밀번호 변경 함수
   const handlePasswordChange = async () => {
     if (newPassword !== confirmNewPassword) {
+      // 새 비밀번호와 확인 비밀번호가 다를 때
       setMessage("새 비밀번호가 일치하지 않습니다.");
       setIsPasswordChangeSuccess(false);
       return;
@@ -83,15 +87,15 @@ function Mypage() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ currentPassword, newPassword }),
+          body: JSON.stringify({ currentPassword, newPassword }), // 서버에 현재 비밀번호와 새 비밀번호 전송
         }
       );
 
       if (response.ok) {
         setMessage("비밀번호가 성공적으로 변경되었습니다.");
-        setIsPasswordChangeSuccess(true);
-        setIsPasswordModalOpen(false);
-        setIsSuccessPopupOpen(true);
+        setIsPasswordChangeSuccess(true); // 변경 성공 상태 설정
+        setIsPasswordModalOpen(false); // 모달 닫기
+        setIsSuccessPopupOpen(true); // 성공 팝업 열기
       } else {
         setMessage("비밀번호 변경에 실패했습니다.");
         setIsPasswordChangeSuccess(false);
@@ -110,7 +114,7 @@ function Mypage() {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ password: deletePassword }),
+        body: JSON.stringify({ password: deletePassword }), // 회원탈퇴 시 비밀번호 전송
       });
 
       if (response.ok) {
@@ -127,35 +131,35 @@ function Mypage() {
   };
   // 비밀번호 변경 모달 열기
   const openPasswordModal = () => {
-    setIsPasswordModalOpen(true);
-    setMessage("");
-    setIsPasswordChangeSuccess(false);
+    setIsPasswordModalOpen(true); // 비밀번호 변경 모달 열림
+    setMessage(""); // 메시지 초기화
+    setIsPasswordChangeSuccess(false); // 성공 상태 초기화
   };
   // 회원탈퇴 모달 열기
   const openDeleteModal = () => {
-    setIsDeleteModalOpen(true);
-    setDeletePassword("");
-    setMessage("");
+    setIsDeleteModalOpen(true); // 회원탈퇴 모달 열림
+    setDeletePassword(""); // 비밀번호 초기화
+    setMessage(""); // 메시지 초기화
   };
   // 비밀번호 변경 모달 닫기
   const closePasswordModal = () => {
-    setIsPasswordModalOpen(false);
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmNewPassword("");
-    setMessage("");
+    setIsPasswordModalOpen(false); // 비밀번호 변경 모달 닫기
+    setCurrentPassword(""); // 현재 비밀번호 초기화
+    setNewPassword(""); // 새 비밀번호 초기화
+    setConfirmNewPassword(""); // 새 비밀번호 확인 초기화
+    setMessage(""); // 메시지 초기화
   };
   // 회원탈퇴 모달 닫기
   const closeDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-    setDeletePassword("");
-    setMessage("");
+    setIsDeleteModalOpen(false); // 회원탈퇴 모달 닫기
+    setDeletePassword(""); // 비밀번호 초기화
+    setMessage(""); // 메시지 초기화
   };
   // 성공 팝업 닫기
   const closeSuccessPopup = () => {
-    setIsSuccessPopupOpen(false);
-    setIsPasswordChangeSuccess(false);
-    setMessage("");
+    setIsSuccessPopupOpen(false); // 성공 팝업 모달 닫기
+    setIsPasswordChangeSuccess(false); // 비밀번호 변경 성공 초기화
+    setMessage(""); // 메시지 초기화
     navigate("/custom-login"); // 성공 팝업 닫을 때 로그인 화면으로 이동
   };
 
@@ -189,6 +193,7 @@ function Mypage() {
         <button onClick={openDeleteModal}>회원탈퇴</button>
       </div>
 
+      {/* 비밀번호 변경 모달 */}
       <Modal
         isOpen={isPasswordModalOpen}
         onRequestClose={closePasswordModal}
