@@ -55,6 +55,10 @@ dependencies {
     implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api'
     implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl'
 
+
+	// Jackson의 JSR310 모듈
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.0'
+
 	// 도커 컴포즈 의존성 일단 제거
 	//developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 
@@ -62,10 +66,10 @@ dependencies {
 	// implementation 'org.springframework.boot:spring-boot-starter-security'
 	// testImplementation 'org.springframework.security:spring-security-test'
 
-//	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-//	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	// testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	// testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-//tasks.named('test') {
-//	useJUnitPlatform()
-//}
+// tasks.named('test') {
+// 	useJUnitPlatform()
+// }

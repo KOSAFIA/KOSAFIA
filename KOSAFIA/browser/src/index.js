@@ -18,8 +18,8 @@ import GameStart from "./fast/gamechat/GameStart";
 //이하은
 // ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 
-// // 차수현
-// // root ID를 가진 DOM 요소에 React 컴포넌트를 렌더링합니다.
+// 차수현
+// root ID를 가진 DOM 요소에 React 컴포넌트를 렌더링합니다.
 // ReactDOM.createRoot(document.getElementById("root")).render(
 //   <BrowserRouter>
 //     <Routes>
@@ -27,6 +27,7 @@ import GameStart from "./fast/gamechat/GameStart";
 //       <Route path="/custom-login" element={<Login />} />
 //       <Route path="/register" element={<Register />} />
 //       <Route path="/LoginOk" element={<LoginOk />} />
+//       <Route path="/mypage" element={<Mypage />} />
 //     </Routes>
 //   </BrowserRouter>
 // );
