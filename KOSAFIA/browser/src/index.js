@@ -79,12 +79,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 //   </BrowserRouter>
 // );
 
-//김남영 심플 마피아 챗
-ReactDOM.createRoot(document.getElementById("root")).render(
+// //김남영 심플 마피아 챗
+// ReactDOM.createRoot(document.getElementById("root")).render(
   
-  <React.StrictMode>
-    <GameStart />
-  </React.StrictMode>,
-  document.getElementById('root')
+//   <React.StrictMode>
+//     <GameStart />
+//   </React.StrictMode>,
+//   document.getElementById('root')
 
-);
+// );
