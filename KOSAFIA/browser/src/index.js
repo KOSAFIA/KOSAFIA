@@ -10,6 +10,11 @@ import Kny22 from './pages/kny/Kny22';
 import { BrowserRouter, Routes, Route } from "react-router-dom"; // React Router 라이브러리에서 필요한 컴포넌트를 불러옵니다.
 import Kny333 from "./pages/kny/kny333";
 
+import SimpleMafiaChat from "./fast/gamechat/MafiaChat";
+import SimpleMafiaChatBtn from "./fast/gamechat/SimpleMafiaChatBtn";
+
+import GameStart from "./fast/gamechat/GameStart";
+
 //이하은
 // ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 
@@ -40,15 +45,25 @@ import Kny333 from "./pages/kny/kny333";
 // }
 
 
-//김남영 게임방 테스트
+// //김남영 게임방 테스트
+// ReactDOM.createRoot(document.getElementById("root")).render(
+//   <BrowserRouter>
+//     <Routes>
+//       <Route path="/" element={<Login />} />
+//       <Route path="/custom-login" element={<Login />} />
+//       <Route path="/register" element={<Register />} />
+//       {/* <Route path="/LoginOk" element={<LoginOk />} /> */} ///차수현
+//       <Route path="/LoginOk" element={<Kny333/>} /> ///김남영 테스트
+//     </Routes>
+//   </BrowserRouter>
+// );
+
+//김남영 심플 마피아 챗
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/custom-login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      {/* <Route path="/LoginOk" element={<LoginOk />} /> */} ///차수현
-      <Route path="/LoginOk" element={<Kny333/>} /> ///김남영 테스트
-    </Routes>
-  </BrowserRouter>
+  
+  <React.StrictMode>
+    <GameStart />
+  </React.StrictMode>,
+  document.getElementById('root')
+
 );
