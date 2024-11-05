@@ -1,0 +1,20 @@
+.job-info-icon {
+    position: absolute;      /* 원하는 위치에 절대적으로 배치 */
+    top: 65px;              /* 상단 위치 */
+    right: 25px;            /* 우측 위치 */
+    width: 40px;            /* 원형 배경의 가로 크기 */
+    height: 40px;           /* 원형 배경의 세로 크기 */
+    background-color: #666; /* 회색 배경색 */
+    border-radius: 50%;     /* 원형 모양으로 설정 */
+    display: flex;          /* Flexbox 사용 */
+    align-items: center;    /* 수직 중앙 정렬 */
+    justify-content: center; /* 수평 중앙 정렬 */
+    cursor: pointer;        /* 마우스 커서 변경 */
+    color: #fff;            /* 아이콘 색상 */
+    font-size: 20px;        /* 아이콘 크기 */
+  }
+  
+  .job-info-icon i {
+    pointer-events: none;   /* 아이콘 위에 마우스 이벤트 방지 */
+  }
+  

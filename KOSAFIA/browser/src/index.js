@@ -12,16 +12,16 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 
 // 차수현
 // root ID를 가진 DOM 요소에 React 컴포넌트를 렌더링합니다.
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/custom-login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/LoginOk" element={<LoginOk />} />
-    </Routes>
-  </BrowserRouter>
-);
+// ReactDOM.createRoot(document.getElementById("root")).render(
+//   <BrowserRouter>
+//     <Routes>
+//       <Route path="/" element={<Login />} />
+//       <Route path="/custom-login" element={<Login />} />
+//       <Route path="/register" element={<Register />} />
+//       <Route path="/LoginOk" element={<LoginOk />} />
+//     </Routes>
+//   </BrowserRouter>
+// );
 
 //김남영
 //ReactDOM.createRoot(document.getElementById("root")).render(<LoginPage />);

@@ -4,25 +4,17 @@
     flex: 3; /* 가로 공간의 30%를 차지 */
     display: flex;
     flex-direction: column; /* 내부 요소를 세로로 배치 */
-    border: 3px solid #ccc;
+    border: 3px solid #3b3b3b;
     overflow: hidden;
-}
-
-.messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-    background-color: #f9f9f9;
-}
-
-.message {
-    padding: 5px;
-    margin-bottom: 5px;
+    position: relative; /* 이미지 위치 설정을 위한 relative */
+    animation: shadow-inset-top 0.4s linear both; /* 애니메이션 효과 적용 */
 }
 
 .input-area {
     display: flex;
     border-top: 1px solid #ddd;
+    background-color: #252525;
+    padding: 10px; /* 전체 영역에 패딩 추가 (필요시) */
 }
 
 input[type='text'] {
@@ -30,12 +22,20 @@ input[type='text'] {
     padding: 8px;
     border: none;
     outline: none;
+    color: white;
+    background-color: #363636;
+    border-radius: 13px; /* 모서리를 둥글게 설정 */
+    margin-right: 10px; /* 버튼과의 간격을 위해 오른쪽 마진 추가 */
 }
 
-button {
-    padding: 8px 12px;
-    border: none;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
+/* 이미지 스타일링 */
+.chat-box .night-image {
+    position: absolute; /* 상위 요소에 상대적으로 위치 지정 */
+    top: -50px; /* 상단에 위치 */
+    left: 0; /* 왼쪽에 위치 */
+    width: 100%; /* 전체 너비를 차지 */
+    height: auto; /* 비율 유지 */
+    opacity: 0.5; /* 투명도 조절 */
+    pointer-events: none; /* 이미지가 클릭 이벤트에 영향을 미치지 않도록 설정 */
+    filter: blur(5px);
 }

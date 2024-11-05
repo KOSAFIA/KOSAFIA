@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@popperjs/core": "^2.11.8",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "bootstrap": "^5.3.3",
     "mdb-react-ui-kit": "^9.0.0",
     "react": "^18.3.1",
+    "react-bootstrap": "^2.10.5",
     "react-dom": "^18.3.1",
     "react-modal": "^3.16.1",
     "react-router-dom": "^6.27.0",
@@ -24,7 +27,11 @@
   "eslintConfig": {
     "extends": [
       "react-app",
-      "react-app/jest"
+      "plugin:import/errors",
+      "plugin:import/warnings"
+    ],
+    "plugins": [
+      "import"
     ]
   },
   "browserslist": {
@@ -38,5 +45,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-plugin-import": "^2.31.0"
   }
 }
