@@ -28,7 +28,7 @@ public class GameRoomController {
         return ResponseEntity.ok(createdRoom);
     }
 
-    //아이디 조회
+    // 아이디 조회
     @GetMapping("/{roomId}")
     public ResponseEntity<GameRoomDto> getRoomById(@PathVariable Long roomId) {
         GameRoomDto room = gameRoomService.getRoomById(roomId);
@@ -41,26 +41,25 @@ public class GameRoomController {
         return ResponseEntity.noContent().build();
     }
 
-    //전체 조회
+    // 전체 조회
     @GetMapping
     public ResponseEntity<List<GameRoomDto>> getAllRooms() {
         List<GameRoomDto> rooms = gameRoomService.getAllRooms();
         return ResponseEntity.ok(rooms);
     }
 
-    //검색어 조회
+    // 검색어 조회
     @GetMapping("/search")
     public ResponseEntity<List<GameRoomDto>> getRoomsBySearch(@RequestParam String searchKeyword) {
         List<GameRoomDto> rooms = gameRoomService.getRoomsBySearch(searchKeyword);
         return ResponseEntity.ok(rooms);
     }
 
-    //대기방 조회
+    // 대기방 조회
     @GetMapping("/waiting")
     public ResponseEntity<List<GameRoomDto>> getWaitingRooms() {
         List<GameRoomDto> rooms = gameRoomService.getWaitingRooms();
         return ResponseEntity.ok(rooms);
     }
-
 
 }

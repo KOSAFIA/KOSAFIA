@@ -5,9 +5,11 @@ import "../styles/components/Mypage.css";
 
 Modal.setAppElement("#root");
 
-function Mypage() {
+function Mypage({ setUsername }) {
+  // setUsername props를 추가로 받음
   const [userEmail, setUserEmail] = useState("");
-  const [username, setUsername] = useState("");
+  // const [username, setUsername] = useState("");
+  const [username, setLocalUsername] = useState("");
   const [isEditingUsername, setIsEditingUsername] = useState(false); // 닉네임 편집 모드 여부
   const [currentPassword, setCurrentPassword] = useState(""); // 현재 비밀번호 상태
   const [newPassword, setNewPassword] = useState(""); // 새 비밀번호 상태
@@ -34,7 +36,7 @@ function Mypage() {
         if (response.ok) {
           const data = await response.json();
           setUserEmail(data.user_email);
-          setUsername(data.username);
+          setLocalUsername(data.username);
         } else {
           console.error("사용자 정보를 불러오는 데 실패했습니다.");
         }
@@ -55,13 +57,14 @@ function Mypage() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ username }), // 새 닉네임을 서버에 전송
+          body: JSON.stringify({ username: username }), // 새 닉네임을 서버에 전송
         }
       );
 
       if (response.ok) {
         setMessage("닉네임이 성공적으로 변경되었습니다.");
         setIsEditingUsername(false);
+        setUsername(username); // LoginOk 컴포넌트의 username 상태를 업데이트
       } else {
         setMessage("닉네임 변경에 실패했습니다.");
       }
@@ -175,7 +178,7 @@ function Mypage() {
             <input
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => setLocalUsername(e.target.value)}
             />
             <button onClick={handleUsernameSave}>저장</button>
             <button onClick={() => setIsEditingUsername(false)}>취소</button>

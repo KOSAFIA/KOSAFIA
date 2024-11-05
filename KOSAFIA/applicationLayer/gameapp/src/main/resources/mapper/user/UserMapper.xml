@@ -2,25 +2,35 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kosafia.gameapp.mapper.user.UserMapper">
   
+    <!-- 이메일로 사용자 찾기 -->
     <select id="findByEmail" parameterType="String" resultType="com.kosafia.gameapp.models.user.User">
         SELECT * FROM Users WHERE user_email = #{email}
     </select>
 
+    <!-- 새로운 사용자 추가 (provider와 provider_id 필드 포함) -->
     <insert id="insertUser" parameterType="com.kosafia.gameapp.models.user.User" useGeneratedKeys="true" keyProperty="userId">
-    INSERT INTO Users (user_email, username, password, status, created_at)
-    VALUES (#{userEmail}, #{username}, #{password}, #{status}, #{createdAt})
-</insert>
+        INSERT INTO Users (user_email, username, password, status, created_at, provider, provider_id)
+        VALUES (#{userEmail}, #{username}, #{password}, #{status}, #{createdAt}, #{provider}, #{providerId})
+    </insert>
 
-<update id="updateUser" parameterType="com.kosafia.gameapp.models.user.User">
-    UPDATE Users
-    SET username = #{username}, password = #{password}
-    WHERE user_id = #{userId}
-</update>
+    <!-- 사용자 업데이트 -->
+    <update id="updateUser" parameterType="com.kosafia.gameapp.models.user.User">
+        UPDATE Users
+        SET username = #{username}, password = #{password}
+        WHERE user_id = #{userId}
+    </update>
 
-   <update id="deactivateUser" parameterType="long">
+    <!-- 회원 탈퇴: 상태를 비활성화(0)로 업데이트 -->
+    <update id="deactivateUser" parameterType="long">
         UPDATE Users
         SET status = 0
         WHERE user_id = #{userId}
     </update>
+
+    <!-- providerId로 사용자를 찾는 쿼리 -->
+    <select id="findByProviderId" parameterType="string" resultType="com.kosafia.gameapp.models.user.User">
+        SELECT * FROM Users
+        WHERE provider_id = #{providerId}
+    </select>
 
 </mapper>
