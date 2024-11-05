@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+## 구글 OAuth -
+application-oauth.properties
