@@ -2,6 +2,7 @@ package com.kosafia.gameapp.services.user;
 
 import com.kosafia.gameapp.mapper.user.UserMapper;
 import com.kosafia.gameapp.models.user.User;
+import com.kosafia.gameapp.models.user.UserData;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -105,5 +106,14 @@ public class UserService {
         } else {
             return "비밀번호가 일치하지 않습니다.";
         }
+    }
+
+    public UserData getUserData(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return null;
+        }
+
+        return new UserData(user.getUserId(), user.getUserEmail(), user.getUsername());
     }
 }

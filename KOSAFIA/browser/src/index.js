@@ -6,7 +6,7 @@ import Login from "./user/Login"; // Login 컴포넌트를 불러옵니다.
 import Register from "./user/Register"; // Register 컴포넌트를 불러옵니다.
 import LoginOk from "./user/LoginOk"; //로그인 성공시 나오는 화면
 import Mypage from "./user/Mypage";
-import Lobby from "./lobby/Lobby";
+import TestLobby from "./lobby/TestLobby";
 
 import Kny22 from "./pages/kny/Kny22";
 
@@ -51,9 +51,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Route path="/" element={<Login />} />
       <Route path="/custom-login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/LoginOk" element={<Lobby />} />
+      {/* <Route path="/LoginOk" element={<Lobby />} /> */}
       <Route path="/mypage" element={<Mypage />} />
-      <Route path="/lobby" element={<Lobby />} />
+      <Route path="/TestLobby" element={<TestLobby />} />
     </Routes>
   </BrowserRouter>
 );

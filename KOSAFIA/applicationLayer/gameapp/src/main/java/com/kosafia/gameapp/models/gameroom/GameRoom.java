@@ -1,5 +1,6 @@
 package com.kosafia.gameapp.models.gameroom;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -17,6 +18,7 @@ public class GameRoom {
     private String roomPassword;
     private String roomStatus;
     private LocalDateTime createdAt;
+    private List<Long> usersId;
 
 }
 
