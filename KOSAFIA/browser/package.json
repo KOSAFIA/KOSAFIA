@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+
     "@popperjs/core": "^2.11.8",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "bootstrap": "^5.3.3",
+    "@stomp/stompjs": "^7.0.0",
+    "axios": "^1.7.7",
     "mdb-react-ui-kit": "^9.0.0",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.5",
@@ -15,6 +18,7 @@
     "react-modal": "^3.16.1",
     "react-router-dom": "^6.27.0",
     "react-scripts": "5.0.1",
+    "sockjs-client": "^1.6.1",
     "styled-components": "^6.1.13",
     "web-vitals": "^2.1.4"
   },
@@ -47,7 +51,11 @@
     ]
   },
   "devDependencies": {
+<<<<<<< HEAD
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.31.0"
+=======
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+>>>>>>> 69aba638b8f6608c539f3d2eec082c054be0fac1
   }
 }

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kosafia.gameapp.mapper.gameroom.GameRoomMapper">
+    
+    <!-- 방 생성 -->
+    <insert id="insertGameRoom">
+        INSERT INTO GameRoom (room_name, max_players, is_private, creator_id, created_at, room_password)
+        VALUES (#{roomName}, #{maxPlayers}, #{isPrivate}, #{creatorId}, #{createdAt}, #{roomPassword})
+    </insert>
+
+    <!-- 방 아이디 조회 -->
+    <select id="selectGameRoomById" resultType="com.kosafia.gameapp.models.gameroom.GameRoom">
+        SELECT * FROM GameRoom WHERE room_id = #{roomId}
+    </select>
+
+    <!-- 방 삭제 -->
+    <delete id="deleteGameRoom">
+        DELETE FROM GameRoom WHERE room_id = #{roomId}
+    </delete>
+
+    <!-- 방 전체 조회 -->
+    <select id="selectAllGameRooms" resultType="com.kosafia.gameapp.models.gameroom.GameRoom">
+        SELECT * FROM GameRoom
+    </select>
+
+    <!-- 검색어 조회 -->
+    <select id="selectGameRoomsBySearch" resultType="com.kosafia.gameapp.models.gameroom.GameRoom">
+        SELECT * FROM GameRoom WHERE room_name LIKE CONCAT('%', #{searchKeyword}, '%')
+    </select>
+
+    <!-- 대기방 조회 -->
+    <select id="selectWaitingGameRooms" resultType="com.kosafia.gameapp.models.gameroom.GameRoom">
+        SELECT * FROM GameRoom WHERE room_status = 'waiting'
+    </select>
+
+
+
+</mapper>
