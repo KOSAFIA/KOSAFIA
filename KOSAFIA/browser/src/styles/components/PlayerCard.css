@@ -2,25 +2,46 @@
     display: flex;  /* Flexbox를 사용하여 가로 방향으로 배치 */
     flex-wrap: wrap;  /* 자식 요소가 넘칠 경우 다음 줄로 이동하도록 설정 */
     gap: 70px;  /* 요소 간의 간격 */    
-    margin-top: -400px; 
     padding: 10px; 
     width: 100%;  
-    padding-left: 10%;
+    padding-left : 50px;
 }
 
 .player-card {
     width: 200px; 
-    height: 200px;
+    height: 400px;
     display: flex;
     flex-direction: column;
+    border: 3px solid;
+    border-color: #3b3b3b;
+    background: linear-gradient(45deg, #272727, #1f1f1f);
     align-items: center; 
     justify-content: center; 
-    border: 1px solid #ccc;
     border-radius: 8px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
     text-align: center; 
     cursor: pointer;
+    position: relative; /* ::before 위치 설정을 위해 relative 추가 */
 }
+
+/* 순서 표시용 정사각형 스타일 */
+.player-card::before {
+    content: attr(data-index); /* data-index 속성을 통해 순서 표시 */
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 60px;
+    height: 60px;
+    background-color: #616161;
+    color: white;
+    font-size: 25px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px; /* 모서리 둥글게 설정 */
+}
+
 
 .player-avatar {
     width:120px;
@@ -36,54 +57,4 @@
 .player-name {
     font-size: 25px;
     font-weight: bold;
-}
-
-.popup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7); /* 배경을 어둡게 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; /* 가장 위에 표시 */
-    backdrop-filter: blur(4px); /* 배경 흐림 효과 추가 */
-}
-
-.popup-content {
-    background: white;
-    width : 1000px;
-    height: 800px;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    text-align: center;
-}
-
-.role-selection {
-    display: flex;
-    justify-content: center;
-    margin: 10px 0;
-}
-
-.role-option {
-    width: 80px; /* 각 역할의 너비 */
-    height: 80px; /* 각 역할의 높이 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0 5px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    cursor: pointer;
-    background-color: #f0f0f0; /* 기본 배경 색 */
-    position: relative; /* 포지션 설정 */
-}
-
-.role-option span {
-    position: absolute;
-    color: #000; /* 텍스트 색상 */
-    font-weight: bold; /* 텍스트 두께 */
 }

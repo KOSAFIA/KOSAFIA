@@ -1,20 +1,34 @@
 package com.kosafia.gameapp.config.user;
 
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
+
+import com.kosafia.gameapp.services.user.UserService;
+
+import jakarta.servlet.http.HttpSession;
+
 import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration // 이 클래스가 설정 클래스임을 나타냄 //Spring 애플리케이션의 설정 정보를 포함하는 클래스로 간주
 @EnableWebSecurity // Spring Security를 활성화
 public class SecurityConfig {
 
+        @Autowired
+        private UserService userService; // UserService 주입
+
         // BCryptPasswordEncoder 빈 등록
-        @Bean //@Bean이 붙은 메서드가 반환하는 객체는 Spring 컨테이너에 의해 관리되는 빈이 됩니다.//필요할 때마다 컨테이너에서 주입하여 재사용할 수 있습니다.
+
+        @Bean // @Bean이 붙은 메서드가 반환하는 객체는 Spring 컨테이너에 의해 관리되는 빈이 됩니다.//필요할 때마다 컨테이너에서 주입하여
+              // 재사용할 수 있습니다.
         public PasswordEncoder passwordEncoder() {
                 return new BCryptPasswordEncoder(); // 비밀번호 암호화를 위해 BCrypt 사용
         }
@@ -42,11 +56,27 @@ public class SecurityConfig {
                                                                                                                  // API
                                                                                                                  // 허용
                                                                 "/img/**", "/custom-login" // 이미지 파일과 로그인 페이지 허용
+                                                                , "/api/room", "/TestLobby",
+                                                                "/LoginOk" // LoginOk 경로를 인증 없이 접근 가능하도록 허용
                                                 ).permitAll() // 위의 경로들에 대해 인증 없이 접근 허용
 
                                                 .anyRequest().authenticated() // 나머지 모든 요청은 인증 필요
                                 )
 
+                                // OAuth2 로그인 설정 -성공시
+                                .oauth2Login(oauth2 -> oauth2
+                                                .successHandler((request, response, authentication) -> {
+                                                        OAuth2User oAuth2User = (OAuth2User) authentication
+                                                                        .getPrincipal();
+                                                        Map<String, Object> userAttributes = oAuth2User.getAttributes();
+                                                        HttpSession session = request.getSession();
+                                                        userService.processOAuth2User(userAttributes, session); // OAuth2
+                                                                                                                // 사용자
+                                                                                                                // 정보 처리
+                                                        response.sendRedirect("/LoginOk"); // 성공 시 리디렉션
+                                                })
+                                                .failureUrl("/custom-login?error=true") // 실패 시 리디렉션할 URL
+                                )
                                 // 로그아웃 설정
                                 .logout(logout -> logout
                                                 .logoutUrl("/api/user/logout") // 로그아웃 경로 설정
@@ -64,3 +94,89 @@ public class SecurityConfig {
                 return http.build(); // 설정이 완료된 HttpSecurity 객체를 빌드하여 반환
         }
 }
+
+// import org.springframework.context.annotation.Bean;
+// import org.springframework.context.annotation.Configuration;
+// import
+// org.springframework.security.config.annotation.web.builders.HttpSecurity;
+// import
+// org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+// import
+// org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+// import org.springframework.security.config.http.SessionCreationPolicy;
+// import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+// import org.springframework.security.crypto.password.PasswordEncoder;
+// import org.springframework.security.web.SecurityFilterChain;
+// import org.springframework.security.web.session.HttpSessionEventPublisher;
+// import org.springframework.web.cors.CorsConfiguration;
+// import org.springframework.web.cors.CorsConfigurationSource;
+// import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+// import org.springframework.web.filter.CorsFilter;
+
+// import java.util.List;
+
+// @Configuration
+// @EnableWebSecurity
+// public class SecurityConfig {
+
+// @Bean
+// public PasswordEncoder passwordEncoder() {
+// return new BCryptPasswordEncoder(); // 비밀번호 암호화를 위해 BCrypt 사용
+// }
+
+// @SuppressWarnings("deprecation")
+// @Bean
+// public SecurityFilterChain securityFilterChain(HttpSecurity http) throws
+// Exception {
+// http
+// // CORS 설정 및 CSRF 비활성화
+// .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+// .csrf(AbstractHttpConfigurer::disable)
+
+// // 권한 설정
+// .authorizeHttpRequests(auth -> {
+// auth.requestMatchers(
+// "/", "/index.html", "/react/**", "/static/**",
+// "/css/**", "/js/**", "/img/**", "/custom-login",
+// "/api/user/register", "/api/user/login", "/api/user/profile",
+// "/api/user/logout", "/api/user/update-username",
+// "/api/user/update-password", "/api/user/delete",
+// "/api/room", "/public/**","**/TestLobby/"
+// ).permitAll();
+// auth.anyRequest().authenticated();
+// })
+
+// // 로그아웃 설정
+// .logout(logout -> logout
+// .logoutUrl("/api/user/logout")
+// .logoutSuccessUrl("/") // 로그아웃 성공 후 이동할 경로
+// .invalidateHttpSession(true)
+// .deleteCookies("JSESSIONID")
+// )
+
+// // 세션 관리 설정
+// .sessionManagement(session -> session
+// .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // 필요 시에만 세션 생성
+// );
+
+// return http.build();
+// }
+
+// // CORS 설정을 범용적으로 적용
+// @Bean
+// public CorsConfigurationSource corsConfigurationSource() {
+// CorsConfiguration configuration = new CorsConfiguration();
+// configuration.setAllowedOrigins(List.of("http://localhost:3000",
+// "http://localhost:8080")); // 프론트엔드 도메인 추가
+// configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE",
+// "OPTIONS")); // 허용할 HTTP 메소드
+// configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); //
+// 허용할 헤더
+// configuration.setAllowCredentials(true); // 자격 증명 포함 허용
+
+// UrlBasedCorsConfigurationSource source = new
+// UrlBasedCorsConfigurationSource();
+// source.registerCorsConfiguration("/**", configuration);
+// return source;
+// }
+// }

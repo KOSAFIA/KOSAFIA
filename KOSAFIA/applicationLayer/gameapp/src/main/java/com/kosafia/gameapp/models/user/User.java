@@ -17,6 +17,12 @@ public class User {
     private int status; // 1: 활성, 0: 탈퇴
     private LocalDateTime createdAt; // 계정 생성일
 
+    // provider : google이 들어감
+    private String provider;
+
+    // providerId : 구굴 로그인 한 유저의 고유 ID가 들어감
+    private String providerId;
+
     // 기본 생성자 추가 (MyBatis에서 필요)
     public User() {
     }

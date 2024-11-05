@@ -72,6 +72,8 @@ dependencies {
 	// BCryptPasswordEncoder를 사용하기 위해 필요한 Spring Security 의존성을 추가
  implementation 'org.springframework.boot:spring-boot-starter-security'
 
+ //구글oauth2 로그인
+implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
 
 }

@@ -89,7 +89,7 @@ function LoginOk() {
         className="mypage-modal" // 모달 스타일 클래스
         overlayClassName="mypage-modal-overlay" // 모달 배경 스타일 클래스
       >
-        <Mypage /> {/* 마이페이지 컴포넌트를 모달 안에 렌더링 */}
+        <Mypage setUsername={setUsername} /> {/* setUsername을 Mypage에 전달 */}
         <button onClick={closeMypageModal} style={{ marginTop: "10px" }}>
           닫기
         </button>

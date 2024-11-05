@@ -17,4 +17,6 @@ public interface UserMapper {
     // 회원 탈퇴: 사용자 상태(status)를 비활성화(0)로 업데이트
     void deactivateUser(@Param("userId") long userId);
 
+    User findByProviderId(String providerId); // 구글 providerId로 사용자 찾기
+
 }

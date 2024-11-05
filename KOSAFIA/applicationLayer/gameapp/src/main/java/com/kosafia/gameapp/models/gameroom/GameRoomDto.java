@@ -1,6 +1,10 @@
 package com.kosafia.gameapp.models.gameroom;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kosafia.gameapp.models.user.User;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,6 +23,8 @@ public class GameRoomDto {
     private boolean isPrivate;
     private String roomStatus;
     private String roomPassword; // 비밀번호 추가
+    private List<User> users;
+
 
     // Constructor
     public GameRoomDto() {}
@@ -31,6 +37,7 @@ public class GameRoomDto {
         this.isPrivate = gameRoom.isPrivate();
         this.roomStatus = gameRoom.getRoomStatus();
         this.roomPassword = gameRoom.getRoomPassword(); // 비밀번호 설정
+        // this.usersId = gameRoom.getUsersId();
     }
 
      // Convert DTO to Entity
@@ -43,6 +50,7 @@ public class GameRoomDto {
         gameRoom.setPrivate(this.isPrivate);
         gameRoom.setRoomStatus(this.roomStatus);
         gameRoom.setRoomPassword(this.roomPassword); // 비밀번호 설정
+        // gameRoom.setUsersId(this.usersId);
         return gameRoom;
     }
 
