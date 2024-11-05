@@ -30,8 +30,8 @@ public class testController {
         return "forward:/index.html"; // React의 빌드된 index.html을 반환
     }
 
-    @GetMapping("/LoginOk")
-    public String loginOk() {
-        return "forward:/index.html"; // LoginOk 경로를 React의 index.html로 전달
-    }
+    // @GetMapping("/LoginOk")
+    // public String loginOk() {
+    // return "forward:/index.html"; // LoginOk 경로를 React의 index.html로 전달
+    // }
 }

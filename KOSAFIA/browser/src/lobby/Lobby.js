@@ -1,67 +1,61 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Modal from "react-modal";
+import LoginOk from "../user/LoginOk";
 import "./Lobby.css";
 
 function Lobby() {
   const [rooms, setRooms] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [username, setUsername] = useState(""); // 사용자 이름 상태
+  const [username, setUsername] = useState("");
   const [newRoom, setNewRoom] = useState({
     roomName: "",
     maxPlayers: 8,
     isPrivate: false,
   });
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // 로그인한 사용자 정보 가져오기
     const fetchUserInfo = async () => {
       try {
         const response = await axios.get(
           "http://localhost:8080/api/user/profile",
           {
-            withCredentials: true, // 세션 쿠키 포함
+            withCredentials: true,
           }
         );
-        setUsername(response.data.username); // 사용자 이름 설정
+        setUsername(response.data.username);
       } catch (error) {
-        console.error("사용자 정보를 가져오는 데 실패했습니다.", error);
+        setError("사용자 정보를 가져오는 데 실패했습니다.");
       }
     };
 
-    // Redis에서 방 정보 가져오기
     const fetchRooms = async () => {
       try {
         const response = await axios.get("http://localhost:8080/api/rooms");
         setRooms(response.data);
       } catch (error) {
-        console.error("방 정보를 가져오는데 실패했습니다.", error);
+        setError("방 정보를 가져오는데 실패했습니다.");
       }
     };
 
-    fetchUserInfo(); // 사용자 정보 가져오기
-    fetchRooms(); // 방 목록 가져오기
+    fetchUserInfo();
+    fetchRooms();
   }, []);
 
-  // 방 생성 함수
   const createRoom = async () => {
     try {
-      await axios.post("http://localhost:8080/api/rooms", newRoom); // 새 방 정보 전송
-      closeModal(); // 모달 닫기
-      const response = await axios.get("http://localhost:8080/api/rooms"); // 전체 방 목록 새로고침
-      setRooms(response.data); // 방 목록 업데이트
+      await axios.post("http://localhost:8080/api/rooms", newRoom);
+      closeModal();
+      const response = await axios.get("http://localhost:8080/api/rooms");
+      setRooms(response.data);
     } catch (error) {
-      console.error("방 생성에 실패했습니다.", error);
+      setError("방 생성에 실패했습니다.");
     }
   };
 
-  const openModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -73,15 +67,20 @@ function Lobby() {
 
   return (
     <div className="lobby-container">
+      <div className="navbar">
+        <LoginOk />
+      </div>
+
       <div className="lobby-header">
-        {username && <h1>{username}님, 환영합니다!</h1>}{" "}
-        {/* 사용자 환영 메시지 */}
+        {username && <h1>{username}님, 환영합니다!</h1>}
+        {error && <p className="error-message">{error}</p>}
         <button className="create-room-btn" onClick={openModal}>
           방 만들기
         </button>
         <button className="quick-join-btn">빠른 입장</button>
         <button className="exit-btn">종료</button>
       </div>
+
       <div className="room-list">
         {rooms.length > 0 ? (
           rooms.map((room) => (
@@ -104,6 +103,7 @@ function Lobby() {
           <p>현재 대기 중인 방이 없습니다.</p>
         )}
       </div>
+
       <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
@@ -120,6 +120,7 @@ function Lobby() {
               name="roomName"
               value={newRoom.roomName}
               onChange={handleInputChange}
+              required
             />
           </label>
           <label>
@@ -131,6 +132,7 @@ function Lobby() {
               onChange={handleInputChange}
               min="4"
               max="12"
+              required
             />
           </label>
           <label>

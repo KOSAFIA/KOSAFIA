@@ -1,13 +1,22 @@
+:root {
+  --background-color: #1e1e1e;
+  --sidebar-bg-color: #2e2e2e;
+  --button-bg-color: #ff4500;
+  --text-color: #fff;
+  --hover-color: #f39c12;
+}
+
 .lobby-container {
   display: flex;
   height: 100vh;
-  background-color: #1e1e1e;
-  color: #fff;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  padding-top: 60px;
 }
 
 .sidebar {
   width: 20%;
-  background-color: #2e2e2e;
+  background-color: var(--sidebar-bg-color);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -44,24 +53,33 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin: 20px 0;
+  text-align: center;
 }
 
 .create-room-btn,
 .quick-join-btn,
 .exit-btn {
-  background-color: #ff4500;
+  background-color: var(--button-bg-color);
   border: none;
-  color: #fff;
+  color: var(--text-color);
   padding: 10px 20px;
   cursor: pointer;
   margin-right: 10px;
+  transition: background-color 0.3s;
+}
+
+.create-room-btn:hover,
+.quick-join-btn:hover,
+.exit-btn:hover {
+  background-color: var(--hover-color);
 }
 
 .room-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding: 20px;
 }
 
 .room-item {
@@ -70,6 +88,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-radius: 5px;
 }
 
 .room-info {
@@ -87,7 +106,7 @@
 }
 
 .room-status {
-  color: #f39c12;
+  color: var(--hover-color);
   margin-left: 10px;
 }
 
@@ -103,25 +122,30 @@
 }
 
 .private-room {
-  color: #ff4500;
+  color: var(--button-bg-color);
   margin-left: 10px;
 }
 
 .join-room-btn {
-  background-color: #ff4500;
+  background-color: var(--button-bg-color);
   border: none;
-  color: #fff;
+  color: var(--text-color);
   padding: 10px;
   cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.join-room-btn:hover {
+  background-color: var(--hover-color);
 }
 
 .create-room-modal {
-  background: #2e2e2e;
+  background: var(--sidebar-bg-color);
   padding: 20px;
   width: 400px;
   margin: auto;
   border-radius: 10px;
-  color: #fff;
+  color: var(--text-color);
 }
 
 .create-room-overlay {
@@ -152,13 +176,47 @@
 
 .create-room-confirm-btn,
 .create-room-cancel-btn {
-  background-color: #ff4500;
+  background-color: var(--button-bg-color);
   border: none;
-  color: #fff;
+  color: var(--text-color);
   padding: 10px 20px;
   cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.create-room-confirm-btn:hover,
+.create-room-cancel-btn:hover {
+  background-color: var(--hover-color);
 }
 
 .create-room-cancel-btn {
   background-color: #444;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: #333;
+  color: var(--text-color);
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+}
+
+@media (max-width: 768px) {
+  .lobby-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+  }
+
+  .lobby-main {
+    width: 100%;
+  }
 }
