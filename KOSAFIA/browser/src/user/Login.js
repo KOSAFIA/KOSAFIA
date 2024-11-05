@@ -1,7 +1,6 @@
 import React, { useState } from "react"; // React와 useState 훅을 가져옵니다.
 import { Link, useNavigate } from "react-router-dom"; // 페이지 이동을 위한 Link와 useNavigate를 가져옵니다.
 import "../styles/components/Login.css";
-import "../lobby/TestLobby.js";
 import {
   MDBBtn,
   MDBContainer,
@@ -33,7 +32,7 @@ function Login() {
       });
 
       if (response.ok) {
-        navigate("/TestLobby"); // 로그인 성공 시 LoginOk 페이지로 리디렉션
+        navigate("/TestLobby"); // 로그인 성공 시 LoginOk 페이지로 리디렉션 /TestLobby
       } else {
         const errorData = await response.text();
         setError(errorData || "로그인 실패. 다시 시도하세요.");

@@ -25,8 +25,8 @@ public class testController {
     }
 
     // 지연 lobby
-    @GetMapping("/lobby")
-    public String lobby() {
+    @GetMapping("/TestLobby")
+    public String TestLobby() {
         return "forward:/index.html"; // React의 빌드된 index.html을 반환
     }
 

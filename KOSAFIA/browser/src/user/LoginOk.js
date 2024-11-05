@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import CheckCors from "../utils/CheckCors";
 import Modal from "react-modal";
 import Mypage from "./Mypage"; // Mypage 컴포넌트를 불러옵니다.
 import { useNavigate } from "react-router-dom";
@@ -12,9 +13,11 @@ function LoginOk() {
 
   // 컴포넌트가 처음 렌더링될 때 사용자 정보를 가져오는 함수입니다.
   useEffect(() => {
-    // 로그인한 사용자 정보 가져오기
+    // 로그인한 사용자 정보 가져오기와 CORS 확인
     const fetchUserInfo = async () => {
       try {
+        await CheckCors(); // CORS 확인을 위해 CheckCors 호출
+
         const response = await fetch("http://localhost:8080/api/user/profile", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
