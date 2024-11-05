@@ -48,9 +48,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Route path="/" element={<Login />} />
       <Route path="/custom-login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/LoginOk" element={<Lobby />} />
+      {/* <Route path="/LoginOk" element={<Lobby />} /> */}
       <Route path="/mypage" element={<Mypage />} />
-      <Route path="/lobby" element={<Lobby />} />
+      <Route path="/TestLobby" element={<TestLobby />} />
     </Routes>
   </BrowserRouter>
 );
