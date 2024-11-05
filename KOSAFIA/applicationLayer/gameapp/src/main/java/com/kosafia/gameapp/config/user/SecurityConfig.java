@@ -59,7 +59,7 @@ public class SecurityConfig {
                                                 .anyRequest().authenticated() // 나머지 모든 요청은 인증 필요
                                 )
 
-                                // OAuth2 로그인 설정 -성공시
+                                // OAuth2 로그인 설정 -성공시 //
                                 .oauth2Login(oauth2 -> oauth2
                                                 .successHandler((request, response, authentication) -> {
                                                         OAuth2User oAuth2User = (OAuth2User) authentication
