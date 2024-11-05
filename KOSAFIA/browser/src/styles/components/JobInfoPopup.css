@@ -1,0 +1,32 @@
+.job-info-popup {
+  position: absolute;
+  top: 40px;
+  right: 10px;
+  width: 300px;
+  padding: 10px;
+  background-color: #333;
+  color: #fff;
+  border-radius: 5px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.job-info-popup h3 {
+    font-weight: bold;
+    font-size: 25px; 
+    margin: 0; 
+  }
+
+.job-info-popup p {
+  font-size: 15px;
+}
+
+.job-info-popup ul {
+  padding: 0;
+  margin: 5px 0 0 0;
+  list-style: none;
+}
+
+.job-info-popup h2 {
+  text-align: center;
+}

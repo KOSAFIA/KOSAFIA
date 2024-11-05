@@ -3,6 +3,7 @@ package com.kosafia.gameapp.services.user;
 import com.kosafia.gameapp.mapper.user.UserMapper;
 import com.kosafia.gameapp.models.user.User;
 import com.kosafia.gameapp.models.user.UserData;
+import com.kosafia.gameapp.models.user.UserData;
 
 import jakarta.servlet.http.HttpSession;
 

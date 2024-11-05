@@ -5,13 +5,39 @@
   justify-content: center;
   width: 100%;
 }
-
 .time-display {
   display: flex;
   align-items: center;
   justify-content: center; /* 가운데 정렬 */
   flex: 1; /* 남은 공간을 차지하게 함 */
 }
+
+.timer-button-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-button-wrapper .button {
+  margin-top: 25px;
+  margin-right: 20px;
+  margin-left: 20px;
+  background-color:transparent;
+  width: 50px; 
+  height: 50px;
+  border: none; 
+  background-size: cover;
+  cursor: pointer; 
+}
+
+.timer-button-wrapper .increase-time {
+  background-image: url('../../../public/img/timer-plus.png'); 
+}
+
+.timer-button-wrapper .decrease-time {
+  background-image: url('../../../public/img/timer-minus.png');
+}
+
 
 .time-display .button {
   margin-bottom: 24px;
