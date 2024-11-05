@@ -1,0 +1,11 @@
+.send-button {
+    width: 40px; /* 버튼의 너비 설정 */
+    height: 40px; /* 버튼의 높이 설정 */
+    border: none;
+    background-image: url('../../../public/img/send.png'); /* 이미지 경로 설정 */
+    background-color: #363636;
+    background-size: contain; /* 이미지 크기를 버튼에 맞게 조정 */
+    background-repeat: no-repeat; /* 이미지 반복 방지 */
+    cursor: pointer;
+    border-radius: 13px;
+}

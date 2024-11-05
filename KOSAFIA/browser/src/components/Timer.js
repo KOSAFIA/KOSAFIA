@@ -11,7 +11,7 @@ const stages = [
   { name: "밤", image: "/img/night.png" },
 ];
 
-const Timer = ({ onSendMessage, playerName }) => {
+const Timer = ({ onSendMessage, playerName, onStageChange }) => {
   const [time, setTime] = useState(stageDurations[stages[0].name]);
   const [stageIndex, setStageIndex] = useState(0);
   const [dayCount, setDayCount] = useState(1);
@@ -26,11 +26,13 @@ const Timer = ({ onSendMessage, playerName }) => {
           const nextStageIndex = getNextStageIndex(stageIndex, stages.length);
           setStageIndex(nextStageIndex);
 
-          // 낮 단계에서만 시간 조정 가능하도록 초기화 및 조건 설정
           if (stages[nextStageIndex].name === "낮") {
             setDayCount((prevDay) => prevDay + 1);
-            setHasModifiedTime(false); // 새로운 날이 되면 초기화
+            setHasModifiedTime(false);
           }
+
+          // 현재 단계 인덱스를 부모 컴포넌트 또는 ChatBox로 전달
+          onStageChange(nextStageIndex);
 
           return stageDurations[stages[nextStageIndex].name];
         }
@@ -38,7 +40,7 @@ const Timer = ({ onSendMessage, playerName }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [stageIndex]);
+  }, [stageIndex, onStageChange]);
 
   const handleIncreaseTime = () => {
     if (stages[stageIndex].name === "낮" && canModifyTime(hasModifiedTime)) {
@@ -58,19 +60,20 @@ const Timer = ({ onSendMessage, playerName }) => {
 
   return (
     <div className="timer">
-      <div className="stage-image">
-        <img src={stages[stageIndex].image} alt={stages[stageIndex].name} />
-      </div>
-      <div className="time-display">
-        <button className="button" onClick={handleIncreaseTime}>시간 증가</button>
-        <span>&nbsp;⏰&nbsp;</span>
+    <div className="stage-image">
+      <img src={stages[stageIndex].image} alt={stages[stageIndex].name} />
+    </div>
+    <div className="time-display">
+      <div className="timer-button-wrapper">
+        <button className="button decrease-time" onClick={handleDecreaseTime}></button>
         <span>&nbsp;{`0:${time.toString().padStart(2, "0")}`}&nbsp;&nbsp;</span>
-        <button className="button" onClick={handleDecreaseTime}>시간 감소</button>
-      </div>
-      <div className="stage-info">
-        {dayCount}일차 {stages[stageIndex].name}
+        <button className="button increase-time" onClick={handleIncreaseTime}></button>
       </div>
     </div>
+    <div className="stage-info">
+      {dayCount}일차 {stages[stageIndex].name}
+    </div>
+  </div>
   );
 };
 

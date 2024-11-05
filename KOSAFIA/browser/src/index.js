@@ -13,7 +13,7 @@ import Kny22 from "./pages/kny/Kny22";
 import { BrowserRouter, Routes, Route } from "react-router-dom"; // React Router 라이브러리에서 필요한 컴포넌트를 불러옵니다.
 
 //이하은
-// ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 
 // // 차수현
 // // root ID를 가진 DOM 요소에 React 컴포넌트를 렌더링합니다.
@@ -24,9 +24,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"; // React Router
 //       <Route path="/custom-login" element={<Login />} />
 //       <Route path="/register" element={<Register />} />
 //       <Route path="/LoginOk" element={<LoginOk />} />
-//       <Route path="/mypage" element={<Mypage />} />
-//       <Route path="/lobby" element={<Lobby />} />
-
 //     </Routes>
 //   </BrowserRouter>
 // );
@@ -51,9 +48,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Route path="/" element={<Login />} />
       <Route path="/custom-login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      {/* <Route path="/LoginOk" element={<Lobby />} /> */}
+      <Route path="/LoginOk" element={<Lobby />} />
       <Route path="/mypage" element={<Mypage />} />
-      <Route path="/TestLobby" element={<TestLobby />} />
+      <Route path="/lobby" element={<Lobby />} />
     </Routes>
   </BrowserRouter>
 );
