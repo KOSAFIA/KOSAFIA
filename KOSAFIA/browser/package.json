@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-
-    "@popperjs/core": "^2.11.8",
+    "@stomp/stompjs": "^7.0.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "bootstrap": "^5.3.3",
-    "@stomp/stompjs": "^7.0.0",
+    "assert": "^2.1.0",
     "axios": "^1.7.7",
+    "bootstrap": "^5.3.3",
+    "https-browserify": "^1.0.0",
     "mdb-react-ui-kit": "^9.0.0",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.5",
@@ -19,7 +19,11 @@
     "react-router-dom": "^6.27.0",
     "react-scripts": "5.0.1",
     "sockjs-client": "^1.6.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
     "styled-components": "^6.1.13",
+    "url": "^0.11.4",
+    "util": "^0.12.5",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -49,13 +53,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-<<<<<<< HEAD
-    "eslint": "^8.57.1",
-    "eslint-plugin-import": "^2.31.0"
-=======
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
->>>>>>> 69aba638b8f6608c539f3d2eec082c054be0fac1
   }
 }
