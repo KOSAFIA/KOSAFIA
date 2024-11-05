@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "./Lobby.css";
 import Modal from "react-modal";
-import LoginOk from "../user/LoginOk";
+import "./Lobby.css";
 
 function Lobby() {
   const [rooms, setRooms] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [username, setUsername] = useState(""); // 사용자 이름 상태
   const [newRoom, setNewRoom] = useState({
     roomName: "",
     maxPlayers: 8,
@@ -14,6 +14,21 @@ function Lobby() {
   });
 
   useEffect(() => {
+    // 로그인한 사용자 정보 가져오기
+    const fetchUserInfo = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/user/profile",
+          {
+            withCredentials: true, // 세션 쿠키 포함
+          }
+        );
+        setUsername(response.data.username); // 사용자 이름 설정
+      } catch (error) {
+        console.error("사용자 정보를 가져오는 데 실패했습니다.", error);
+      }
+    };
+
     // Redis에서 방 정보 가져오기
     const fetchRooms = async () => {
       try {
@@ -23,8 +38,22 @@ function Lobby() {
         console.error("방 정보를 가져오는데 실패했습니다.", error);
       }
     };
-    fetchRooms();
+
+    fetchUserInfo(); // 사용자 정보 가져오기
+    fetchRooms(); // 방 목록 가져오기
   }, []);
+
+  // 방 생성 함수
+  const createRoom = async () => {
+    try {
+      await axios.post("http://localhost:8080/api/rooms", newRoom); // 새 방 정보 전송
+      closeModal(); // 모달 닫기
+      const response = await axios.get("http://localhost:8080/api/rooms"); // 전체 방 목록 새로고침
+      setRooms(response.data); // 방 목록 업데이트
+    } catch (error) {
+      console.error("방 생성에 실패했습니다.", error);
+    }
+  };
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -42,59 +71,38 @@ function Lobby() {
     }));
   };
 
-  const createRoom = async () => {
-    try {
-      await axios.post("http://localhost:8080/api/rooms", newRoom);
-      closeModal();
-      // 방 생성 후 다시 방 목록 불러오기
-      const response = await axios.get("http://localhost:8080/api/lobby");
-      setRooms(response.data);
-    } catch (error) {
-      console.error("방 생성에 실패했습니다.", error);
-    }
-  };
-
   return (
     <div className="lobby-container">
-      <div className="sidebar">
-        <div className="profile">
-          <div className="profile-pic">?</div>
-          <div className="profile-info">
-            <p>0</p>
-            <p>1,049</p>
-          </div>
-        </div>
+      <div className="lobby-header">
+        {username && <h1>{username}님, 환영합니다!</h1>}{" "}
+        {/* 사용자 환영 메시지 */}
+        <button className="create-room-btn" onClick={openModal}>
+          방 만들기
+        </button>
+        <button className="quick-join-btn">빠른 입장</button>
+        <button className="exit-btn">종료</button>
       </div>
-      <div className="lobby-main">
-        <div className="lobby-header">
-          <button className="create-room-btn" onClick={openModal}>
-            방 만들기
-          </button>
-          <button className="quick-join-btn">빠른 입장</button>
-          <button className="exit-btn">종료</button>
-        </div>
-        <div className="room-list">
-          {rooms.length > 0 ? (
-            rooms.map((room) => (
-              <div key={room.roomId} className="room-item">
-                <div className="room-info">
-                  <span className="room-number">{room.roomId}. </span>
-                  <span className="room-name">{room.roomName}</span>
-                  {room.isPrivate && <span className="private-room"> 🔒</span>}
-                </div>
-                <div className="room-players">
-                  <span className="players">
-                    {room.currentPlayers}/{room.maxPlayers}
-                  </span>
-                  <span className="room-status"> {room.roomStatus}</span>
-                </div>
-                <button className="join-room-btn">입장</button>
+      <div className="room-list">
+        {rooms.length > 0 ? (
+          rooms.map((room) => (
+            <div key={room.roomId} className="room-item">
+              <div className="room-info">
+                <span className="room-number">{room.roomId}. </span>
+                <span className="room-name">{room.roomName}</span>
+                {room.isPrivate && <span className="private-room"> 🔒</span>}
               </div>
-            ))
-          ) : (
-            <p>현재 대기 중인 방이 없습니다.</p>
-          )}
-        </div>
+              <div className="room-players">
+                <span className="players">
+                  {room.currentPlayers}/{room.maxPlayers}
+                </span>
+                <span className="room-status"> {room.roomStatus}</span>
+              </div>
+              <button className="join-room-btn">입장</button>
+            </div>
+          ))
+        ) : (
+          <p>현재 대기 중인 방이 없습니다.</p>
+        )}
       </div>
       <Modal
         isOpen={isModalOpen}

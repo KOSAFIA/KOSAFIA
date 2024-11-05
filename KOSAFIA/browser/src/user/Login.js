@@ -114,6 +114,9 @@ function Login() {
                 Login
               </MDBBtn>
             </form>
+            <a href="http://localhost:8080/oauth2/authorization/google">
+              <button>Google로 로그인</button>
+            </a>
             <p className="mt-3 mb-5">
               계정이 없으신가요?{" "}
               <Link to="/register" className="text-muted">

@@ -2,6 +2,7 @@ package com.kosafia.gameapp.services.user;
 
 import com.kosafia.gameapp.mapper.user.UserMapper;
 import com.kosafia.gameapp.models.user.User;
+import com.kosafia.gameapp.models.user.UserData;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -56,11 +57,11 @@ public class UserService {
 
     // 프로필 조회 메서드
     public Map<String, Object> getUserProfile(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null)
+        User user = (User) session.getAttribute("user"); // 세션에서 사용자 정보 가져오기
+        if (user == null) // 사용자 정보가 없을 경우 처리
             return null;
 
-        Map<String, Object> userData = new HashMap<>();
+        Map<String, Object> userData = new HashMap<>();// 사용자 정보를 Map에 담기
         userData.put("user_email", user.getUserEmail());
         userData.put("username", user.getUsername());
         return userData;
@@ -106,4 +107,43 @@ public class UserService {
             return "비밀번호가 일치하지 않습니다.";
         }
     }
+
+    // 특정 User를 UserData 형식으로 가져오는 메서드 // 로그인한 user정보 필요한 사람 이거 쓰세요~~~
+    public UserData getUserData(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return null;
+        }
+
+        return new UserData(user.getUserId(), user.getUserEmail(), user.getUsername());
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    // OAuth2 Google 로그인 사용자 정보를 처리하는 메서드
+    public String processOAuth2User(Map<String, Object> userAttributes, HttpSession session) {
+        String email = (String) userAttributes.get("email");
+        String providerId = (String) userAttributes.get("sub"); // Google의 unique ID
+        String provider = "google"; // provider를 "google"로 설정
+
+        // 기존 사용자 찾기
+        User user = userMapper.findByProviderId(providerId);
+        if (user == null) {
+            // 신규 사용자 등록
+            user = new User();
+            user.setUserEmail(email);
+            user.setUsername((String) userAttributes.get("name")); // Google 사용자 이름
+            user.setProvider(provider);
+            user.setProviderId(providerId);
+            user.setPassword(""); // OAuth 사용자의 경우 비밀번호를 빈 문자열로 설정
+            user.setStatus(1);
+            user.setCreatedAt(LocalDateTime.now());
+            userMapper.insertUser(user); // DB에 저장
+        }
+
+        // 세션에 사용자 정보 저장
+        session.setAttribute("user", user);
+        return "OAuth2 로그인 성공";
+    }
+
 }
