@@ -47,15 +47,6 @@ public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer{
         registry.addEndpoint("/wstomp")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();  // SockJS 지원 추가
-
-        //         // SockJS 폴백 옵션을 위한 별도 엔드포인트
-        // registry.addEndpoint("/wstomp")
-        //         .setAllowedOriginPatterns("*")
-        //         .withSockJS()
-        //         .setClientLibraryUrl("/webjars/sockjs-client/1.5.1/sockjs.min.js")  // SockJS 클라이언트 경로 지정
-        //         .setWebSocketEnabled(true)
-        //         .setSessionCookieNeeded(false);
-
     }
 
         // SockJS fallback options 추가

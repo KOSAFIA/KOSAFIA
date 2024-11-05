@@ -1,4 +1,4 @@
-package com.kosafia.gameapp.knyTestSet;
+package com.kosafia.gameapp.knytestset;
 
 import org.apache.ibatis.annotations.Mapper;
 

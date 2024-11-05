@@ -21,6 +21,16 @@ public class UserService {
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    //=======김남영 터치 책임은 김남영이============
+    public User getUserFromSession(HttpSession session){
+        User user = (User) session.getAttribute("user");
+        if (user == null)
+            return null;
+
+        return user;
+    }
+    //=======김남영 터치 책임은 김남영이============
+
     // 회원가입 메서드
     public String registerUser(String email, String username, String password) {
         User existingUser = userMapper.findByEmail(email);

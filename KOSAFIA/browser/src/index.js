@@ -50,19 +50,19 @@ import GameStart from "./fast/gamechat/GameStart";
 //     console.error('Root element not found');
 // }
 
-//김지연
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/custom-login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/LoginOk" element={<Lobby />} />
-      <Route path="/mypage" element={<Mypage />} />
-      <Route path="/lobby" element={<Lobby />} />
-    </Routes>
-  </BrowserRouter>
-);
+// //김지연
+// ReactDOM.createRoot(document.getElementById("root")).render(
+//   <BrowserRouter>
+//     <Routes>
+//       <Route path="/" element={<Login />} />
+//       <Route path="/custom-login" element={<Login />} />
+//       <Route path="/register" element={<Register />} />
+//       <Route path="/LoginOk" element={<Lobby />} />
+//       <Route path="/mypage" element={<Mypage />} />
+//       <Route path="/lobby" element={<Lobby />} />
+//     </Routes>
+//   </BrowserRouter>
+// );
 
 
 
@@ -88,3 +88,17 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 //   document.getElementById('root')
 
 // );
+
+//김남영 유저 리스트 리프레시 업데이트
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/custom-login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/LoginOk" element={<Kny333/>} />
+      <Route path="/mypage" element={<Mypage />} />
+      <Route path="/lobby" element={<Lobby />} />
+    </Routes>
+  </BrowserRouter>
+);
