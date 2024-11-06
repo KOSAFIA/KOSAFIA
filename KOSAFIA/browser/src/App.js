@@ -4,6 +4,7 @@
 // import GameRoom from "./pages/GameRoom";
 // import Login from "./user/Login";
 // import Register from "./user/Register";
+// import LoginOk from "./user/LoginOk";
 
 // const App = () => {
 //   return (
@@ -11,6 +12,8 @@
 //       <Routes>
 //         <Route path="/" element={<GameRoom />} />
 //         <Route path="/login" element={<Login />} />
+//         <Route path="/LoginOk" element={<LoginOk />} />
+//         <Route path="/custom-login" element={<Login />} />
 //         <Route path="/register" element={<Register />} />
 //       </Routes>
 //     </BrowserRouter>

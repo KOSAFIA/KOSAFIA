@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import CheckCors from "../utils/CheckCors";
 import Modal from "react-modal";
 import Mypage from "./Mypage"; // Mypage 컴포넌트를 불러옵니다.
+import GameRoom from "../pages/GameRoom";
 import { useNavigate } from "react-router-dom";
 
 Modal.setAppElement("#root"); // 모달이 열릴 때 #root 외부의 콘텐츠는 접근 불가로 설정
@@ -72,6 +73,11 @@ function LoginOk() {
     setIsMypageModalOpen(false); // 마이페이지 모달을 닫도록 상태를 false로 변경
   };
 
+    // 게임방 페이지로 이동
+    const goToGameRoom = () => {
+      navigate("/GameRoom"); // 게임방 페이지로 이동
+    };
+    
   return (
     <div className="login-ok-container">
       <h1>홈 페이지</h1>
@@ -83,6 +89,9 @@ function LoginOk() {
 
       <button className="mypage-button" onClick={openMypageModal}>
         마이페이지
+      </button>
+      <button className="GameRoombutton" onClick={goToGameRoom}>
+        게임방
       </button>
 
       <Modal
