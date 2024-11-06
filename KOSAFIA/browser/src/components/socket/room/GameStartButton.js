@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGameStart } from './GameStartContext';
+import { useGameStart } from '../../../contexts/socket/room/GameStartContext';
 
 const GameStartButton = () => {
     const { startGame } = useGameStart();

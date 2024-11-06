@@ -1,8 +1,9 @@
-import { RoomChat } from "../../socket/room/RoomChat";
+import RoomChatComponent from "../../socket/room/RoomChatComponet";
 import { RoomProvider } from "../../../contexts/socket/room/RoomContext";
 import { useBase } from "../../../contexts/socket/base/BaseContext";
 import React, { useState, useEffect } from "react";
 import RoomUserList from "../../socket/room/RoomUserList";
+import { Import } from "lucide-react";
 
 
 
@@ -27,7 +28,7 @@ export const RoomSocketComponent = ({ roomId }) => {
       <RoomProvider roomId={roomId} stompClient={stompClient}>
         <div className="room-container">
           <RoomUserList />
-          <RoomChat />
+          <RoomChatComponent />
         </div>
       </RoomProvider>
     );

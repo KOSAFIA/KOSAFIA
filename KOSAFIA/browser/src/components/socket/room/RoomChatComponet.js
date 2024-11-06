@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useChat } from '../../contexts/socket/room/RoomChatContext';
+import { useChat } from '../../../contexts/socket/room/RoomChatContext';
 
 const RoomChatComponent = () => {
     const { messages, sendMessage } = useChat();
