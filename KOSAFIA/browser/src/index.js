@@ -8,6 +8,9 @@ import LoginOk from "./user/LoginOk"; //로그인 성공시 나오는 화면
 import Mypage from "./user/Mypage";
 import Lobby from "./lobby/Lobby";
 import TestLobby from "./lobby/TestLobby";
+import TestRoom from './lobby/TestRoom';
+import TestPlayRoom from './lobby/TestPlayRoom';
+
 
 // import Kny22 from "./pages/kny/Kny22";
 
@@ -99,6 +102,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       {/* <Route path="/LoginOk" element={<Lobby />} /> */}
       <Route path="/mypage" element={<Mypage />} />
       <Route path="/TestLobby" element={<TestLobby />} />
+      <Route path="/rooms/:roomId" element={<TestRoom />} />
+      <Route path="/rooms/:roomId/gameplay" element={<TestPlayRoom />} />
+
     </Routes>
   </BrowserRouter>
 );

@@ -17,7 +17,7 @@ import com.kosafia.gameapp.models.gameroom.GameRoomDto;
 import com.kosafia.gameapp.services.gameroom.GameRoomService;
 
 @RestController
-@RequestMapping("/api/rooms")
+@RequestMapping("/api/rooms/gameRoomController")
 public class GameRoomController {
     @Autowired
     private GameRoomService gameRoomService;
