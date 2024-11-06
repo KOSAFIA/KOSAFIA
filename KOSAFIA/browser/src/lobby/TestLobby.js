@@ -1,10 +1,10 @@
 import React from 'react';
 import axios from 'axios';
 
-function LobbyPage() {
+function TestLobby() {
     const handleJoinRoom = async () => {
         try {
-            const response = await axios.post('http://localhost:8080/rooms/1/join'); // 서버의 엔드포인트 주소
+            const response = await axios.post('http://localhost:8080/api/rooms/1/join'); // 서버의 엔드포인트 주소
             alert(response.data); // 성공 시 서버로부터의 메시지 표시
         } catch (error) {
             console.error('Error joining room:', error);
@@ -20,4 +20,4 @@ function LobbyPage() {
     );
 }
 
-export default LobbyPage;
+export default TestLobby;
