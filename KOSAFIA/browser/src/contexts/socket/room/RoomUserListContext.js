@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useStompClient } from './useStompClient';
+import useStompClient from '../../../hooks/socket/UseStompClient';
 
 const UserListContext = createContext();
 

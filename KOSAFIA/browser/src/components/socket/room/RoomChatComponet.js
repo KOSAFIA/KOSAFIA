@@ -6,9 +6,15 @@ const RoomChatComponent = () => {
     const [input, setInput] = useState('');
 
     const handleSend = () => {
+        console.log('Send button clicked');
+        console.log('Current input:', input);
+
         if (input.trim()) {
+            console.log('Sending message:', input);
             sendMessage(input);
             setInput('');
+        } else {
+            console.log('Input is empty, not sending message');
         }
     };
 
@@ -19,7 +25,13 @@ const RoomChatComponent = () => {
                     <div key={index}>{msg.sender}: {msg.content}</div>
                 ))}
             </div>
-            <input value={input} onChange={(e) => setInput(e.target.value)} />
+            <input 
+                value={input} 
+                onChange={(e) => {
+                    console.log('Input changed:', e.target.value);
+                    setInput(e.target.value);
+                }} 
+            />
             <button onClick={handleSend}>Send</button>
         </div>
     );

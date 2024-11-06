@@ -1,33 +1,16 @@
-import React, { createContext, useContext, useEffect } from 'react';
-import { useRoomSocket } from '../../../hooks/socket/room/useRoomSocket';
+import React, { createContext, useContext } from 'react';
+import useRoom from '../../../hooks/socket/useRoom';
 
-const RoomContext = createContext(null);
+const RoomContext = createContext();
 
-export const RoomProvider = ({ children, roomId, stompClient }) => {
-  const roomSocketHook = useRoomSocket(stompClient, roomId);
-  
-  useEffect(() => {
-    const { chatUnsub, usersUnsub } = roomSocketHook.subscribeToRoom();
-    roomSocketHook.enterRoom();
+export const RoomProvider = ({ roomId, children }) => {
+    const room = useRoom(roomId);
 
-    return () => {
-      roomSocketHook.leaveRoom();
-      if (chatUnsub) chatUnsub();
-      if (usersUnsub) usersUnsub();
-    };
-  }, [roomId, stompClient]);
-
-  return (
-    <RoomContext.Provider value={roomSocketHook}>
-      {children}
-    </RoomContext.Provider>
-  );
+    return (
+        <RoomContext.Provider value={room}>
+            {children}
+        </RoomContext.Provider>
+    );
 };
 
-export const useRoom = () => {
-  const context = useContext(RoomContext);
-  if (!context) {
-    throw new Error('useRoom must be used within a RoomProvider');
-  }
-  return context;
-};
+export const useRoomContext = () => useContext(RoomContext);

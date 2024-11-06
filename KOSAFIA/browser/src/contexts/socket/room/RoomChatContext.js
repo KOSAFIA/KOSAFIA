@@ -9,17 +9,41 @@ export const ChatProvider = ({ roomId, children }) => {
 
     useEffect(() => {
         if (stompClient) {
+            console.log('STOMP client is initialized:', stompClient);
+            console.log('STOMP client connected:', stompClient.connected);
+        } else {
+            console.log('STOMP client is not initialized yet');
+        }
+    }, [stompClient]);
+
+    useEffect(() => {
+        if (stompClient && stompClient.connected) {
+            console.log('Subscribing to topic:', `/topic/room.chat.${roomId}`);
             const subscription = stompClient.subscribe(`/topic/room.chat.${roomId}`, (message) => {
+                console.log('Received message:', message.body);
                 setMessages((prevMessages) => [...prevMessages, JSON.parse(message.body)]);
             });
 
-            return () => subscription.unsubscribe();
+            return () => {
+                console.log('Unsubscribing from topic:', `/topic/room.chat.${roomId}`);
+                subscription.unsubscribe();
+            };
         }
     }, [stompClient, roomId]);
 
     const sendMessage = (content) => {
-        const chatMessage = { sender: '사용자이름', content, roomId, type: 'CHAT' };
-        stompClient.send(`/app/room.chat.send/${roomId}`, {}, JSON.stringify(chatMessage));
+        const user = sessionStorage.getItem('user');
+        const username = user ? JSON.parse(user).username : 'Unknown User';
+
+        const chatMessage = { username, content, roomId };
+        console.log('Attempting to send message:', chatMessage);
+
+        if (stompClient && stompClient.connected) {
+            stompClient.send(`/fromapp/room.chat.send/${roomId}`, {}, JSON.stringify(chatMessage));
+            console.log('Message sent successfully');
+        } else {
+            console.error('STOMP client is not connected or send method is not available');
+        }
     };
 
     return (

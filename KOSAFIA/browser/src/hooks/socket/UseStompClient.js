@@ -1,48 +1,33 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import SockJS from 'sockjs-client';
-import { Client } from '@stomp/stompjs' // eslint-disable-line import/no-unresolved
+import { Client } from '@stomp/stompjs'; // eslint-disable-line import/no-unresolved
 
 const useStompClient = () => {
-    const client = useRef(null);
     const [stompClient, setStompClient] = useState(null);
 
     useEffect(() => {
-        // STOMP 클라이언트 생성
+        console.log('Initializing STOMP client');
         const socket = new SockJS('http://localhost:8080/wstomp');
-        const newClient = new Client({
+        const client = new Client({
             webSocketFactory: () => socket,
-            debug: (str) => {
-                console.log('STOMP:', str);
+            debug: (str) => console.log('STOMP Debug:', str),
+            onConnect: () => {
+                console.log('STOMP client connected');
+                setStompClient(client);
             },
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000
+            onStompError: (frame) => {
+                console.error('STOMP error:', frame.headers['message']);
+                console.error('STOMP error details:', frame.body);
+            }
         });
 
-        // 연결 성공시 콜백
-        newClient.onConnect = () => {
-            console.log('STOMP 연결 성공');
-            setStompClient(newClient);
-        };
+        client.activate();
+        console.log('STOMP client activated');
 
-        // 연결 해제시 콜백 
-        newClient.onDisconnect = () => {
-            console.log('STOMP 연결 해제');
-            setStompClient(null);
-        };
-
-        // 에러 발생시 콜백
-        newClient.onStompError = (frame) => {
-            console.error('STOMP 에러:', frame);
-        };
-
-        client.current = newClient;
-        newClient.activate();
-
-        // 컴포넌트 언마운트시 연결 해제
         return () => {
-            if (client.current?.connected) {
-                client.current.deactivate();
+            if (client) {
+                console.log('Deactivating STOMP client');
+                client.deactivate();
             }
         };
     }, []);

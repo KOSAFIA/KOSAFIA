@@ -1,11 +1,11 @@
 import React from 'react';
-import useStompClient from './hooks/socket/UseStompClient';
-import { ChatProvider } from './contexts/ChatContext';
-import { UserListProvider } from './contexts/UserListContext';
-import { GameStartProvider } from './contexts/GameStartContext';
-import ChatComponent from './components/ChatComponent';
-import UserListComponent from './components/UserListComponent';
-import GameStartButton from './components/GameStartButton';
+import useStompClient from '../../hooks/socket/UseStompClient';
+import { ChatProvider } from '../../contexts/socket/room/RoomChatContext';
+import { UserListProvider } from '../../contexts/socket/room/RoomUserListContext';
+import { GameStartProvider } from '../../contexts/socket/room/GameStartContext';
+import RoomChatComponent from '../../components/socket/room/RoomChatComponet';
+import RoomUserListComponent from '../../components/socket/room/RoomUserListComponent';
+import GameStartButton from '../../components/socket/room/GameStartButton';
 
 const RoomSocketFeatureComponent = ({ roomId }) => {
     const stompClient = useStompClient();
@@ -21,8 +21,8 @@ const RoomSocketFeatureComponent = ({ roomId }) => {
                 <UserListProvider roomId={roomId}>
                     <GameStartProvider roomId={roomId}>
                         <div>
-                            <UserListComponent />
-                            <ChatComponent />
+                            <RoomUserListComponent />
+                            <RoomChatComponent />
                             <GameStartButton />
                         </div>
                     </GameStartProvider>

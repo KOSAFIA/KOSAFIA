@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react';
-import { useStompClient } from './useStompClient';
+import useStompClient from '../../../hooks/socket/UseStompClient';
 
 const GameStartContext = createContext();
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import RoomSocketFeatureComponent from '../pages/socketroom/RoomSocketFeatureComponent'; // RoomSocketFeatureComponent 경로에 맞게 수정
 
 function TestRoom() {
     const { roomId } = useParams(); // URL에서 roomId를 받아옴
@@ -44,6 +45,9 @@ function TestRoom() {
                 ))}
             </ul>
             <button onClick={handleStartGame}>게임 시작</button>
+
+            {/* RoomSocketFeatureComponent 추가 */}
+            <RoomSocketFeatureComponent roomId={roomId} />
         </div>
     );
 }
