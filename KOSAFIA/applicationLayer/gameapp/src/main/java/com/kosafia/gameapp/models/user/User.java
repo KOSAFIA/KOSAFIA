@@ -31,4 +31,8 @@ public class User {
         this.status = status;
         this.createdAt = LocalDateTime.now();
     }
+
+    public UserData toUserData() {
+        return new UserData(this.userId, this.userEmail, this.username);
+    }
 }
