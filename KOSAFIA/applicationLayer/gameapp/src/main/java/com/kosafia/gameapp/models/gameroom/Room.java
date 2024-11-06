@@ -8,9 +8,13 @@ import com.kosafia.gameapp.models.user.UserData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Builder @AllArgsConstructor
 @Data
+@ToString
 public class Room {
     private final Integer roomId;
     private final List<UserData> users;
@@ -33,9 +37,11 @@ public class Room {
         // users.add(userData);
 
         if (users.size() < maxUsers) {
-            users.addAll(users);
+            
+            this.users.add(userData);
             // playerStatuses.put(player.getId(), "alive"); // 기본 상태 설정
             if (users.size() == 1) {
+                log.info("너가 최초야");
                 this.host = userData; // 첫 입장 플레이어를 호스트로 설정
             }
             return true;

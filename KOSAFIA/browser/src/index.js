@@ -9,6 +9,9 @@ import Mypage from "./user/Mypage";
 import Lobby from "./lobby/Lobby";
 import TestLobby from "./lobby/TestLobby";
 import GameRoom from "./pages/GameRoom";
+import TestRoom from './lobby/TestRoom';
+import TestPlayRoom from './lobby/TestPlayRoom';
+
 
 // import Kny22 from "./pages/kny/Kny22";
 
@@ -65,6 +68,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Route path="/LoginOk" element={<LoginOk />} />
       <Route path="/custom-login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      {/* <Route path="/LoginOk" element={<Lobby />} /> */}
+      <Route path="/mypage" element={<Mypage />} />
+      <Route path="/TestLobby" element={<TestLobby />} />
+      <Route path="/rooms/:roomId" element={<TestRoom />} />
+      <Route path="/rooms/:roomId/gameplay" element={<TestPlayRoom />} />
+
       <Route path="/GameRoom" element={<GameRoom />} />
     </Routes>
   </BrowserRouter>

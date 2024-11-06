@@ -1,5 +1,9 @@
 package com.kosafia.gameapp.models.user;
 
+import lombok.Data;
+import lombok.ToString;
+
+@ToString
 public class UserData {
         private Long userId;
         private String userEmail;
@@ -28,4 +32,5 @@ public class UserData {
         public String getUsername() {
             return username;
         }
+
 }
