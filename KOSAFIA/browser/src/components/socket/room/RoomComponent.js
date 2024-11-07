@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useRoomContext } from '../../../contexts/socket/room/RoomContext';
 
-const RoomComponent = ({ roomId }) => {
+const RoomComponent = ({ roomKey }) => {
     const { messages, users, sendMessage, startGame, isConnected } = useRoomContext();
     const [inputMessage, setInputMessage] = useState('');
 
@@ -14,7 +14,7 @@ const RoomComponent = ({ roomId }) => {
 
     return (
         <div>
-            <h1>방 {roomId}</h1>
+            <h1>방 {roomKey}</h1>
             <div>연결 상태: {isConnected ? '연결됨' : '연결 중...'}</div>
             <h2>사용자들:</h2>
             <ul>
