@@ -5,26 +5,27 @@ import { useNavigate } from 'react-router-dom'; // useNavigate import
 function TestLobby() {
     const navigate = useNavigate(); // useNavigate 훅 사용
 
-    //김남영 추가 :: 세션에서 사용자 데이터 가져오기 무조건 한번 페이지 로드시 실행
-    // 컴포넌트가 마운트될 때 세션 데이터를 가져옵니다
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                // withCredentials: true를 설정하여 쿠키와 함께 요청을 보냅니다
-                const response = await axios.get('http://localhost:8080/api/user/response-userData', {
-                    withCredentials: true
-                });
+    //어.. 이 코드가 이제 로그인 오케이로 넘어갈거에요. 일단 복원용으로 냅둘게요
+    // //김남영 추가 :: 세션에서 사용자 데이터 가져오기 무조건 한번 페이지 로드시 실행
+    // // 컴포넌트가 마운트될 때 세션 데이터를 가져옵니다
+    // useEffect(() => {
+    //     const fetchUserData = async () => {
+    //         try {
+    //             // withCredentials: true를 설정하여 쿠키와 함께 요청을 보냅니다
+    //             const response = await axios.get('http://localhost:8080/api/user/response-userData', {
+    //                 withCredentials: true
+    //             });
                 
-                // 응답으로 받은 userData를 sessionStorage에 저장
-                sessionStorage.setItem('userData', JSON.stringify(response.data));
-                console.log('사용자 데이터를 성공적으로 저장했어요:', response.data);
-            } catch (error) {
-                console.error('사용자 데이터를 가져오는데 실패했어요:', error);
-            }
-        };
+    //             // 응답으로 받은 userData를 sessionStorage에 저장
+    //             sessionStorage.setItem('userData', JSON.stringify(response.data));
+    //             console.log('사용자 데이터를 성공적으로 저장했어요:', response.data);
+    //         } catch (error) {
+    //             console.error('사용자 데이터를 가져오는데 실패했어요:', error);
+    //         }
+    //     };
 
-        fetchUserData();
-    }, [navigate]);
+    //     fetchUserData();
+    // }, [navigate]);
 
     const handleJoinRoom = async () => {
         try {
