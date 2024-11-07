@@ -14,7 +14,9 @@ import com.kosafia.gameapp.services.user.UserService;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class RoomService {
 
@@ -78,12 +80,19 @@ public class RoomService {
 
 
     // 방에 플레이어 추가(입장)
-    public boolean joinRoom(Integer roomKey, UserData userData) {
+    public Player joinRoom(Integer roomKey, UserData userData) {
         Room room = roomRepository.getRoom(roomKey);
         if (room != null) {
-            return room.addPlayer(userData.getUsername(), userData.getUserEmail());
+            if(room.addPlayer(userData.getUsername(), userData.getUserEmail())){
+               return room.getPlayerByUserEmail(userData.getUserEmail());
+            }
+            else{
+                log.warn("그런 플레이어 없어여");
+                return null;
+            }
         }
-        return false;
+        log.warn("방이없어여");
+        return null;
     }
 
     // 방에서 플레이어 나가기

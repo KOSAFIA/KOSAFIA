@@ -33,6 +33,8 @@ public class Room {
     // private Integer nextPlayerNumber = 1; // 다음에 부여할 번호
      private Random random = new Random();
 
+    
+
     public Room(Integer roomKey, String roomName, String password, boolean isPrivate) {
         this.roomKey = roomKey;
         this.roomName = roomName;
@@ -44,6 +46,17 @@ public class Room {
         this.password = password;
         this.isPrivate = isPrivate;
     }
+
+    //가져오기 매서드들
+    public Player getPlayerByUserEmail(String userEmail){
+        for (Player player : players) {
+            if(player.getUserEmail() == userEmail){
+                return player;
+            }
+        }
+        return null;
+    }
+
 
     // 플레이어 추가 메서드
     public boolean addPlayer(String username, String userEmail) {
@@ -65,6 +78,9 @@ public class Room {
 
         return true;
     }
+
+    
+
 
     // 플레이어 제거 메서드
     public boolean removePlayer(Player player) {
@@ -126,6 +142,7 @@ public class Room {
             hostName = null; // 방에 남아 있는 플레이어가 없으면 방장 없음
         }
     }
+
 
 
 }

@@ -76,7 +76,7 @@ public class SecurityConfig {
                                                         userService.processOAuth2User(userAttributes, session); // OAuth2
                                                                                                                 // 사용자
                                                                                                                 // 정보 처리
-                                                        response.sendRedirect("/LoginOk"); // 성공 시 리디렉션
+                                                        response.sendRedirect("/TestLobby"); // 성공 시 리디렉션
                                                 })
                                                 .failureUrl("/custom-login?error=true") // 실패 시 리디렉션할 URL
                                 )
