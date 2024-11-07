@@ -31,7 +31,6 @@ const Timer = ({ onSendMessage, playerName, onStageChange }) => {
             setHasModifiedTime(false);
           }
 
-          // 현재 단계 인덱스를 부모 컴포넌트 또는 ChatBox로 전달
           onStageChange(nextStageIndex);
 
           return stageDurations[stages[nextStageIndex].name];
@@ -45,15 +44,15 @@ const Timer = ({ onSendMessage, playerName, onStageChange }) => {
   const handleIncreaseTime = () => {
     if (stages[stageIndex].name === "낮" && canModifyTime(hasModifiedTime)) {
       setTime((prevTime) => changeTime(prevTime, 10));
-      onSendMessage(`${playerName} 님이 시간을 증가했습니다.`);
+      onSendMessage({ text: `${playerName} 님이 시간을 증가했습니다.`, player: playerName, isTimeModifiedMessage: true });
       setHasModifiedTime(true);
     }
   };
-
+  
   const handleDecreaseTime = () => {
     if (stages[stageIndex].name === "낮" && canModifyTime(hasModifiedTime)) {
       setTime((prevTime) => changeTime(prevTime, -10));
-      onSendMessage(`${playerName} 님이 시간을 감소했습니다.`);
+      onSendMessage({ text: `${playerName} 님이 시간을 감소했습니다.`, player: playerName, isTimeModifiedMessage: true });
       setHasModifiedTime(true);
     }
   };

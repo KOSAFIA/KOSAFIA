@@ -8,6 +8,7 @@ import LoginOk from "./user/LoginOk"; //로그인 성공시 나오는 화면
 import Mypage from "./user/Mypage";
 import Lobby from "./lobby/Lobby";
 import TestLobby from "./lobby/TestLobby";
+import GameRoom from "./pages/GameRoom";
 import TestRoom from './lobby/TestRoom';
 import TestPlayRoom from './lobby/TestPlayRoom';
 
@@ -58,9 +59,9 @@ import GameStart from "./fast/gamechat/GameStart";
 //       <Route path="/" element={<Login />} />
 //       <Route path="/custom-login" element={<Login />} />
 //       <Route path="/register" element={<Register />} />
-//       <Route path="/LoginOk" element={<Lobby />} />
+//       {/* <Route path="/LoginOk" element={<Lobby />} /> */}
 //       <Route path="/mypage" element={<Mypage />} />
-//       <Route path="/lobby" element={<Lobby />} />
+//       <Route path="/TestLobby" element={<TestLobby />} />
 //     </Routes>
 //   </BrowserRouter>
 // );
@@ -95,6 +96,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/LoginOk" element={<LoginOk />} />
       <Route path="/custom-login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       {/* <Route path="/LoginOk" element={<Lobby />} /> */}
@@ -103,6 +106,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Route path="/rooms/:roomId" element={<TestRoom />} />
       <Route path="/rooms/:roomId/gameplay" element={<TestPlayRoom />} />
 
+      <Route path="/GameRoom" element={<GameRoom />} />
     </Routes>
   </BrowserRouter>
 );

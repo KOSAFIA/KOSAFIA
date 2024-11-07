@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/components/PlayerCard.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+// 역할 정보 배열
 const roles = [
   { name: "마피아", image: "/img/mafia.jpeg" },
   { name: "의사", image: "/img/doctor.jpeg" },
@@ -9,9 +10,19 @@ const roles = [
   { name: "시민", image: "/img/citizen.png" },
 ];
 
-const PlayerCard = ({ name, index }) => {
+const PlayerCard = ({ name, index, role }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [avatar, setAvatar] = useState("/img/default-avatar.png"); // 기본 아바타 경로
+  const [avatar, setAvatar] = useState("/img/default-avatar.png"); // 기본 아바타
+
+  // role에 맞는 이미지를 설정하는 useEffect
+  useEffect(() => {
+    const selectedRole = roles.find((r) => r.name === role);
+    if (selectedRole) {
+      setAvatar(selectedRole.image);
+    } else {
+      setAvatar("/img/default-avatar.png"); // 역할을 찾을 수 없으면 기본 이미지
+    }
+  }, [role]); 
 
   const handleCardClick = () => {
     setIsOpen(true);
@@ -21,8 +32,8 @@ const PlayerCard = ({ name, index }) => {
     setIsOpen(false);
   };
 
-  const handleRoleSelect = (role) => {
-    setAvatar(role.image); // 선택한 역할의 이미지를 아바타로 설정
+  const handleRoleSelect = (selectedRole) => {
+    setAvatar(selectedRole.image); // 선택한 역할의 이미지를 avatar에 설정
     setIsOpen(false); // 팝업 닫기
   };
 
@@ -59,16 +70,16 @@ const PlayerCard = ({ name, index }) => {
                 </div>
               ))}
             </div>
-             <div className="button-wrapper">
-            <div className="circle">
-              <button
-                type="button"
-                class="btn-close"
-                aria-label="Close"
-                onClick={handleClose}
-              ></button>
+            <div className="button-wrapper">
+              <div className="circle">
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Close"
+                  onClick={handleClose}
+                ></button>
+              </div>
             </div>
-          </div>
           </div>
         </div>
       )}

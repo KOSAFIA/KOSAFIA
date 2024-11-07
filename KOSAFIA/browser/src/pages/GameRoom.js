@@ -38,6 +38,7 @@ const GameRoom = () => {
   };
 
   return (
+    
     <div className={`game-room ${stageIndex === 1 ? "shadow-inset-top" : ""}`}>
       <div className="chat-area">
         <div className="player-area">
@@ -51,7 +52,7 @@ const GameRoom = () => {
           </div>
           <JobInfoIcon />
           <div className="player-cards">
-            {/* 여기 하드코딩 되어있는 상황. 후에 합치면 수정해야함. */}
+            {/* 여기 하드코딩 되어있는 상황. 후에 수정해야함. */}
             <div className="player-cards">
               <PlayerCard
                 name="본인 (마피아)"
