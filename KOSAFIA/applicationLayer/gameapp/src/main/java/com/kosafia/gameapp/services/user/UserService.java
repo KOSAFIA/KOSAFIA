@@ -23,6 +23,16 @@ public class UserService {
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(); // 비밀번호 암호화를 위한 BCryptPasswordEncoder
                                                                                  // 생성
 
+    //=======김남영 터치 책임은 김남영이============
+    public User getUserFromSession(HttpSession session){
+        User user = (User) session.getAttribute("user");
+        if (user == null)
+            return null;
+
+        return user;
+    }
+    //=======김남영 터치 책임은 김남영이============
+
     // 회원가입 메서드
     public String registerUser(String email, String username, String password) {
         User existingUser = userMapper.findByEmail(email); // 이메일로 사용자 조회
@@ -126,7 +136,8 @@ public class UserService {
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     ///
     // OAuth2 Google 로그인 사용자 정보를 처리하는 메서드
-    public String processOAuth2User(Map<String, Object> userAttributes, HttpSession session) {
+    //김남영 츄가 :: 로그인시에 브라우저 세션스토리지에 저장할 데이터 반환으로 String -> UserData
+    public UserData processOAuth2User(Map<String, Object> userAttributes, HttpSession session) {
         String email = (String) userAttributes.get("email"); // Google에서 제공한 이메일
         String providerId = (String) userAttributes.get("sub"); // Google의 unique ID
         String provider = "google"; // provider를 "google"로 설정
@@ -148,7 +159,26 @@ public class UserService {
 
         // 세션에 사용자 정보 저장
         session.setAttribute("user", user);
-        return "OAuth2 로그인 성공";
+        UserData userData = new UserData();
+        userData.setUsername(user.getUsername());
+        userData.setUserId(user.getUserId());
+        userData.setUserEmail(user.getUserEmail());
+        return userData;
+    }
+
+    public String deactivateOAuth2User(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null)
+            return "로그인이 필요합니다."; // 로그인 상태가 아니면 메시지 반환
+
+        // OAuth 사용자의 탈퇴 처리 (provider가 존재하는 경우)
+        if (user.getProvider() != null && user.getProvider().equals("google")) {
+            userMapper.deactivateUser(user.getUserId()); // STATUS를 0으로 업데이트
+            session.invalidate(); // 세션 무효화
+            return "회원탈퇴가 성공적으로 완료되었습니다.";
+        } else {
+            return "OAuth2 사용자가 아닙니다."; // OAuth2 사용자가 아닌 경우 처리
+        }
     }
 
     public String deactivateOAuth2User(HttpSession session) {

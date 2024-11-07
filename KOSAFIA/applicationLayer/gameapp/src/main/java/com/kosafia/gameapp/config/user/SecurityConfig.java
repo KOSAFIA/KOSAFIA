@@ -11,6 +11,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
+
+import com.kosafia.gameapp.models.user.UserData;
 import com.kosafia.gameapp.services.user.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -39,21 +41,29 @@ public class SecurityConfig {
 
                                 // 요청에 대한 인증/인가 설정
                                 .authorizeHttpRequests(authz -> authz
-                                                .requestMatchers( // 정적 리소스 (HTML, CSS, JS, 이미지)와 특정 API 엔드포인트에 대한 접근 허용
-                                                                "/", "/Login", "/index.html", "/react", "/react/**",
-                                                                "/static/**", // 정적
-                                                                // 파일
-                                                                // 요청
-                                                                // 허용
-                                                                "/css/**", "/js/**", // CSS 및 JS 파일 접근 허용
-                                                                "/api/user/**",
-                                                                "/img/**", "/custom-login" // 이미지 파일과 로그인 페이지 허용
-                                                                , "/api/room", "/TestLobby",
-                                                                "/LoginOk", "/rooms/**", "/api/rooms", "/api/rooms/**", // 특정
-                                                                "/register", // 경로
-                                                                             // 접근
-                                                                             // 허용
-                                                                "/rooms" // LoginOk 경로를 인증 없이 접근 가능하도록 허용
+                                                .requestMatchers(
+                                                                "/", "/index.html", "/react", "/react/**", "/static/**", // 정적
+                                                                                                                         // 파일
+                                                                                                                         // 요청
+                                                                                                                         // 허용
+                                                                "/css/**", "/js/**", "/css", "/js", // CSS 및 JS 파일 접근 허용
+                                                                "/api/user/register", "/api/user/login", "/api/**",
+                                                                "/api/user/profile", // 회원가입, 로그인, 프로필 조회
+                                                                "/api/user/logout", "/api/user/update-username",
+                                                                "/api/user/update-password", "/api/user/delete", // 사용자
+                                                                                                                 // 관련
+                                                                                                                 // API
+                                                                                                                 // 허용
+                                                                "/img/**", "/img", "/custom-login" // 이미지 파일과 로그인 페이지 허용
+                                                                , "/api/room", "/api/rooms", "/api/room/**",
+                                                                "/api/rooms/**", "/TestLobby", "/api/game/**",
+                                                                "/api/game/", "/rooms", "/rooms/**",
+                                                                "/LoginOk", "/Login", "/LoginOk/**", "/Login/**"// LoginOk
+                                                                                                                // 경로를
+                                                                                                                // 인증 없이
+                                                                                                                // 접근
+                                                                                                                // 가능하도록
+                                                                                                                // 허용
                                                 ).permitAll() // 위의 경로들에 대해 인증 없이 접근 허용
 
                                                 .anyRequest().authenticated() // 나머지 모든 요청은 인증 필요
@@ -76,9 +86,12 @@ public class SecurityConfig {
                                                         // 사용자 정보(Map 형태)를 가져와 세션에 저장
                                                         Map<String, Object> userAttributes = oAuth2User.getAttributes();
                                                         HttpSession session = request.getSession();
-                                                        userService.processOAuth2User(userAttributes, session); // OAuth2
+                                                        UserData userData = userService.processOAuth2User(userAttributes, session); // OAuth2
                                                                                                                 // 사용자
                                                                                                                 // 정보 처리
+                                                        // 세션에 사용자 데이터 저장
+                                                        session.setAttribute("userData", userData);
+                                                        // response.sendRedirect("/TestLobby"); // 성공 시 리디렉션
                                                         response.sendRedirect("/LoginOk"); // 성공 시 리디렉션
                                                 })
                                                 .failureUrl("/custom-login?error=true") // 실패 시 리디렉션할 URL

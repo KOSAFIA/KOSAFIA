@@ -1,10 +1,15 @@
 package com.kosafia.gameapp.models.user;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+
+
 import java.time.LocalDateTime;
 
 // @Data 애너테이션을 사용하면 Lombok 라이브러리가 자동으로 getter, setter, toString, equals, hashCode 메서드를 생성
 @Data
+@Builder @AllArgsConstructor //김남영 수정. 유저세션 레파지토리에 유저를 빌더 함수로 추가할때 필요--2024/11/05
 public class User {
     private Long userId;
     private String userEmail; //사용자 이메일
@@ -31,5 +36,9 @@ public class User {
         this.password = password;
         this.status = status;
         this.createdAt = LocalDateTime.now();
+    }
+
+    public UserData toUserData() {
+        return new UserData(this.userId, this.userEmail, this.username);
     }
 }

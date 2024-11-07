@@ -1,6 +1,10 @@
 package com.kosafia.gameapp.models.user;
 
-// 사용자 데이터 정보를 담는 UserData 클래스
+import lombok.Data;
+import lombok.ToString;
+
+@ToString
+@Data
 public class UserData {
         private Long userId;
         private String userEmail; //사용자 이메일
@@ -29,4 +33,5 @@ public class UserData {
         public String getUsername() {
             return username;
         }
+
 }

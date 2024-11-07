@@ -72,10 +72,12 @@ dependencies {
 	// BCryptPasswordEncoder를 사용하기 위해 필요한 Spring Security 의존성을 추가
  implementation 'org.springframework.boot:spring-boot-starter-security'
 testImplementation 'org.springframework.security:spring-security-test'
+
  //구글oauth2 로그인
 implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
-
+  // Spring Core 및 Value 어노테이션을 사용할 수 있는 의존성
+    implementation 'org.springframework:spring-context'
 }
 
 // tasks.named('test') {

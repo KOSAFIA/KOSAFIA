@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import CheckCors from "../utils/CheckCors";
 import Modal from "react-modal";
 import Mypage from "./Mypage"; // Mypage 컴포넌트를 불러옵니다.
+import GameRoom from "../pages/GameRoom";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 Modal.setAppElement("#root"); // 모달이 열릴 때 #root 외부의 콘텐츠는 접근 불가로 설정
 
@@ -10,6 +12,27 @@ function LoginOk() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [isMypageModalOpen, setIsMypageModalOpen] = useState(false); // 마이페이지 모달 열림 상태
+
+    //김남영 추가 :: 세션에서 사용자 데이터 가져오기 무조건 한번 페이지 로드시 실행
+    // 컴포넌트가 마운트될 때 세션 데이터를 가져옵니다
+    useEffect(() => {
+      const fetchUserData = async () => {
+          try {
+              // withCredentials: true를 설정하여 쿠키와 함께 요청을 보냅니다
+              const response = await axios.get('http://localhost:8080/api/user/response-userData', {
+                  withCredentials: true
+              });
+              
+              // 응답으로 받은 userData를 sessionStorage에 저장
+              sessionStorage.setItem('userData', JSON.stringify(response.data));
+              console.log('사용자 데이터를 성공적으로 저장했어요:', response.data);
+          } catch (error) {
+              console.error('사용자 데이터를 가져오는데 실패했어요:', error);
+          }
+      };
+
+      fetchUserData();
+  }, [navigate]);
 
   // 컴포넌트가 처음 렌더링될 때 사용자 정보를 가져오는 함수입니다.
   useEffect(() => {
@@ -72,6 +95,16 @@ function LoginOk() {
     setIsMypageModalOpen(false); // 마이페이지 모달을 닫도록 상태를 false로 변경
   };
 
+    // 게임방 페이지로 이동
+    const goToGameRoom = () => {
+      navigate("/GameRoom"); // 게임방 페이지로 이동
+    };
+
+  //김남영 추가 : 김지연 테스트로비로 이동
+  const goToTestLobby = () => {
+    navigate("/TestLobby"); 
+  };
+
   return (
     <div className="login-ok-container">
       <h1>홈 페이지</h1>
@@ -83,6 +116,14 @@ function LoginOk() {
 
       <button className="mypage-button" onClick={openMypageModal}>
         마이페이지
+      </button>
+      <button className="GameRoombutton" onClick={goToGameRoom}>
+        게임방
+      </button>
+
+//김남영 추가
+      <button className="TestLobbybutton" onClick={goToTestLobby}>
+        테스트로비
       </button>
 
       <Modal
