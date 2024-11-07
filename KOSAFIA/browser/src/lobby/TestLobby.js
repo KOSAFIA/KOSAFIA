@@ -8,10 +8,20 @@ function TestLobby() {
     console.log("roomKey:", roomKey); // roomKey 값을 확인하는 로그
     const handleJoinRoom = async () => {
         try {
-            const response = await axios.post(`http://localhost:8080/api/rooms/${roomKey}/join`); // 백틱(`) 사용하여 템플릿 리터럴로 작성
-            withCredentials: true // 세션 쿠키를 포함하여 요청을 보냄
-            alert(response.data); // 성공 시 서버로부터의 메시지 표시
-            navigate(`/rooms/${roomKey}`); // 입장 성공 시 해당 방 페이지로 이동
+            // const response = await axios.post(`http://localhost:8080/api/rooms/${roomKey}/join`); // 백틱(`) 사용하여 템플릿 리터럴로 작성
+            const response = await axios.post(`http://localhost:8080/api/rooms/${roomKey}/join`, {}, {
+                withCredentials: true // 세션 쿠키를 포함하여 요청을 보냄
+            });
+            
+            if(response.ok){
+                sessionStorage.setItem("player", response.data);
+                alert(response.data); // 성공 시 서버로부터의 메시지 표시
+                navigate(`/rooms/${roomKey}`); // 입장 성공 시 해당 방 페이지로 이동
+            }
+            else{
+                alert(response.status); //응답 메시지 상태 알림창
+            }
+
         } catch (error) {
             console.error('Error joining room:', error);
             alert('방 입장에 실패했습니다. 다시 시도해 주세요.');

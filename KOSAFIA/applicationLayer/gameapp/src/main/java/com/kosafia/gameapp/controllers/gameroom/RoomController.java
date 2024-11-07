@@ -94,19 +94,23 @@ public class RoomController {
 
     // 방 입장 엔드포인트
     @PostMapping("/{roomKey}/join")
-    public ResponseEntity<String> joinRoom(@PathVariable Integer roomKey, HttpSession session) {
+    public ResponseEntity<Player> joinRoom(@PathVariable Integer roomKey, HttpSession session) {
         // 세션에서 유저 정보를 가져옴
         UserData userData = roomService.getUserDataFromSession(session);
         if (userData == null) {
-            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+            return ResponseEntity.status(401).body(null);
+            // return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
 
         // 방에 유저 입장 처리
-        boolean success = roomService.joinRoom(roomKey, userData);
-        if (success) {
-            return ResponseEntity.ok(userData.getUsername() + "님이 방에 입장하였습니다.");
+        Player player = roomService.joinRoom(roomKey, userData);
+        if (player.equals(null)) {
+            session.setAttribute("player", player);
+            session.setAttribute("roomKey", roomKey);
+            return ResponseEntity.ok(player);
         } else {
-            return ResponseEntity.status(409).body("방이 가득 찼거나 입장할 수 없습니다.");
+            return ResponseEntity.status(409).body(null);
+            // return ResponseEntity.status(409).body("방이 가득 찼거나 입장할 수 없습니다.");
         }
     }
 

@@ -103,8 +103,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       {/* <Route path="/LoginOk" element={<Lobby />} /> */}
       <Route path="/mypage" element={<Mypage />} />
       <Route path="/TestLobby" element={<TestLobby />} />
-      <Route path="/rooms/:roomId" element={<TestRoom />} />
-      <Route path="/rooms/:roomId/gameplay" element={<TestPlayRoom />} />
+      <Route path="/rooms/:roomKey" element={<TestRoom />} />
+      <Route path="/rooms/:roomKey/gameplay" element={<TestPlayRoom />} />
 
       <Route path="/GameRoom" element={<GameRoom />} />
     </Routes>
