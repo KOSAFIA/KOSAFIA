@@ -1,9 +1,10 @@
 package com.kosafia.gameapp.models.gameroom;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-
-import com.kosafia.gameapp.models.user.UserData;
+import java.util.Queue;
+import java.util.Random;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,57 +17,132 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 @ToString
 public class Room {
-    private final Integer roomId;
-    private final List<UserData> users;
-    private final int maxUsers;
-    private UserData host;
 
 
-    //방 최초 생성
-    public Room(Integer roomId,int maxUsers ) {
-        this.roomId = roomId;
-        this.users = new ArrayList<>();
-        this.maxUsers = maxUsers;
-        this.host = null;
-      
+    private final Integer roomKey; // PK와 로비에 보이는 키 (String 형식)
+    private String roomName; // 방제
+    private List<Player> players; // 플레이어 목록
+    private String hostName; // 방장 이름
+    private int currentPlayers; // 최대 인원
+    private final Integer maxPlayers=8; // 최대 인원
+    private boolean gameStatus; // 게임 진행 상태
+    private Integer turn; // 현재 턴
+    private String password; // 방 비밀번호
+    private boolean isPrivate; // 비밀 방 여부
+
+    // private Integer nextPlayerNumber = 1; // 다음에 부여할 번호
+     private Random random = new Random();
+
+    
+
+    public Room(Integer roomKey, String roomName, String password, boolean isPrivate) {
+        this.roomKey = roomKey;
+        this.roomName = roomName;
+        this.players = new ArrayList<>();
+        this.hostName = null;        
+        // this.maxPlayers = maxPlayers;
+        this.gameStatus = false;
+        this.turn = 0;
+        this.password = password;
+        this.isPrivate = isPrivate;
     }
 
-
-    // 단일 UserData 추가
-    public boolean addUser(UserData userData) {
-        // users.add(userData);
-
-        if (users.size() < maxUsers) {
-            
-            this.users.add(userData);
-            // playerStatuses.put(player.getId(), "alive"); // 기본 상태 설정
-            if (users.size() == 1) {
-                log.info("너가 최초야");
-                this.host = userData; // 첫 입장 플레이어를 호스트로 설정
+    //가져오기 매서드들
+    public Player getPlayerByUserEmail(String userEmail){
+        for (Player player : players) {
+            if(player.getUserEmail() == userEmail){
+                return player;
             }
-            return true;
         }
-        return false;
-
+        return null;
     }
 
-     // 플레이어list 추가 메서드
-     public void addAllUsers(List<UserData> users) {
-        users.addAll(users);
+
+    // 플레이어 추가 메서드
+    public boolean addPlayer(String username, String userEmail) {
+        if (players.size() >= maxPlayers) {
+            System.out.println("최대 인원이 다 찼습니다. 더 이상 플레이어를 추가할 수 없습니다.");
+            return false; // 최대 인원 초과 시 추가 거부
+        }
+        
+
+        int playerNumber = players.size() + 1; // 현재 리스트 크기 + 1로 playerNumber 부여
+        Player player = new Player(playerNumber, username, userEmail);
+        players.add(player);
+        currentPlayers++; // 플레이어 추가 시 현재 인원수 증가
+
+        // 방장이 없는 경우 첫 번째 플레이어를 방장으로 설정
+        if (hostName == null) {
+            hostName = player.getUsername();
+        }
+
+        return true;
     }
 
-    // one 플레이어 제거
-     public void removePlayer(UserData userData) {
-        users.remove(userData);
+    
+
+
+    // 플레이어 제거 메서드
+    public boolean removePlayer(Player player) {
+        int index = players.indexOf(player); // 나가는 플레이어의 인덱스 확인
+        if (index == -1) {
+            System.out.println("플레이어를 찾을 수 없습니다.");
+            return false;
+        }
+
+        // 방장이 나가면 새 방장 지정
+        if (player.getUsername().equals(hostName)) {
+            assignNewHost(); 
+        }
+
+        players.remove(index); // 해당 플레이어 제거
+        currentPlayers--; // 플레이어 제거 시 현재 인원수 감소
+
+        // 뒤에 있는 플레이어들의 번호를 앞으로 당김
+        for (int i = index; i < players.size(); i++) {
+            players.get(i).setPlayerNumber(i + 1); // playerNumber를 i + 1로 업데이트
+        }
+        return true;
     }
 
-     // 현재 사용자 리스트 반환
-     public List<UserData> getUsers() {
-        return users;
+    //////////////////////////
+
+  
+
+    // 게임 시작 메서드
+    public void startGame() {
+        if (!gameStatus && players.size() >= 4) { // 최소 4인 이상일 때 시작 가능
+            this.gameStatus = true;
+            this.turn = 1; // 첫 턴 초기화
+        }
     }
 
-    // 현재 플레이어 수 반환
-    public int getPlayerCount() {
-        return users.size();
+    // 게임 종료 메서드
+    public void endGame() {
+        this.gameStatus = false;
+        this.turn = 0;
     }
+
+    ///////////////////////////
+    
+
+      // 방장 확인 메서드
+      public boolean isHost(String username) {
+        return username != null && username.equals(hostName);
+    }
+
+
+     // 새 방장 지정 메서드 (랜덤 선택)
+     private void assignNewHost() {
+        if (!players.isEmpty()) {
+            Player newHost = players.get(random.nextInt(players.size())); // 남아 있는 플레이어 중 랜덤 선택
+            hostName = newHost.getUsername();
+            System.out.println("새 방장으로 " + hostName + "가 지정되었습니다.");
+        } else {
+            hostName = null; // 방에 남아 있는 플레이어가 없으면 방장 없음
+        }
+    }
+
+
+
 }

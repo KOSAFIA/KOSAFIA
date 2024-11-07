@@ -32,7 +32,7 @@ function Login() {
       });
 
       if (response.ok) {
-        navigate("/LoginOk"); // 로그인 성공 시 LoginOk 페이지로 리디렉션 /TestLobby
+        navigate("/TestLobby"); // 로그인 성공 시 LoginOk 페이지로 리디렉션 /TestLobby
       } else {
         const errorData = await response.text();
         setError(errorData || "로그인 실패. 다시 시도하세요.");
