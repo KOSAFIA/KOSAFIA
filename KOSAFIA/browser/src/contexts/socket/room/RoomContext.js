@@ -8,7 +8,7 @@ import { Client } from '@stomp/stompjs'; //eslint-disable-line
 const RoomContext = createContext();
 
 // 방에 들어온 사람들에게 필요한 정보와 기능을 제공하는 특별한 상자예요
-export const RoomProvider = ({ roomId, children }) => {
+export const RoomProvider = ({ roomKey, children }) => {
     // 방에서 필요한 정보를 저장하는 곳이에요
     const [messages, setMessages] = useState([]); // 채팅 메시지를 모아두는 곳
     const [users, setUsers] = useState([]); // 방에 있는 사람들 목록
@@ -17,12 +17,12 @@ export const RoomProvider = ({ roomId, children }) => {
     const messageQueue = useRef([]); // 아직 보내지 못한 메시지를 임시로 보관하는 곳
 
     // 방에 들어왔을 때 다른 사람들에게 알려주는 함수예요
-    const sendInitialUserData = useCallback((client, roomId) => {
+    const sendInitialUserData = useCallback((client, roomKey) => {
         const userData = JSON.parse(sessionStorage.getItem('userData'));
         if (userData) {
             console.log('입장 메시지를 보내기 전 userData:', userData);
             client.publish({
-                destination: `/fromapp/room.user.join/${roomId}`,
+                destination: `/fromapp/room.user.join/${roomKey}`,
                 body: JSON.stringify(userData)
             });
             console.log('입장 메시지를 보냈어요:', userData);
@@ -32,11 +32,11 @@ export const RoomProvider = ({ roomId, children }) => {
     }, []);
 
     // 방에서 일어나는 일들을 듣고 있는 함수예요
-    const setupSubscriptions = useCallback((client, roomId) => {
+    const setupSubscriptions = useCallback((client, roomKey) => {
         console.log('구독 설정을 시작합니다...');
         
         // 유저 리스트 구독
-        const userSubscription = client.subscribe(`/topic/room.users.${roomId}`, (message) => {
+        const userSubscription = client.subscribe(`/topic/room.users.${roomKey}`, (message) => {
             console.log('유저 리스트 메시지가 도착했어요:', message);
             try {
                 const userList = JSON.parse(message.body);
@@ -53,7 +53,7 @@ export const RoomProvider = ({ roomId, children }) => {
         });
 
         // 채팅 메시지 구독
-        const chatSubscription = client.subscribe(`/topic/room.chat.${roomId}`, (message) => {
+        const chatSubscription = client.subscribe(`/topic/room.chat.${roomKey}`, (message) => {
             console.log('채팅 메시지가 도착했어요:', message);
             try {
                 const chatMessage = JSON.parse(message.body);
@@ -65,13 +65,13 @@ export const RoomProvider = ({ roomId, children }) => {
         });
 
         // 게임 시작 신호 구독 추가
-        const gameStartSubscription = client.subscribe(`/topic/room.game.start.${roomId}`, (message) => {
+        const gameStartSubscription = client.subscribe(`/topic/room.game.start.${roomKey}`, (message) => {
             console.log('게임 시작 신호가 도착했어요:', message);
             try {
                 const gameStartMessage = JSON.parse(message.body);
                 console.log('게임을 시작할 준비가 되었어요:', gameStartMessage);
                 // TODO: 게임 시작 처리 로직 추가
-                // 예: navigate(`/rooms/${roomId}/gameplay`);
+                // 예: navigate(`/rooms/${roomKey}/gameplay`);
             } catch (error) {
                 console.error('게임 시작 신호를 처리하는 중 문제가 발생했어요:', error);
             }
@@ -110,9 +110,9 @@ export const RoomProvider = ({ roomId, children }) => {
                 clientRef.current = client;
                 
                 // 방에서 일어나는 일들을 듣기 시작해요
-                setupSubscriptions(client, roomId);
+                setupSubscriptions(client, roomKey);
                 // 다른 사람들에게 내가 방에 들어왔다고 알려요
-                sendInitialUserData(client, roomId);
+                sendInitialUserData(client, roomKey);
 
                 // 아직 보내지 못한 메시지가 있다면 지금 보내요
                 while (messageQueue.current.length > 0) {
@@ -144,7 +144,7 @@ export const RoomProvider = ({ roomId, children }) => {
                 client.deactivate();
             }
         };
-    }, [roomId, setupSubscriptions, sendInitialUserData]);
+    }, [roomKey, setupSubscriptions, sendInitialUserData]);
 
     // 채팅 메시지를 보내는 함수예요
     const sendMessage = useCallback((content) => {
@@ -152,10 +152,10 @@ export const RoomProvider = ({ roomId, children }) => {
             try {
                 const userData = JSON.parse(sessionStorage.getItem('userData'));
                 const username = userData ? userData.username : '알 수 없는 사용자';
-                const chatMessage = { username, content, roomId };
+                const chatMessage = { username, content, roomKey };
                 
                 clientRef.current.publish({
-                    destination: `/fromapp/room.chat.send/${roomId}`,
+                    destination: `/fromapp/room.chat.send/${roomKey}`,
                     body: JSON.stringify(chatMessage)
                 });
                 console.log('채팅 메시지를 보냈어요:', chatMessage);
@@ -165,23 +165,23 @@ export const RoomProvider = ({ roomId, children }) => {
         } else {
             console.warn('아직 방과 연결이 안 되어서, 메시지를 잠시 보관할게요.');
             messageQueue.current.push({
-                destination: `/fromapp/room.chat.send/${roomId}`,
+                destination: `/fromapp/room.chat.send/${roomKey}`,
                 body: JSON.stringify({
                     username: '알 수 없는 사용자',
                     content,
-                    roomId
+                    roomKey
                 })
             });
         }
-    }, [isConnected, roomId]);
+    }, [isConnected, roomKey]);
 
     // 게임 시작 신호를 보내는 함수예요
     const startGame = useCallback(() => {
         if (isConnected && clientRef.current) {
             try {
-                const startMessage = { roomId, message: '게임 시작' };
+                const startMessage = { roomKey, message: '게임 시작' };
                 clientRef.current.publish({
-                    destination: `/fromapp/room.game.start/${roomId}`,
+                    destination: `/fromapp/room.game.start/${roomKey}`,
                     body: JSON.stringify(startMessage)
                 });
                 console.log('게임 시작 신호를 보냈어요!');
@@ -191,11 +191,11 @@ export const RoomProvider = ({ roomId, children }) => {
         } else {
             console.warn('아직 방과 연결이 안 되어서, 게임 시작 신호를 잠시 보관할게요.');
             messageQueue.current.push({
-                destination: `/fromapp/room.game.start/${roomId}`,
-                body: JSON.stringify({ roomId, message: '게임 시작' })
+                destination: `/fromapp/room.game.start/${roomKey}`,
+                body: JSON.stringify({ roomKey, message: '게임 시작' })
             });
         }
-    }, [isConnected, roomId]);
+    }, [isConnected, roomKey]);
 
     // 방에서 사용할 수 있는 모든 기능과 정보를 담아서 내보내요
     const value = {
