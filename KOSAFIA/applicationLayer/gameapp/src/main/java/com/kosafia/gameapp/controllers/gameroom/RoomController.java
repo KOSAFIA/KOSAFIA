@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -128,20 +129,65 @@ public class RoomController {
 
   // 게임 시작 엔드포인트
     @PostMapping("/{roomKey}/start")
-    public ResponseEntity<List<Player>> startGame(@PathVariable Integer roomKey, HttpSession session) {
+    public ResponseEntity<?> startGame(@PathVariable Integer roomKey, HttpSession session) {
+        
+    /* 
+         // 김지연 코드 == 모든 플레이어를 시작하려고 하시는 코드이나.. 시작은 각 클라이언트가 각자가 각각 시작하는거.
+        // 대신 소켓으로 서버 요청 타이밍을 동기화 하는 로직으로 아래 구현하겠음다. -김남영- 
+
         // 세션에서 유저 정보 확인
         UserData userData = roomService.getUserDataFromSession(session);
         if (userData == null) {
             return ResponseEntity.status(401).body(null); // 로그인된 유저가 아닌 경우
         }
-
         // 게임 시작 요청
         List<Player> players = roomService.startGame(roomKey, userData);
         if (players == null) {
             return ResponseEntity.status(403).body(null); // 방장만 시작 가능 또는 방이 없을 경우
         }
-
         return ResponseEntity.ok(players); // 방의 모든 플레이어 정보 반환
+    */
+        log.info("방 {}에서 게임 시작 요청이 왔어요", roomKey);
+        try {
+            // 세션에서 유저 정보 가져오기
+            UserData userData = roomService.getUserDataFromSession(session);
+            if (userData == null) {
+                log.error("세션에서 로그인 정보를 찾을 수 없어요");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 안되어 있네요??");
+            }
+
+            // 방 찾기
+            Room room = roomService.getRoomById(roomKey);
+            if (room == null) {
+                log.error("방 {}을 찾을 수 없어요", roomKey);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("방을 찾을 수 없어요");
+            }
+
+            // 게임 시작 조건 체크 (예: 최소 인원수)
+            if (room.getPlayers().size() < room.getMaxPlayers()) {  // 최소 2명 필요
+                log.warn("방 {}에 플레이어가 부족해요: {} 명", roomKey, room.getPlayers().size());
+                return ResponseEntity.badRequest().body("게임을 시작하려면 풀방이어야해요");
+            }
+
+            // 유저를 플레이어로 변환
+            Player player = room.getPlayerByUserEmail(userData.getUserEmail());
+            if (player == null) {
+                log.error("{}님이 플레이어로 등록이 안되어 있어요", player.getUsername());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("플레이어 정보를 찾을 수 없어요");
+            }
+
+            // 게임 시작 처리
+            room.startGame();  // Room 클래스에 게임 시작 로직 구현 필요
+            log.info("방 {}에서 게임이 시작되었어요!", roomKey);
+
+            return ResponseEntity.ok(player);  // 플레이어 정보 반환
+
+        } catch (Exception e) {
+            log.error("게임 시작 중 오류가 발생했어요", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("게임을 시작하는 중에 문제가 발생했어요: " + e.getMessage());
+        }
+
     }
 
     // 게임 종료 엔드포인트

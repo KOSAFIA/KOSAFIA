@@ -14,7 +14,7 @@ function TestLobby() {
             });
             
             if(response.ok){
-                sessionStorage.setItem("player", response.data);
+                sessionStorage.setItem("player", JSON.stringify(response.data));
                 alert(response.data); // 성공 시 서버로부터의 메시지 표시
                 navigate(`/rooms/${roomKey}`); // 입장 성공 시 해당 방 페이지로 이동
             }
