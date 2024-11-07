@@ -13,7 +13,7 @@ import java.util.Map; // JSON 형태의 데이터 처리를 위한 Map 사용
 @RequestMapping("/api/user") // 이 컨트롤러의 기본 경로 설정
 public class UserController {
 
-    @Autowired // UserService 객체 자동 주입
+    @Autowired // UserService를 자동 주입받아 회원 관련 서비스 로직에 접근 가능
     private UserService userService;
 
     // 회원가입 엔드포인트
@@ -45,6 +45,7 @@ public class UserController {
         String password = loginData.get("password"); // loginData에서 "password" 키의 값을 가져옴
 
         // 로그인 로직 처리 - userService의 loginUser 메서드 호출
+        // 로그인 성공 시, 세션에 사용자 정보를 저장하고 성공 메시지 반환
         if (userService.loginUser(email, password, session)) { // 로그인 성공 시
             // 200 OK 상태 코드와 함께 "로그인 성공" 메시지를 응답 본문에 포함하여 반환
             return ResponseEntity.ok("로그인 성공");
@@ -130,5 +131,21 @@ public class UserController {
 
         // 200 OK 상태 코드와 함께 성공 메시지 반환
         return ResponseEntity.ok(result);
+    }
+
+    //////////////////////////////////////////////////////////////////////
+
+    // OAuth 구글 로그인 사용자가 회원탈퇴시
+    @DeleteMapping("/delete-oauth")
+    public ResponseEntity<String> deactivateOAuthUser(HttpSession session) {
+        String result = userService.deactivateOAuth2User(session);
+
+        if ("로그인이 필요합니다.".equals(result)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
+        } else if ("OAuth2 사용자가 아닙니다.".equals(result)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        }
+
+        return ResponseEntity.ok(result); // 탈퇴 성공 메시지 반환
     }
 }

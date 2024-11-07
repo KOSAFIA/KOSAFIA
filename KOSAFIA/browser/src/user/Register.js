@@ -12,34 +12,34 @@ import {
   MDBCol,
   MDBIcon,
   MDBInput,
-} from "mdb-react-ui-kit";
+} from "mdb-react-ui-kit";  // MDBootstrap UI Kit을 사용해 스타일링된 컴포넌트를 가져옵니다.
 
 function Register() {
-  // 회원가입 폼의 상태를 관리하는 상태 변수들
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  // 회원가입 폼의 입력 데이터를 관리하는 상태 변수들
+  const [email, setEmail] = useState(""); // 이메일 상태
+  const [username, setUsername] = useState("");// 닉네임 상태
+  const [password, setPassword] = useState(""); // 비밀번호 상태
+  const [confirmPassword, setConfirmPassword] = useState("");// 비밀번호 확인 상태
+  const [error, setError] = useState("");// 오류 메시지 상태
   const navigate = useNavigate(); // 리디렉션을 위한 navigate 설정
 
-  // 회원가입 요청 핸들러
+  // 회원가입 요청을 처리하는 함수
   const handleRegister = async (e) => {
-    e.preventDefault();
+    e.preventDefault();// 폼 제출 시 페이지 새로고침 방지
 
     // 비밀번호와 비밀번호 확인이 일치하는지 확인
     if (password !== confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다.");
-      return;
+      setError("비밀번호가 일치하지 않습니다.");// 일치하지 않을 경우 오류 메시지 설정
+      return; // 일치하지 않으면 함수 종료
     }
 
-    const userData = { email, username, password }; // 회원가입에 필요한 데이터
+    const userData = { email, username, password };  // 서버에 전송할 회원가입 데이터
 
     try {
-      // 회원가입 API 요청
+       // 회원가입 요청을 서버에 전송
       const response = await fetch("http://localhost:8080/api/user/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },// JSON 형식으로 데이터 전송
         body: JSON.stringify(userData), // userData를 JSON 형식으로 서버에 전송
       });
 

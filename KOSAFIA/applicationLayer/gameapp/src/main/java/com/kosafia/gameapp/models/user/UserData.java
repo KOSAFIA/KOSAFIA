@@ -1,9 +1,10 @@
 package com.kosafia.gameapp.models.user;
 
+// 사용자 데이터 정보를 담는 UserData 클래스
 public class UserData {
         private Long userId;
-        private String userEmail;
-        private String username;
+        private String userEmail; //사용자 이메일
+        private String username; //사용자 닉네임
     
         public UserData() {
     
