@@ -23,6 +23,16 @@ public class UserService {
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    //=======김남영 터치 책임은 김남영이============
+    public User getUserFromSession(HttpSession session){
+        User user = (User) session.getAttribute("user");
+        if (user == null)
+            return null;
+
+        return user;
+    }
+    //=======김남영 터치 책임은 김남영이============
+
     // 회원가입 메서드
     public String registerUser(String email, String username, String password) {
         User existingUser = userMapper.findByEmail(email);
@@ -122,7 +132,8 @@ public class UserService {
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     ///
     // OAuth2 Google 로그인 사용자 정보를 처리하는 메서드
-    public String processOAuth2User(Map<String, Object> userAttributes, HttpSession session) {
+    //김남영 츄가 :: 로그인시에 브라우저 세션스토리지에 저장할 데이터 반환으로 String -> UserData
+    public UserData processOAuth2User(Map<String, Object> userAttributes, HttpSession session) {
         String email = (String) userAttributes.get("email");
         String providerId = (String) userAttributes.get("sub"); // Google의 unique ID
         String provider = "google"; // provider를 "google"로 설정
@@ -144,7 +155,11 @@ public class UserService {
 
         // 세션에 사용자 정보 저장
         session.setAttribute("user", user);
-        return "OAuth2 로그인 성공";
+        UserData userData = new UserData();
+        userData.setUsername(user.getUsername());
+        userData.setUserId(user.getUserId());
+        userData.setUserEmail(user.getUserEmail());
+        return userData;
     }
 
 }

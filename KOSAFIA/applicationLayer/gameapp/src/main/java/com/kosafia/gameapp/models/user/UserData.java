@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.ToString;
 
 @ToString
+@Data
 public class UserData {
         private Long userId;
         private String userEmail;

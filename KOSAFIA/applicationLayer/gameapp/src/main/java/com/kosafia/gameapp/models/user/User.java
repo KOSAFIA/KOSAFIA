@@ -1,9 +1,14 @@
 package com.kosafia.gameapp.models.user;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+
+
 import java.time.LocalDateTime;
 
 @Data
+@Builder @AllArgsConstructor //김남영 수정. 유저세션 레파지토리에 유저를 빌더 함수로 추가할때 필요--2024/11/05
 public class User {
     private Long userId;
     private String userEmail;

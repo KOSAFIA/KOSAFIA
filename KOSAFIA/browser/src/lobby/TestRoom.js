@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import { RoomProvider } from '../contexts/socket/room/RoomContext'; // RoomProvider 경로에 맞게 수정
+import RoomComponent from '../components/socket/room/RoomComponent'; // RoomComponent 경로에 맞게 수정
 
 function TestRoom() {
     const { roomKey } = useParams();
