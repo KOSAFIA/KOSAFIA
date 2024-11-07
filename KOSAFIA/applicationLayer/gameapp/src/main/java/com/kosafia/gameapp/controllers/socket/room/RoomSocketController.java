@@ -6,6 +6,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Room;
 import com.kosafia.gameapp.models.user.UserData;
 import com.kosafia.gameapp.repositories.gameroom.RoomRepository;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Random;
 
 @Slf4j
 @Controller
@@ -34,8 +36,8 @@ public class RoomSocketController {
         log.info("방 {}의 사용자 목록을 보내려고 해요", roomId);
         Room room = roomRepository.getRoom(roomId);
         if (room != null) {
-            List<UserData> users = room.getUsers();
-            messagingTemplate.convertAndSend("/topic/room.users." + roomId, users);
+            List<Player> players = room.getPlayers();
+            messagingTemplate.convertAndSend("/topic/room.users." + roomId, players);
             log.info("방 {}의 사용자 목록을 성공적으로 보냈어요", roomId);
         } else {
             log.warn("앗! 방 {}을 찾을 수 없어요", roomId);
@@ -59,22 +61,29 @@ public class RoomSocketController {
     @MessageMapping("/room.user.join/{roomId}")
     public void handleUserJoin(@DestinationVariable Integer roomId, @Payload UserData userData) {
         log.info("{}님이 방 {}에 들어오려고 해요", userData.getUsername(), roomId);
+
+        Random rand = new Random();
+        Player player = new Player(rand.nextInt(9999), userData.getUsername(), userData.getUserEmail());
+        
+
         Room room = roomRepository.getRoom(roomId);
+
+        room.getPlayers().get(0)
         if (room != null) {
-            if (!room.getUsers().contains(userData)) {
-                room.addUser(userData);
+            if (!players.contains(player)) {
+                room.addPlayer(userData.getUsername(), userData.getUserEmail());
                 log.info("{}님이 방 {}에 성공적으로 들어왔어요", userData.getUsername(), roomId);
-                List<UserData> updatedUsers = room.getUsers();
+                List<Player> updatedPlayers = room.getPlayers();
                 
                 // 디버그 로그 추가
-                log.info("전송할 유저 리스트: {}", updatedUsers);
+                log.info("전송할 유저 리스트: {}", updatedPlayers);
                 
-                messagingTemplate.convertAndSend("/topic/room.users." + roomId, updatedUsers);
-                log.info("방 {}의 업데이트된 유저 리스트를 전송했어요: {}", roomId, updatedUsers);
+                messagingTemplate.convertAndSend("/topic/room.users." + roomId, updatedPlayers);
+                log.info("방 {}의 업데이트된 유저 리스트를 전송했어요: {}", roomId, updatedPlayers);
             } else {
                 log.info("{}님은 이미 방 {}에 있어요", userData.getUsername(), roomId);
                 // 이미 있어도 현재 유저 리스트를 다시 보내기
-                messagingTemplate.convertAndSend("/topic/room.users." + roomId, room.getUsers());
+                messagingTemplate.convertAndSend("/topic/room.users." + roomId, room.getPlayers());
             }
         } else {
             log.warn("앗! 방 {}을 찾을 수 없어요", roomId);
@@ -87,10 +96,10 @@ public class RoomSocketController {
         log.info("{}님이 방 {}에서 나가려고 해요", userData.getUsername(), roomId);
         Room room = roomRepository.getRoom(roomId);
         if (room != null) {
-            if (room.getUsers().contains(userData)) {
-                room.removePlayer(userData);
+            if (room.getPlayers().contains(player)) {
+                room.removePlayer(player);
                 log.info("{}님이 방 {}에서 나갔어요", userData.getUsername(), roomId);
-                messagingTemplate.convertAndSend("/topic/room.users." + roomId, room.getUsers());
+                messagingTemplate.convertAndSend("/topic/room.users." + roomId, room.getPlayers());
             } else {
                 log.warn("{}님은 방 {}에 없어요", userData.getUsername(), roomId);
             }
