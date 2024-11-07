@@ -1,37 +1,17 @@
 import React, { useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // useNavigate import
+import { useNavigate } from 'react-router-dom';
 
 function TestLobby() {
-    const navigate = useNavigate(); // useNavigate 훅 사용
-
-    //어.. 이 코드가 이제 로그인 오케이로 넘어갈거에요. 일단 복원용으로 냅둘게요
-    // //김남영 추가 :: 세션에서 사용자 데이터 가져오기 무조건 한번 페이지 로드시 실행
-    // // 컴포넌트가 마운트될 때 세션 데이터를 가져옵니다
-    // useEffect(() => {
-    //     const fetchUserData = async () => {
-    //         try {
-    //             // withCredentials: true를 설정하여 쿠키와 함께 요청을 보냅니다
-    //             const response = await axios.get('http://localhost:8080/api/user/response-userData', {
-    //                 withCredentials: true
-    //             });
-                
-    //             // 응답으로 받은 userData를 sessionStorage에 저장
-    //             sessionStorage.setItem('userData', JSON.stringify(response.data));
-    //             console.log('사용자 데이터를 성공적으로 저장했어요:', response.data);
-    //         } catch (error) {
-    //             console.error('사용자 데이터를 가져오는데 실패했어요:', error);
-    //         }
-    //     };
-
-    //     fetchUserData();
-    // }, [navigate]);
-
+    const navigate = useNavigate();
+    const roomKey = 1; // 테스트용으로 roomKey를 임의로 설정
+    console.log("roomKey:", roomKey); // roomKey 값을 확인하는 로그
     const handleJoinRoom = async () => {
         try {
-            const response = await axios.post('http://localhost:8080/api/rooms/1/join'); // 서버의 엔드포인트 주소
+            const response = await axios.post(`http://localhost:8080/api/rooms/${roomKey}/join`); // 백틱(`) 사용하여 템플릿 리터럴로 작성
+            withCredentials: true // 세션 쿠키를 포함하여 요청을 보냄
             alert(response.data); // 성공 시 서버로부터의 메시지 표시
-            navigate(`/rooms/1`); // 입장 성공 시 게임 방 페이지로 이동
+            navigate(`/rooms/${roomKey}`); // 입장 성공 시 해당 방 페이지로 이동
         } catch (error) {
             console.error('Error joining room:', error);
             alert('방 입장에 실패했습니다. 다시 시도해 주세요.');
