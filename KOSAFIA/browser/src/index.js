@@ -12,10 +12,8 @@ import TestRoom from './lobby/TestRoom';
 import TestPlayRoom from './lobby/TestPlayRoom';
 
 
-// import Kny22 from "./pages/kny/Kny22";
-
 import { BrowserRouter, Routes, Route } from "react-router-dom"; // React Router 라이브러리에서 필요한 컴포넌트를 불러옵니다.
-import Kny333 from "./pages/kny/kny333";
+
 
 import SimpleMafiaChat from "./fast/gamechat/MafiaChat";
 import SimpleMafiaChatBtn from "./fast/gamechat/SimpleMafiaChatBtn";

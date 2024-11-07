@@ -1,5 +1,7 @@
 package com.kosafia.gameapp.controllers.user;
 
+import com.kosafia.gameapp.models.user.User;
+import com.kosafia.gameapp.models.user.UserData;
 import com.kosafia.gameapp.services.user.UserService; // UserService 클래스 임포트
 import jakarta.servlet.http.HttpSession; // HttpSession 클래스를 통해 세션 관리
 import org.springframework.beans.factory.annotation.Autowired; // @Autowired 애너테이션 임포트 (의존성 주입)
@@ -39,7 +41,8 @@ public class UserController {
 
     // 로그인 엔드포인트
     @PostMapping("/login") // "/api/user/login" 경로로 POST 요청이 올 때 실행
-    public ResponseEntity<String> login(@RequestBody Map<String, String> loginData, HttpSession session) {
+    //김남영 수정: 반환타입 String -> ?
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginData, HttpSession session) {
         // 클라이언트에서 전송된 로그인 데이터를 Map으로 받음
         String email = loginData.get("email"); // loginData에서 "email" 키의 값을 가져옴
         String password = loginData.get("password"); // loginData에서 "password" 키의 값을 가져옴
@@ -47,7 +50,10 @@ public class UserController {
         // 로그인 로직 처리 - userService의 loginUser 메서드 호출
         if (userService.loginUser(email, password, session)) { // 로그인 성공 시
             // 200 OK 상태 코드와 함께 "로그인 성공" 메시지를 응답 본문에 포함하여 반환
-            return ResponseEntity.ok("로그인 성공");
+            //김남영 수정 : 클라이언트에서 UserData를 반환하지 않으면 클라이언트는 평생모름
+            // return ResponseEntity.ok("로그인 성공");
+            UserData userData = userService.getUserData(session);
+            return ResponseEntity.ok(userData);
         } else { // 로그인 실패 시
             // 401 Unauthorized 상태 코드와 함께 오류 메시지를 응답 본문에 포함하여 반환
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 실패: 이메일이나 비밀번호가 잘못되었습니다.");
@@ -130,5 +136,19 @@ public class UserController {
 
         // 200 OK 상태 코드와 함께 성공 메시지 반환
         return ResponseEntity.ok(result);
+    }
+
+        // 김남영 추가 담백하게 UserData 반환   
+    @GetMapping("/response-userData") // "/api/user/response-userData" 경로로 GET 요청이 올 때 실행
+    public ResponseEntity<UserData> getUserData(HttpSession session) {
+        // 세션에 저장된 유저로 유저 데이타 변환해서 호출출
+        UserData userData = userService.getUserData(session);
+        if (userData != null) { // 사용자 정보가 존재하면
+            // 200 OK 상태 코드와 함께 사용자 정보를 응답 본문에 포함하여 반환
+            return ResponseEntity.ok(userData);
+        } else { // 사용자 정보가 없으면 (로그인이 필요함)
+            // 401 Unauthorized 상태 코드와 함께 null을 반환
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
     }
 }

@@ -11,6 +11,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
+
+import com.kosafia.gameapp.models.user.UserData;
 import com.kosafia.gameapp.services.user.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -66,9 +68,11 @@ public class SecurityConfig {
                                                                         .getPrincipal();
                                                         Map<String, Object> userAttributes = oAuth2User.getAttributes();
                                                         HttpSession session = request.getSession();
-                                                        userService.processOAuth2User(userAttributes, session); // OAuth2
+                                                        UserData userData = userService.processOAuth2User(userAttributes, session); // OAuth2
                                                                                                                 // 사용자
                                                                                                                 // 정보 처리
+                                                        // 세션에 사용자 데이터 저장
+                                                        session.setAttribute("userData", userData);
                                                         response.sendRedirect("/TestLobby"); // 성공 시 리디렉션
                                                 })
                                                 .failureUrl("/custom-login?error=true") // 실패 시 리디렉션할 URL

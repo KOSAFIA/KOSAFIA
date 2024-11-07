@@ -32,6 +32,12 @@ function Login() {
       });
 
       if (response.ok) {
+        console.log("로그인 성공");
+        //김남영 수정: 클라이언트에서 UserData를 반환하지 않으면 클라이언트는 평생모름
+        const userData = await response.json();
+        // 사용자 정보를 sessionStorage에 저장
+        sessionStorage.setItem('userData', JSON.stringify(userData));
+        console.log('User information saved to sessionStorage:', userData);
         navigate("/TestLobby"); // 로그인 성공 시 LoginOk 페이지로 리디렉션 /TestLobby
       } else {
         const errorData = await response.text();
