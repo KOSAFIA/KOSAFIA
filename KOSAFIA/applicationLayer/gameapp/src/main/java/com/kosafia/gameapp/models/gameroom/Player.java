@@ -20,6 +20,7 @@ public class Player {
     private Role role; // 역할 Enum (시민, 경찰, 의사, 마피아 등)
     private boolean isAlive; // 생존 여부
     private Integer target; // 마지막에 선택한 플레이어 번호
+    private Result result;
 
     public Player(Integer playerNumber, String username, String userEmail) {
         this.playerNumber = playerNumber;
@@ -28,6 +29,7 @@ public class Player {
         this.role = Role.NONE;
         this.isAlive = true; // 기본 생존 상태
         this.target = null;
+        this.result = Result.NONE;
         //
     }
 }
