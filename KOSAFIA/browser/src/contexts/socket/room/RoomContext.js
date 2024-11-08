@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs'; //eslint-disable-line
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 // 방의 모든 정보와 기능을 담는 상자를 만들어요
 const RoomContext = createContext();
@@ -16,6 +17,7 @@ export const RoomProvider = ({ roomKey, children }) => {
     const [isConnected, setIsConnected] = useState(false); // 웹소켓이 연결되었는지 확인하는 곳
     const clientRef = useRef(null); // 웹소켓 연결을 안전하게 보관하는 곳
     const messageQueue = useRef([]); // 아직 보내지 못한 메시지를 임시로 보관하는 곳
+    const navigate = useNavigate();
 
     // 방에 들어왔을 때 다른 사람들에게 알려주는 함수예요
     const sendInitialplayer = useCallback((client, roomKey) => {
@@ -80,7 +82,7 @@ export const RoomProvider = ({ roomKey, children }) => {
                     }
                     
                     const player = JSON.parse(playerData);
-                    
+
                     // 2. 게임 페이지로 이동
                     console.log('게임 페이지로 이동합니다!');
                     // window.location.href = `/rooms/${roomKey}/gameplay`;
