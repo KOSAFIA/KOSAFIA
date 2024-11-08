@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Room;
 import com.kosafia.gameapp.repositories.gameroom.RoomRepository;
@@ -56,16 +57,16 @@ public class GameController {
         
         try {
             // 1. 현재 방의 상태 가져오기
-            String gameState = gameService.getGameState(roomKey);
+            GameStatus gameStatus = roomRepository.getRoom(Integer.parseInt(roomKey)).getGameStatus();
             
             // 2. 방에 있는 플레이어 목록 가져오기
-            List<Player> players = gameService.getPlayers(roomKey);
+            List<Player> players = roomRepository.getRoom(Integer.parseInt(roomKey)).getPlayers();
             
             // 3. 현재 접속한 플레이어 정보 가져오기
-            Player currentPlayer = gameService.getCurrentPlayer(session);
+            Player currentPlayer = (Player) session.getAttribute("player");
             
             // 4. 데이터 담기
-            gameData.put("gameState", gameState);
+            gameData.put("gameStatus", gameStatus);
             gameData.put("players", players);
             gameData.put("currentPlayer", currentPlayer);
             
