@@ -120,14 +120,23 @@ public class RoomController {
 
     // 방에서 플레이어 나가기
     @PostMapping("/{roomKey}/leave")
-    public ResponseEntity<String> leaveRoom(@PathVariable Integer roomKey,
-                                            @RequestParam String username) {
-        boolean success = roomService.leaveRoom(roomKey, username);
-        if (success) {
-            return ResponseEntity.ok(username + "님이 방에서 나갔습니다.");
-        } else {
-            return ResponseEntity.status(404).body("플레이어를 찾을 수 없거나 방에서 나갈 수 없습니다.");
-        }
+    public ResponseEntity<String> leaveRoom(@PathVariable Integer roomKey, HttpSession session) {
+      // 세션에서 플레이어 정보 가져오기
+      Player player = (Player) session.getAttribute("player");
+      if (player == null) {
+          return ResponseEntity.status(401).body("로그인이 필요합니다.");
+      }
+  
+      // 방에서 플레이어 제거
+      boolean removed = roomService.leaveRoom(roomKey, player);
+      if (removed) {
+          // 세션에서 플레이어와 방 정보 삭제
+          session.removeAttribute("player");
+          session.removeAttribute("roomKey");
+          return ResponseEntity.ok("방에서 성공적으로 나갔습니다.");
+      } else {
+          return ResponseEntity.status(404).body("방을 나가는 데 실패했습니다.");
+      }
     }
 
   // 게임 시작 엔드포인트 그런데 방에집중한!!  반환값은 여러개가 있지만 성공하면 데이터로 플레이어값 나갈거야

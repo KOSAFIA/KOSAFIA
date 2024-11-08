@@ -96,16 +96,10 @@ public class RoomService {
     }
 
     // 방에서 플레이어 나가기
-    public boolean leaveRoom(Integer roomKey, String username) {
+    public boolean leaveRoom(Integer roomKey, Player player) {
         Room room = roomRepository.getRoom(roomKey);
         if (room != null) {
-            Player player = room.getPlayers().stream()
-                                 .filter(p -> p.getUsername().equals(username))
-                                 .findFirst()
-                                 .orElse(null);
-            if (player != null) {
-                return room.removePlayer(player);
-            }
+            return room.removePlayer(player);
         }
         return false;
     }

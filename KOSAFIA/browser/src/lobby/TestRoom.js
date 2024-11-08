@@ -63,32 +63,85 @@
 
 // export default TestRoom;
 
-import React, { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { RoomProvider } from '../contexts/socket/room/RoomContext';
-import RoomComponent from '../components/socket/room/RoomComponent';
+// import React, { useEffect } from 'react';
+// import { useParams, useNavigate } from 'react-router-dom';
+// import { RoomProvider } from '../contexts/socket/room/RoomContext';
+// import RoomComponent from '../components/socket/room/RoomComponent';
 
-function TestRoom() {
-    const { roomKey } = useParams();
+// function TestRoom() {
+//     const { roomKey } = useParams();
+//     const navigate = useNavigate();
+
+//     useEffect(() => {
+//         // 사용자 데이터 확인
+//         const userData = sessionStorage.getItem('userData');
+//         if (!userData) {
+//             console.error('사용자 정보를 찾을 수 없어요!');
+//             navigate('/');
+//             return;
+//         }
+//     }, [navigate]);
+
+//     return (
+//         <div style={{ padding: '20px' }}>
+//             <RoomProvider roomKey={roomKey}>
+//                 <RoomComponent roomKey={roomKey} />
+//             </RoomProvider>
+//         </div>
+//     );
+// }
+
+// export default TestRoom;
+
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+function RoomPage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { roomKey, player } = location.state || {}; // 로비 페이지에서 전달된 상태
+    const [players, setPlayers] = useState([]);
 
+    // 방에 있는 인원 목록 가져오기
     useEffect(() => {
-        // 사용자 데이터 확인
-        const userData = sessionStorage.getItem('userData');
-        if (!userData) {
-            console.error('사용자 정보를 찾을 수 없어요!');
-            navigate('/');
-            return;
+        const fetchPlayers = async () => {
+            try {
+                const response = await axios.get(`http://localhost:8080/api/rooms/${roomKey}`);
+                setPlayers(response.data.players || []); // 방에 있는 모든 플레이어 목록 설정
+            } catch (error) {
+                console.error("방 정보를 가져오는 중 오류 발생:", error);
+                alert("방 정보를 불러오는 데 실패했습니다.");
+            }
+        };
+        fetchPlayers();
+    }, [roomKey]);
+
+    // 방 나가기
+    const handleLeaveRoom = async () => {
+        try {
+            await axios.post(`http://localhost:8080/api/rooms/${roomKey}/leave`, {}, { withCredentials: true });
+            alert("방에서 나왔습니다.");
+            navigate("/lobby"); // 로비 페이지로 이동
+        } catch (error) {
+            console.error("방 나가는 중 오류 발생:", error);
+            alert("방을 나가는 데 실패했습니다.");
         }
-    }, [navigate]);
+    };
 
     return (
-        <div style={{ padding: '20px' }}>
-            <RoomProvider roomKey={roomKey}>
-                <RoomComponent roomKey={roomKey} />
-            </RoomProvider>
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+            <h1>게임 방</h1>
+            <p>방 번호: {roomKey}</p>
+            <h2>현재 참여자 목록:</h2>
+            <ul>
+                {players.map((p) => (
+                    <li key={p.userEmail}>{p.username}</li>
+                ))}
+            </ul>
+            <button onClick={handleLeaveRoom}>방 나가기</button>
         </div>
     );
 }
 
-export default TestRoom;
+export default RoomPage;
