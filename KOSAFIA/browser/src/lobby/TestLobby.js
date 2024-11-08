@@ -7,24 +7,27 @@ function TestLobby() {
     const roomKey = 1; // 테스트용으로 roomKey를 임의로 설정
     console.log("roomKey:", roomKey); // roomKey 값을 확인하는 로그
     const handleJoinRoom = async () => {
-        try {
-            // const response = await axios.post(`http://localhost:8080/api/rooms/${roomKey}/join`); // 백틱(`) 사용하여 템플릿 리터럴로 작성
-            const response = await axios.post(`http://localhost:8080/api/rooms/${roomKey}/join`, {}, {
-                withCredentials: true // 세션 쿠키를 포함하여 요청을 보냄
-            });
-            
-            if(response.ok){
-                sessionStorage.setItem("player", JSON.stringify(response.data));
-                alert(response.data); // 성공 시 서버로부터의 메시지 표시
-                navigate(`/rooms/${roomKey}`); // 입장 성공 시 해당 방 페이지로 이동
+    // 수정된 버전
+    try {
+        const response = await axios.post(`http://localhost:8080/api/rooms/${roomKey}/join`, {}, {
+        withCredentials: true
+    });
+    
+    // axios는 2xx 응답을 자동으로 처리합니다
+    console.log('방 입장 성공:', response.data);
+    sessionStorage.setItem("player", JSON.stringify(response.data));
+    navigate(`/rooms/${roomKey}`); // 성공시 바로 이동
+    } catch (error) {
+        if (error.response) {
+            if (error.response.status === 409) {
+            // 이미 방에 있는 경우
+                navigate(`/rooms/${roomKey}`);
+            } else {
+                alert(`방 입장 실패: ${error.response.data}`);
             }
-            else{
-                alert(response.status); //응답 메시지 상태 알림창
-            }
-
-        } catch (error) {
-            console.error('Error joining room:', error);
-            alert('방 입장에 실패했습니다. 다시 시도해 주세요.');
+        } else {
+            alert('서버 연결 오류');
+        }
         }
     };
 

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs'; //eslint-disable-line
+import axios from 'axios';
 
 // 방의 모든 정보와 기능을 담는 상자를 만들어요
 const RoomContext = createContext();
@@ -11,23 +12,24 @@ const RoomContext = createContext();
 export const RoomProvider = ({ roomKey, children }) => {
     // 방에서 필요한 정보를 저장하는 곳이에요
     const [messages, setMessages] = useState([]); // 채팅 메시지를 모아두는 곳
-    const [users, setUsers] = useState([]); // 방에 있는 사람들 목록
+    const [players, setPlayers] = useState([]); // 방에 있는 사람들 목록
     const [isConnected, setIsConnected] = useState(false); // 웹소켓이 연결되었는지 확인하는 곳
     const clientRef = useRef(null); // 웹소켓 연결을 안전하게 보관하는 곳
     const messageQueue = useRef([]); // 아직 보내지 못한 메시지를 임시로 보관하는 곳
 
     // 방에 들어왔을 때 다른 사람들에게 알려주는 함수예요
-    const sendInitialUserData = useCallback((client, roomKey) => {
-        const userData = JSON.parse(sessionStorage.getItem('userData'));
-        if (userData) {
-            console.log('입장 메시지를 보내기 전 userData:', userData);
+    const sendInitialplayer = useCallback((client, roomKey) => {
+        const player = JSON.parse(sessionStorage.getItem('player'));
+
+        if (player) {
+            console.log('입장 메시지를 보내기 전 player:', player);
             client.publish({
-                destination: `/fromapp/room.user.join/${roomKey}`,
-                body: JSON.stringify(userData)
+                destination: `/fromapp/room.player.join/${roomKey}`,
+                body: JSON.stringify(player)
             });
-            console.log('입장 메시지를 보냈어요:', userData);
+            console.log('입장 메시지를 보냈어요:', player);
         } else {
-            console.error('userData를 찾을 수 없어요!');
+            console.error('player를 찾을 수 없어요!');
         }
     }, []);
 
@@ -36,16 +38,16 @@ export const RoomProvider = ({ roomKey, children }) => {
         console.log('구독 설정을 시작합니다...');
         
         // 유저 리스트 구독
-        const userSubscription = client.subscribe(`/topic/room.users.${roomKey}`, (message) => {
+        const playerSubscription = client.subscribe(`/topic/room.players.${roomKey}`, (message) => {
             console.log('유저 리스트 메시지가 도착했어요:', message);
             try {
-                const userList = JSON.parse(message.body);
-                console.log('파싱된 유저 리스트:', userList);
-                if (Array.isArray(userList)) {
-                    setUsers(userList);
-                    console.log('유저 리스트가 업데이트되었어요:', userList);
+                const playerList = JSON.parse(message.body);
+                console.log('파싱된 유저 리스트:', playerList);
+                if (Array.isArray(playerList)) {
+                    setPlayers(playerList);
+                    console.log('유저 리스트가 업데이트되었어요:', playerList);
                 } else {
-                    console.error('받은 유저 리스트가 배열이 아니에요:', userList);
+                    console.error('받은 유저 리스트가 배열이 아니에요:', playerList);
                 }
             } catch (error) {
                 console.error('유저 리스트 처리 중 문제가 발생했어요:', error);
@@ -64,25 +66,37 @@ export const RoomProvider = ({ roomKey, children }) => {
             }
         });
 
-        // 게임 시작 신호 구독 추가
-        const gameStartSubscription = client.subscribe(`/topic/room.game.start.${roomKey}`, (message) => {
-            console.log('게임 시작 신호가 도착했어요:', message);
-            try {
-                const gameStartMessage = JSON.parse(message.body);
-                console.log('게임을 시작할 준비가 되었어요:', gameStartMessage);
-                // TODO: 게임 시작 처리 로직 추가
-                // 예: navigate(`/rooms/${roomKey}/gameplay`);
-            } catch (error) {
-                console.error('게임 시작 신호를 처리하는 중 문제가 발생했어요:', error);
+        // 게임 시작 신호 구독
+        const gameStartSubscription = client.subscribe(
+            `/topic/room.game.start.${roomKey}`, 
+            async (message) => {
+                console.log('게임 시작 신호를 받았어요:', message);
+                try {
+                    // 1. 세션스토리지에서 현재 플레이어 정보 확인
+                    const playerData = sessionStorage.getItem('player');
+                    if (!playerData) {
+                        console.error('플레이어 정보를 찾을 수 없어요!');
+                        return;
+                    }
+                    
+                    const player = JSON.parse(playerData);
+                    
+                    // 2. 게임 페이지로 이동
+                    console.log('게임 페이지로 이동합니다!');
+                    window.location.href = `/rooms/${roomKey}/gameplay`;
+                    
+                } catch (error) {
+                    console.error('게임 시작 처리 중 오류 발생:', error);
+                }
             }
-        });
+        );
 
         console.log(`구독 설정이 모두 완료되었어요!`);
 
         // 컴포넌트가 언마운트될 때 모든 구독 해제
         return () => {
-            if (userSubscription) {
-                userSubscription.unsubscribe();
+            if (playerSubscription) {
+                playerSubscription.unsubscribe();
                 console.log('유저 리스트 구독을 해제했어요');
             }
             if (chatSubscription) {
@@ -112,7 +126,7 @@ export const RoomProvider = ({ roomKey, children }) => {
                 // 방에서 일어나는 일들을 듣기 시작해요
                 setupSubscriptions(client, roomKey);
                 // 다른 사람들에게 내가 방에 들어왔다고 알려요
-                sendInitialUserData(client, roomKey);
+                sendInitialplayer(client, roomKey);
 
                 // 아직 보내지 못한 메시지가 있다면 지금 보내요
                 while (messageQueue.current.length > 0) {
@@ -144,14 +158,14 @@ export const RoomProvider = ({ roomKey, children }) => {
                 client.deactivate();
             }
         };
-    }, [roomKey, setupSubscriptions, sendInitialUserData]);
+    }, [roomKey, setupSubscriptions, sendInitialplayer]);
 
     // 채팅 메시지를 보내는 함수예요
     const sendMessage = useCallback((content) => {
         if (isConnected && clientRef.current) {
             try {
-                const userData = JSON.parse(sessionStorage.getItem('userData'));
-                const username = userData ? userData.username : '알 수 없는 사용자';
+                const player = JSON.parse(sessionStorage.getItem('player'));
+                const username = player ? player.username : '알 수 없는 사용자';
                 const chatMessage = { username, content, roomKey };
                 
                 clientRef.current.publish({
@@ -176,31 +190,42 @@ export const RoomProvider = ({ roomKey, children }) => {
     }, [isConnected, roomKey]);
 
     // 게임 시작 신호를 보내는 함수예요
-    const startGame = useCallback(() => {
-        if (isConnected && clientRef.current) {
-            try {
+    const startGame = useCallback(async () => {
+        try {
+            // 1. HTTP로 게임 시작 요청
+            const response = await axios.post(
+                `http://localhost:8080/api/rooms/${roomKey}/start`,
+                {},
+                { withCredentials: true }
+            );
+
+            // 2. 응답으로 받은 플레이어 정보를 세션스토리지에 저장
+            if (response.data) {
+                sessionStorage.setItem('player', JSON.stringify(response.data));
+                console.log('플레이어 상태가 업데이트되었어요:', response.data);
+            }
+
+            // 3. 소켓으로 게임 시작 신호 전송
+            if (isConnected && clientRef.current) {
                 const startMessage = { roomKey, message: '게임 시작' };
                 clientRef.current.publish({
                     destination: `/fromapp/room.game.start/${roomKey}`,
                     body: JSON.stringify(startMessage)
                 });
                 console.log('게임 시작 신호를 보냈어요!');
-            } catch (error) {
-                console.error('게임 시작 신호를 보내다가 문제가 생겼어요:', error);
+            } else {
+                throw new Error('소켓 연결이 되어있지 않아요');
             }
-        } else {
-            console.warn('아직 방과 연결이 안 되어서, 게임 시작 신호를 잠시 보관할게요.');
-            messageQueue.current.push({
-                destination: `/fromapp/room.game.start/${roomKey}`,
-                body: JSON.stringify({ roomKey, message: '게임 시작' })
-            });
+        } catch (error) {
+            console.error('게임 시작 처리 중 문제가 발생했어요:', error);
+            alert('게임 시작에 실패했어요. 다시 시도해주세요.');
         }
     }, [isConnected, roomKey]);
 
     // 방에서 사용할 수 있는 모든 기능과 정보를 담아서 내보내요
     const value = {
-        messages,    // 채팅 메시지 목록
-        users,       // 방에 있는 사람들 목록
+        messages: messages || [],    // 채팅 메시지 목록
+        players: players || [],      // 방에 있는 사람들 목록
         isConnected, // 방 연결 상태
         sendMessage, // 채팅 메시지 보내는 함수
         startGame    // 게임 시작 신호 보내는 함수

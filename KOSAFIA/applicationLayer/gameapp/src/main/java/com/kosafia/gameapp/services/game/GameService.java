@@ -2,7 +2,7 @@ package com.kosafia.gameapp.services.game;
 
 import java.util.ArrayList;
 
-import com.kosafia.gameapp.models.game.Player;
+import com.kosafia.gameapp.models.gameroom.Player;
 
 public interface GameService {
 
