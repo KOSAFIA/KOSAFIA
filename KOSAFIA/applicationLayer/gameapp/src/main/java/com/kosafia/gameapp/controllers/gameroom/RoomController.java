@@ -137,6 +137,7 @@ public class RoomController {
       } else {
           return ResponseEntity.status(404).body("방을 나가는 데 실패했습니다.");
       }
+      
     }
 
   // 게임 시작 엔드포인트 그런데 방에집중한!!  반환값은 여러개가 있지만 성공하면 데이터로 플레이어값 나갈거야

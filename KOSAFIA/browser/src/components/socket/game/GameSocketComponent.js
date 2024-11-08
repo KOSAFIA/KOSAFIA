@@ -5,7 +5,7 @@ const GameSocketComponent = () => {
     const { 
         messages, 
         players, 
-        gameState, 
+        gameStatus, 
         currentPlayer,
         mafiaTarget,
         canChat,
@@ -24,7 +24,7 @@ const GameSocketComponent = () => {
     };
 
     const handleTargetSelection = (targetId) => {
-        if (currentPlayer?.role === 'MAFIA' && gameState === 'NIGHT') {
+        if (currentPlayer?.role === 'MAFIA' && gameStatus === 'NIGHT') {
             setTarget(targetId);
         }
     };
@@ -32,7 +32,7 @@ const GameSocketComponent = () => {
     return (
         <div className="game-container">
             <div className="game-status">
-                <h2>게임 상태: {gameState}</h2>
+                <h2>게임 상태: {gameStatus}</h2>
                 <p>당신의 역할: {currentPlayer?.role || '미정'}</p>
             </div>
 
@@ -42,7 +42,7 @@ const GameSocketComponent = () => {
                     {players.map((player) => (
                         <li key={player.id}>
                             {player.username}
-                            {currentPlayer?.role === 'MAFIA' && gameState === 'NIGHT' && (
+                            {currentPlayer?.role === 'MAFIA' && gameStatus === 'NIGHT' && (
                                 <input
                                     type="radio"
                                     name="mafiaTarget"

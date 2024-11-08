@@ -7,7 +7,9 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
+import com.kosafia.gameapp.models.gameroom.Role;
 
 import java.util.List;
 
@@ -22,14 +24,14 @@ public class GameSocketController {
 
     // 채팅 메시지 처리
     @MessageMapping("/game.chat.send/{roomKey}")
-    public void handleGameChat(@DestinationVariable String roomKey, ChatMessage message) {
+    public void handleGameChat(@DestinationVariable Integer roomKey, ChatMessage message) {
         System.out.println("채팅 메시지 받음: " + message);
         messagingTemplate.convertAndSend("/topic/game.chat." + roomKey, message);
     }
 
     // 마피아가 타겟 선택했을 때
     @MessageMapping("/game.mafia.target/{roomKey}")
-    public void handleMafiaTarget(@DestinationVariable String roomKey, 
+    public void handleMafiaTarget(@DestinationVariable Integer roomKey, 
                                 @Payload MafiaTargetMessage targetMessage) {
         System.out.println("마피아가 타겟 선택: " + targetMessage);
         
@@ -42,7 +44,7 @@ public class GameSocketController {
 
     // 게임 상태 변경 알림(안쓸 예정인데... 확장될수도 있지 않을까. 쓰면 실시간 처리 가능한데 로직이 복잡해지겠지)
     @MessageMapping("/game.state.change/{roomKey}")
-    public void handleGameStateChange(@DestinationVariable String roomKey, 
+    public void handleGameStateChange(@DestinationVariable Integer roomKey, 
                                     @Payload GameStateMessage stateMessage) {
         System.out.println("게임 상태 변경: " + stateMessage);
         
@@ -59,19 +61,19 @@ public class GameSocketController {
 class ChatMessage {
     private String username;
     private String content;
-    private String gameState;
-    private String role;
+    private GameStatus gameStatus;
+    private Role role;
 }
 
 // 마피아 타겟 메시지 형식 마피아가 암살 시도 할때 어떤 형태로 메시지를 보내는지
 class MafiaTargetMessage {
-    private String mafiaId;
-    private String targetId;
-    private String roomKey;
+    private Integer mafiaId;
+    private Integer targetId;
+    private Integer roomKey;
 }
 
 // 게임 상태 메시지 형식 게임 상태 변경 알림 메시지 형식 ((일단 안쓸 예정이지 않을까?))
 class GameStateMessage {
-    private String state;
+    private GameStatus gameStatus;
     private List<Player> players;
 }

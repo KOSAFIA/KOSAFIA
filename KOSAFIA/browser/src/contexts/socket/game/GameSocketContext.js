@@ -109,10 +109,10 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                 
                 // 게임 상태 구독
                 client.subscribe(`/topic/game.state.${roomKey}`, (message) => {
-                    const { state, players: updatedPlayers } = JSON.parse(message.body);
-                    setgameStatus(state);
+                    const { gameStatus, players: updatedPlayers } = JSON.parse(message.body);
+                    setGameStatus(gameStatus);
                     setPlayers(updatedPlayers);
-                    console.log('게임 상태가 변경되었어요:', state);
+                    console.log('게임 상태가 변경되었어요:', gameStatus);
                 });
 
                 // 채팅 메시지 구독
