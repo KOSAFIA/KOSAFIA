@@ -83,7 +83,9 @@ export const RoomProvider = ({ roomKey, children }) => {
                     
                     // 2. 게임 페이지로 이동
                     console.log('게임 페이지로 이동합니다!');
-                    window.location.href = `/rooms/${roomKey}/gameplay`;
+                    // window.location.href = `/rooms/${roomKey}/gameplay`;
+                    // window.location.href 대신 navigate 사용
+                    navigate(`/rooms/${roomKey}/gameplay`);
                     
                 } catch (error) {
                     console.error('게임 시작 처리 중 오류 발생:', error);
@@ -108,7 +110,7 @@ export const RoomProvider = ({ roomKey, children }) => {
                 console.log('게임 시작 구독을 해제했어요');
             }
         };
-    }, []);
+    }, [navigate]);// navigate를 의존성 배열에 추가
 
     // 방에 처음 들어왔을 때 웹소켓 연결을 시작하는 부분이에요
     useEffect(() => {

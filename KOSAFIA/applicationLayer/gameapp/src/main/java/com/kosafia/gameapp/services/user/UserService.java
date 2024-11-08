@@ -3,7 +3,6 @@ package com.kosafia.gameapp.services.user;
 import com.kosafia.gameapp.mapper.user.UserMapper;
 import com.kosafia.gameapp.models.user.User;
 import com.kosafia.gameapp.models.user.UserData;
-import com.kosafia.gameapp.models.user.UserData;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -60,7 +59,6 @@ public class UserService {
         }
         return false;
     }
-
     // 로그아웃 메서드
     public void logoutUser(HttpSession session) {
         session.invalidate();
