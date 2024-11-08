@@ -57,8 +57,8 @@ public class SecurityConfig {
                                                                 , "/api/room", "/api/rooms", "/api/room/**",
                                                                 "/api/rooms/**", "/TestLobby", "/api/game/**",
                                                                 "/api/game/", "/rooms", "/rooms/**",
-                                                                "/LoginOk", "/Login", "/LoginOk/**", "/Login/**"// LoginOk
-                                                                                                                // 경로를
+                                                                "/LoginOk", "/Login", "/LoginOk/**", "/Login/**",// LoginOk
+                                                                 "/wstomp/**"                                               // 경로를
                                                                                                                 // 인증 없이
                                                                                                                 // 접근
                                                                                                                 // 가능하도록
