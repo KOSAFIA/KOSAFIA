@@ -6,6 +6,7 @@ import { Client } from '@stomp/stompjs'; //eslint-disable-line
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+
 // 방의 모든 정보와 기능을 담는 상자를 만들어요
 const RoomContext = createContext();
 
@@ -18,6 +19,7 @@ export const RoomProvider = ({ roomKey, children }) => {
     const clientRef = useRef(null); // 웹소켓 연결을 안전하게 보관하는 곳
     const messageQueue = useRef([]); // 아직 보내지 못한 메시지를 임시로 보관하는 곳
     const navigate = useNavigate();
+
 
     // 방에 들어왔을 때 다른 사람들에게 알려주는 함수예요
     const sendInitialplayer = useCallback((client, roomKey) => {
