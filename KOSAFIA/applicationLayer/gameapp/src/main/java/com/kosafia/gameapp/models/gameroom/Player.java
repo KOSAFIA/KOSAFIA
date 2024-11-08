@@ -30,6 +30,5 @@ public class Player {
         this.isAlive = true; // 기본 생존 상태
         this.target = null;
         this.result = Result.NONE;
-        //
     }
 }
