@@ -28,5 +28,6 @@ public class Player {
         this.role = Role.NONE;
         this.isAlive = true; // 기본 생존 상태
         this.target = null;
+        //
     }
 }
