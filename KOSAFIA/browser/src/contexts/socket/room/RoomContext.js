@@ -84,7 +84,7 @@ export const RoomProvider = ({ roomKey, children }) => {
                     }
                     
                     const player = JSON.parse(playerData);
-                    
+
                     // 2. 게임 페이지로 이동
                     console.log('게임 페이지로 이동합니다!');
                     // window.location.href = `/rooms/${roomKey}/gameplay`;

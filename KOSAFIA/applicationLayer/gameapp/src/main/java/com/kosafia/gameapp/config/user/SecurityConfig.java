@@ -41,7 +41,7 @@ public class SecurityConfig {
                                 // 요청에 대한 인증 설정
                                 .authorizeHttpRequests(authz -> authz
                                                 .requestMatchers(
-                                                                "/", "/index.html", "/react", "/react/**", "/static/**", // 정적
+                                                                "/**","/", "/index.html", "/react", "/react/**", "/static/**", // 정적
                                                                                                                          // 파일
                                                                                                                          // 요청
                                                                                                                          // 허용
