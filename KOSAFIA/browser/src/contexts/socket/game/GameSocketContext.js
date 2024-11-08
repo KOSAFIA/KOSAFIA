@@ -11,7 +11,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     const [messages, setMessages] = useState([]);
     const [players, setPlayers] = useState([]);
     const [isConnected, setIsConnected] = useState(false);
-    const [gameState, setGameState] = useState(false);
+    const [gameStatus, setGameStatus] = useState(false);
     const [currentPlayer, setCurrentPlayer] = useState(null);
     const [mafiaTarget, setMafiaTarget] = useState(null);
     
@@ -26,12 +26,12 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                 { withCredentials: true }
             );
             
-            setGameState(response.data.gameState);
+            setGameStatus(response.data.gameStatus);
             setPlayers(response.data.players);
             setCurrentPlayer(response.data.currentPlayer);
 
             console.log('게임 정보를 가져왔어요:', {
-                상태: response.data.gameState,
+                상태: response.data.gameStatus,
                 플레이어목록: response.data.players,
                 내정보: response.data.currentPlayer
             });
@@ -43,16 +43,16 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     // 채팅이 가능한지 확인하는 함수예요
     const canChat = useCallback(() => {
         console.log('채팅 가능 여부 확인 중...', {
-            게임상태: gameState,
+            게임상태: gameStatus,
             현재플레이어: currentPlayer?.role
         });
 
-        if (gameState === 'DELAY') return false;
-        if (gameState === 'VOTE') return false;
-        if (gameState === 'FINAL_VOTE') return currentPlayer?.isVoteTarget;
-        if (gameState === 'NIGHT') return currentPlayer?.role === 'MAFIA';
-        return gameState === 'DAY';
-    }, [gameState, currentPlayer]);
+        if (gameStatus === 'DELAY') return false;
+        if (gameStatus === 'VOTE') return false;
+        if (gameStatus === 'FINAL_VOTE') return currentPlayer?.isVoteTarget;
+        if (gameStatus === 'NIGHT') return currentPlayer?.role === 'MAFIA';
+        return gameStatus === 'DAY';
+    }, [gameStatus, currentPlayer]);
 
     // 메시지를 보내는 함수예요
     const sendGameMessage = useCallback((content) => {
@@ -66,7 +66,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                 username: currentPlayer?.username,
                 content,
                 roomKey,
-                gameState,
+                gameStatus,
                 role: currentPlayer?.role
             };
 
@@ -75,11 +75,11 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                 body: JSON.stringify(chatMessage)
             });
         }
-    }, [isConnected, roomKey, gameState, currentPlayer, canChat]);
+    }, [isConnected, roomKey, gameStatus, currentPlayer, canChat]);
 
     // 마피아가 타겟을 고르는 함수예요
     const setTarget = useCallback((targetId) => {
-        if (currentPlayer?.role !== 'MAFIA' || gameState !== 'NIGHT') {
+        if (currentPlayer?.role !== 'MAFIA' || gameStatus !== 'NIGHT') {
             console.log('마피아가 아니거나 밤이 아니라서 선택할 수 없어요');
             return;
         }
@@ -91,7 +91,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                 body: JSON.stringify({ mafiaId: currentPlayer.id, targetId, roomKey })
             });
         }
-    }, [isConnected, roomKey, currentPlayer, gameState]);
+    }, [isConnected, roomKey, currentPlayer, gameStatus]);
 
     // 웹소켓 연결을 설정하는 부분이에요
     useEffect(() => {
@@ -110,7 +110,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                 // 게임 상태 구독
                 client.subscribe(`/topic/game.state.${roomKey}`, (message) => {
                     const { state, players: updatedPlayers } = JSON.parse(message.body);
-                    setGameState(state);
+                    setgameStatus(state);
                     setPlayers(updatedPlayers);
                     console.log('게임 상태가 변경되었어요:', state);
                 });
@@ -158,7 +158,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         messages,
         players,
         isConnected,
-        gameState,
+        gameStatus,
         currentPlayer,
         mafiaTarget,
         canChat,
