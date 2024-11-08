@@ -1,20 +1,20 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { RoomProvider } from '../contexts/socket/room/RoomContext';
+import { GameSocketProvider } from '../contexts/socket/game/GameSocketContext';
+import GameSocketComponent from '../components/socket/game/GameSocketComponent';
 
 function TestPlayRoom() {
-    const location = useLocation();
-    const { users, roomKey } = location.state || {}; // 이전 페이지에서 전달된 상태
+    const { roomKey } = useParams();
 
     return (
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h1>게임 진행 창</h1>
-            <p>방 번호: {roomKey}</p>
-            <h2>참여자 목록:</h2>
-            <ul>
-                {users && users.map((user) => (
-                    <li key={user.id}>{user.username}</li>
-                ))}
-            </ul>
+        <div style={{ padding: '20px' }}>
+            <h1>게임 진행 창 - 방 {roomKey}</h1>
+            <RoomProvider roomKey={roomKey}>
+                <GameSocketProvider roomKey={roomKey}>
+                    <GameSocketComponent />
+                </GameSocketProvider>
+            </RoomProvider>
         </div>
     );
 }
