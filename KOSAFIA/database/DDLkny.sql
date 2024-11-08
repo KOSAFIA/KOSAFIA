@@ -7,10 +7,12 @@ USE kosafia_db;
 CREATE TABLE `Users` (
     `user_id` INT NOT NULL AUTO_INCREMENT COMMENT '사용자 ID',
     `user_email` VARCHAR(50) NOT NULL UNIQUE COMMENT '사용자 이메일',
-    `username` VARCHAR(50) NOT NULL COMMENT '사용자 이름',
+    `username` VARCHAR(50) NOT NULL COMMENT '사용자 닉네임이름',
     `password` VARCHAR(100) NOT NULL COMMENT '비밀번호',
     `status` TINYINT NOT NULL DEFAULT 1 COMMENT '1: 활동, 0: 탈퇴',
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '계정 생성일',
+    `provider` VARCHAR(50) COMMENT '사용자 로그인 제공자',
+    `provider_id` VARCHAR(100) COMMENT '사용자 로그인 제공자 ID',
     PRIMARY KEY (`user_id`)
 ) COMMENT '사용자 정보 테이블';
 
