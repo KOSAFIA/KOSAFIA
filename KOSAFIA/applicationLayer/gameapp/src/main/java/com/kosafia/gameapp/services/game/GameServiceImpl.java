@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.kosafia.gameapp.models.game.Player;
-import com.kosafia.gameapp.models.game.Role;
+import com.kosafia.gameapp.models.gameroom.Player;
+import com.kosafia.gameapp.models.gameroom.Role;
 
 @Service
 public class GameServiceImpl implements GameService {
