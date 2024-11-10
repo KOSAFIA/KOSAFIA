@@ -41,10 +41,11 @@ public class SecurityConfig {
                                 // 요청에 대한 인증 설정
                                 .authorizeHttpRequests(authz -> authz
                                                 .requestMatchers(
-                                                                "/**","/", "/index.html", "/react", "/react/**", "/static/**", // 정적
-                                                                                                                         // 파일
-                                                                                                                         // 요청
-                                                                                                                         // 허용
+                                                                "/", "/**", "/index.html", "/react", "/react/**",
+                                                                "/static/**", // 정적
+                                                                              // 파일
+                                                                              // 요청
+                                                                              // 허용
                                                                 "/css/**", "/js/**", "/css", "/js", // CSS 및 JS 파일 접근 허용
                                                                 "/api/user/register", "/api/user/login", "/api/**",
                                                                 "/api/user/profile", // 회원가입, 로그인, 프로필 조회
@@ -57,12 +58,12 @@ public class SecurityConfig {
                                                                 , "/api/room", "/api/rooms", "/api/room/**",
                                                                 "/api/rooms/**", "/TestLobby", "/api/game/**",
                                                                 "/api/game/", "/rooms", "/rooms/**",
-                                                                "/LoginOk", "/Login", "/LoginOk/**", "/Login/**",// LoginOk
-                                                                 "/wstomp/**"                                               // 경로를
-                                                                                                                // 인증 없이
-                                                                                                                // 접근
-                                                                                                                // 가능하도록
-                                                                                                                // 허용
+                                                                "/LoginOk", "/Login", "/LoginOk/**", "/Login/**", // LoginOk
+                                                                "/wstomp/**" // 경로를
+                                                // 인증 없이
+                                                // 접근
+                                                // 가능하도록
+                                                // 허용
                                                 ).permitAll() // 위의 경로들에 대해 인증 없이 접근 허용
 
                                                 .anyRequest().authenticated() // 나머지 모든 요청은 인증 필요
@@ -75,9 +76,10 @@ public class SecurityConfig {
                                                                         .getPrincipal();
                                                         Map<String, Object> userAttributes = oAuth2User.getAttributes();
                                                         HttpSession session = request.getSession();
-                                                        UserData userData = userService.processOAuth2User(userAttributes, session); // OAuth2
-                                                                                                                // 사용자
-                                                                                                                // 정보 처리
+                                                        UserData userData = userService
+                                                                        .processOAuth2User(userAttributes, session); // OAuth2
+                                                        // 사용자
+                                                        // 정보 처리
                                                         // 세션에 사용자 데이터 저장
                                                         session.setAttribute("userData", userData);
                                                         // response.sendRedirect("/TestLobby"); // 성공 시 리디렉션
