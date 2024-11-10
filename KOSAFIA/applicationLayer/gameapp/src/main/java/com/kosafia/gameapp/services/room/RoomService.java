@@ -30,22 +30,22 @@ public class RoomService {
     }
 
 
-    // 초기화 메서드: 서버 시작 시 임시 방 생성
-    @PostConstruct
-    public void init() {
-        // 서버 시작 시 임시 방 생성
-        createTestRoom();
-    }
+    // // 초기화 메서드: 서버 시작 시 임시 방 생성
+    // @PostConstruct
+    // public void init() {
+    //     // 서버 시작 시 임시 방 생성
+    //     createTestRoom();
+    // }
 
-    // 테스트용 임시 방 생성
-    private void createTestRoom() {
-        String roomName = "testRoom";
-        String password = null; // 공개 방으로 설정
-        boolean isPrivate = false;
+    // // 테스트용 임시 방 생성
+    // private void createTestRoom() {
+    //     String roomName = "testRoom";
+    //     String password = null; // 공개 방으로 설정
+    //     boolean isPrivate = false;
 
-        Room room = roomRepository.createRoom(roomName, password, isPrivate);
-        System.out.println("초기 룸 생성 완료: " + roomName);
-    }
+    //     Room room = roomRepository.createRoom(roomName, password, isPrivate);
+    //     System.out.println("초기 룸 생성 완료: " + roomName);
+    // }
 
 
 
@@ -55,10 +55,17 @@ public class RoomService {
     }
 
     // 방 생성
-    public Room createRoom(String roomName, String password, boolean isPrivate) {
+    public Room createRoom(String roomName, int maxPlayers, String password, boolean isPrivate, UserData userData) {
          // 비밀방이 아닌 경우 password를 null로 설정
         String roomPassword = isPrivate ? password : null;
-        return roomRepository.createRoom(roomName, roomPassword, isPrivate);
+        // return roomRepository.createRoom(roomName, maxPlayers, roomPassword, isPrivate);
+
+        Room room = roomRepository.createRoom(roomName, maxPlayers, roomPassword, isPrivate);
+        // newRoom.setMaxPlayers(maxPlayers);
+
+        return room;
+
+   
     }
 
     // 방 삭제

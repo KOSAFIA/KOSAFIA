@@ -52,10 +52,10 @@ public class RoomRepository {
     // }
     
       // 방 생성 메서드 (roomKey 자동 증가)
-      public Room createRoom(String roomName, String password, boolean isPrivate) {
+      public Room createRoom(String roomName, int maxPlayers, String password, boolean isPrivate) {
         // Integer roomKey = Integer.valueOf(nextRoomKey++); // roomKey로 auto-increment 값을 사용
         int roomKey = nextRoomKey++;
-        Room room = new Room(roomKey, roomName, password, isPrivate);
+        Room room = new Room(roomKey, roomName, maxPlayers, password, isPrivate);
         roomMap.put(roomKey, room);
         return room;
     }
