@@ -127,7 +127,7 @@ public class RoomController {
 
     // 방 입장 엔드포인트
     @PostMapping("/{roomKey}/join")
-    public ResponseEntity<?> joinRoom(@PathVariable Integer roomKey, HttpSession session) {
+    public ResponseEntity<?> joinRoom(@PathVariable("roomKey") Integer roomKey, HttpSession session) {
         // 세션에서 유저 정보를 가져옴
         System.out.println("방 입장 요청 - 방 키=" + roomKey);
         UserData userData = roomService.getUserDataFromSession(session);
@@ -163,7 +163,7 @@ public class RoomController {
     }
 
     @PostMapping("/{roomKey}/leave")
-    public ResponseEntity<String> leaveRoom(@PathVariable Integer roomKey, HttpSession session) {
+    public ResponseEntity<String> leaveRoom(@PathVariable("roomKey") Integer roomKey, HttpSession session) {
         // 1. 세션에서 플레이어 정보 가져오기
         Player player = (Player) session.getAttribute("player");
         if (player == null) {
@@ -198,7 +198,7 @@ public class RoomController {
 
   // 게임 시작 엔드포인트 그런데 방에집중한!!  반환값은 여러개가 있지만 성공하면 데이터로 플레이어값 나갈거야
     @PostMapping("/{roomKey}/start")
-    public ResponseEntity<?> startGame(@PathVariable Integer roomKey, HttpSession session) {
+    public ResponseEntity<?> startGame(@PathVariable("roomKey") Integer roomKey, HttpSession session) {
         log.info("방 {}에서 게임 시작 요청이 왔어요", roomKey);
         
         try {
@@ -242,21 +242,21 @@ public class RoomController {
 
     // 게임 종료 엔드포인트
     @PostMapping("/{roomKey}/end")
-    public ResponseEntity<String> endGame(@PathVariable Integer roomKey) {
+    public ResponseEntity<String> endGame(@PathVariable("roomKey") Integer roomKey) {
         roomService.endGame(roomKey);
         return ResponseEntity.ok("게임이 종료되었습니다.");
     }
 
     // 방 삭제 엔드포인트
     @DeleteMapping("/{roomKey}/delete")
-    public ResponseEntity<String> deleteRoom(@PathVariable Integer roomKey) {
+    public ResponseEntity<String> deleteRoom(@PathVariable("roomKey") Integer roomKey) {
         roomService.deleteRoom(roomKey);
         return ResponseEntity.ok("방이 삭제되었습니다.");
     }
 
     // 특정 방 조회
     @GetMapping("/{roomKey}")
-    public ResponseEntity<Room> getRoomById(@PathVariable Integer roomKey) {
+    public ResponseEntity<Room> getRoomById(@PathVariable("roomKey") Integer roomKey) {
         Room room = roomService.getRoomById(roomKey);
         if (room != null) {
             return ResponseEntity.ok(room);
