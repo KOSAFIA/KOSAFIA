@@ -1,5 +1,6 @@
 package com.kosafia.gameapp.controllers.gameroom;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -87,16 +88,41 @@ public class RoomController {
 
     // 방 생성 엔드포인트
     @PostMapping("/create")
-    public ResponseEntity<String> createRoom(@RequestParam String roomName,
+    public ResponseEntity<?> createRoom(@RequestParam String roomName,
+                                             @RequestParam int maxPlayers,
                                              @RequestParam String password,
-                                             @RequestParam boolean isPrivate) {
-        Room room = roomService.createRoom(roomName, password, isPrivate);
-        return ResponseEntity.ok("방이 생성되었습니다: Room ID " + room.getRoomKey());
+                                             @RequestParam boolean isPrivate,
+                                             HttpSession session) {
+                                                  // 세션에서 유저 정보를 가져옴
+        UserData userData = roomService.getUserDataFromSession(session);
+        if (userData == null) {
+            return ResponseEntity.status(401).body(null);
+            // return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        // 방 생성 및 플레이어 입장
+        Room room = roomService.createRoom(roomName, maxPlayers, password, isPrivate, userData);
+        Integer roomKey = room.getRoomKey();
+        // Player player = roomService.joinRoom(room.getRoomKey(), userData);
+        return joinRoom(roomKey, session);
+        
+        // if (player != null) {
+        //     // 세션에 플레이어와 방 정보를 저장
+        //     session.setAttribute("player", player);
+        //     session.setAttribute("roomKey", room.getRoomKey()); // 방의 roomKey를 세션에 저장
+        //     return ResponseEntity.ok(player); // 생성된 방에 입장한 플레이어 정보 반환
+        // } else {
+        //     return ResponseEntity.status(409).body(null); // 입장 불가능한 경우
+        // }
+    
+        // return ResponseEntity.ok("방이 생성되었습니다: Room ID " + room.getRoomKey());
     }
+
+
 
     // 방 입장 엔드포인트
     @PostMapping("/{roomKey}/join")
-    public ResponseEntity<Player> joinRoom(@PathVariable Integer roomKey, HttpSession session) {
+    public ResponseEntity<?> joinRoom(@PathVariable Integer roomKey, HttpSession session) {
         // 세션에서 유저 정보를 가져옴
         UserData userData = roomService.getUserDataFromSession(session);
         if (userData == null) {
@@ -111,7 +137,15 @@ public class RoomController {
         if (!player.equals(null)) {
             session.setAttribute("player", player);
             session.setAttribute("roomKey", roomKey);
-            return ResponseEntity.ok(player);
+
+
+               // 여러 값 반환을 위한 Map 생성
+            Map<String, Object> response = new HashMap<>();
+            response.put("player", player);
+            response.put("roomKey", roomKey);
+
+            return ResponseEntity.ok(response);
+
         } else {
             return ResponseEntity.status(409).body(null);
             // return ResponseEntity.status(409).body("방이 가득 찼거나 입장할 수 없습니다.");
