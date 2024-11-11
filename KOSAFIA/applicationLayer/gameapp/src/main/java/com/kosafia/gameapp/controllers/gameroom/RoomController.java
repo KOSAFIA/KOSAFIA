@@ -176,9 +176,9 @@ public class RoomController {
         // 2. 방에서 플레이어 제거 요청
         boolean removed = roomService.leaveRoom(roomKey, player);
         if (removed) {
-            log.info("플레이어가 방에서 성공적으로 나갔습니다. roomKey: {}, player: {}", roomKey, player.getUsername());
-
-            log.info("방에 남은 플레이어들 : {}", roomService.getRoomById(roomKey).getPlayers());
+            log.info("플레이어가 방에서 성공적으로 나갔습니다. roomKey: {}, player: {}", roomKey, player.getUsername());        
+            // log.info("방에 남은 플레이어들 : {}", roomService.getRoomById(roomKey).getPlayers());
+            
     
             // 3. 세션에서 플레이어와 방 정보 삭제
             session.removeAttribute("player");

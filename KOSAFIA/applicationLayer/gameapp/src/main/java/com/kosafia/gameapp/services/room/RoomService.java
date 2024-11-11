@@ -106,7 +106,14 @@ public class RoomService {
     public boolean leaveRoom(Integer roomKey, Player player) {
         Room room = roomRepository.getRoom(roomKey);
         if (room != null) {
-            return room.removePlayer(player);
+            boolean playerRemoved = room.removePlayer(player);
+
+            // 방에서 플레이어가 성공적으로 제거되고, 방에 0명이 남은 경우 방 삭제
+            if (playerRemoved && room.getCurrentPlayers() == 0) {
+                roomRepository.removeRoom(roomKey); // 방 삭제 메서드 호출
+                System.out.println("방에 플레이어가 없어 방을 삭제합니다. roomKey: " + roomKey);
+            }
+            return playerRemoved;
         }
         return false;
     }

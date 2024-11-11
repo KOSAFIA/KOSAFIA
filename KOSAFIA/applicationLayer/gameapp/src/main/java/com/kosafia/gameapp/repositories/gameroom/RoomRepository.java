@@ -64,6 +64,7 @@ public class RoomRepository {
     // 방 삭제
     public void removeRoom(Integer roomKey) {
         roomMap.remove(roomKey);
+        System.out.println("방이 성공적으로 삭제되었습니다. roomKey: " + roomKey);
     }
 
     // 방 조회
