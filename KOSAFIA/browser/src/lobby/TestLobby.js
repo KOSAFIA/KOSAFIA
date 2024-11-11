@@ -41,34 +41,98 @@
 
 // export default TestLobby;
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import Modal from 'react-modal';
 
-function LobbyPage() {
+function TestLobby() {
     const navigate = useNavigate();
-    const roomKey = 1; // 테스트용 임시 방 번호
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [roomDetails, setRoomDetails] = useState({
+        roomName: "",
+        maxPlayers: 8,
+        isPrivate: false,
+        password: ""
+    });
 
-    const handleJoinRoom = async () => {
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setRoomDetails((prevDetails) => ({
+            ...prevDetails,
+            [name]: type === "checkbox" ? checked : value
+        }));
+    };
+
+    const handleCreateRoom = async () => {
         try {
-            const response = await axios.post(`http://localhost:8080/api/rooms/${roomKey}/join`, {}, { withCredentials: true });
-            const player = response.data; // 방에 입장한 플레이어 정보
+            const response = await axios.post('http://localhost:8080/api/rooms/create', roomDetails, {
+                withCredentials: true
+            });
+            const { player, roomKey } = response.data; 
+            
             if (player) {
-                // 입장 성공 시 해당 방 페이지로 이동하고 플레이어 정보 전달
-                navigate(`/rooms/${roomKey}`, { state: { roomKey, player } });
+                sessionStorage.setItem("player", JSON.stringify(player));
+                sessionStorage.setItem("roomKey", roomKey);
+                navigate(`/rooms/${roomKey}`);
             }
         } catch (error) {
-            console.error("방 입장 중 오류 발생:", error);
-            alert("방에 입장할 수 없습니다. 다시 시도해 주세요.");
+            console.error("방 생성 실패:", error);
+            alert("방 생성에 실패했습니다. 다시 시도해 주세요.");
         }
     };
 
     return (
-        <div style={{ padding: '20px', textAlign: 'center' }}>
+        <div>
             <h1>로비 페이지</h1>
-            <button onClick={handleJoinRoom}>임시 방 입장</button>
+            <button onClick={() => setIsModalOpen(true)}>방 생성</button>
+
+            <Modal
+                isOpen={isModalOpen}
+                onRequestClose={() => setIsModalOpen(false)}
+                contentLabel="방 생성"
+            >
+                <h2>방 생성</h2>
+                <input
+                    type="text"
+                    name="roomName"
+                    placeholder="방 제목"
+                    value={roomDetails.roomName}
+                    onChange={handleInputChange}
+                />
+                <input
+                    type="number"
+                    name="maxPlayers"
+                    placeholder="최대 인원"
+                    value={roomDetails.maxPlayers}
+                    onChange={handleInputChange}
+                    min="2"
+                    max="12"
+                />
+                <label>
+                    비밀방 여부:
+                    <input
+                        type="checkbox"
+                        name="isPrivate"
+                        checked={roomDetails.isPrivate}
+                        onChange={handleInputChange}
+                    />
+                </label>
+                {roomDetails.isPrivate && (
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="비밀번호"
+                        value={roomDetails.password}
+                        onChange={handleInputChange}
+                    />
+                )}
+                <button onClick={handleCreateRoom}>방 생성</button>
+                <button onClick={() => setIsModalOpen(false)}>취소</button>
+            </Modal>
         </div>
     );
+
 }
 
-export default LobbyPage;
+export default TestLobby;

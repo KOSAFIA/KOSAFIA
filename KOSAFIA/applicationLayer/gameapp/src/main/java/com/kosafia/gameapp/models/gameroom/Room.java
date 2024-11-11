@@ -20,15 +20,15 @@ public class Room {
 
 
     private final Integer roomKey; // PK와 로비에 보이는 키 (String 형식)
-    private String roomName; // 방제
+    private String roomName; // 방제 //입력받음
     private List<Player> players; // 플레이어 목록
     private String hostName; // 방장 이름
-    private int currentPlayers; // 최대 인원
-    private final Integer maxPlayers=8; // 최대 인원
+    private int currentPlayers; // 현재 인원 
+    private int maxPlayers; // 최대 인원 //입력받음
     private boolean isPlaying; // 게임 진행 여부
     private Integer turn; // 현재 턴
-    private String password; // 방 비밀번호
-    private boolean isPrivate; // 비밀 방 여부
+    private String password; // 방 비밀번호 //입력받음
+    private boolean isPrivate; // 비밀 방 여부 //입력받음
     private GameStatus gameStatus; //게임 상태: 낮 밤 등등
     
 
@@ -37,12 +37,12 @@ public class Room {
 
     
 
-    public Room(Integer roomKey, String roomName, String password, boolean isPrivate) {
+    public Room(Integer roomKey, String roomName, int maxPlayers, String password, boolean isPrivate) {
         this.roomKey = roomKey;
         this.roomName = roomName;
         this.players = new ArrayList<>();
         this.hostName = null;        
-        // this.maxPlayers = maxPlayers;
+        this.maxPlayers = maxPlayers;
         this.isPlaying = false;
         this.turn = 0;
         this.password = password;
