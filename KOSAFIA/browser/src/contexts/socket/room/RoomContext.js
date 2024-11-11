@@ -74,25 +74,31 @@ export const RoomProvider = ({ roomKey, children }) => {
         const gameStartSubscription = client.subscribe(
             `/topic/room.game.start.${roomKey}`, 
             async (message) => {
-                console.log('게임 시작 신호를 받았어요:', message);
                 try {
-                    // 1. 세션스토리지에서 현재 플레이어 정보 확인
-                    const playerData = sessionStorage.getItem('player');
-                    if (!playerData) {
-                        console.error('플레이어 정보를 찾을 수 없어요!');
-                        return;
-                    }
-                    
-                    const player = JSON.parse(playerData);
+                    const gameStartData = JSON.parse(message.body);
+                    console.log('게임 시작 데이터:', gameStartData);
 
-                    // 2. 게임 페이지로 이동
-                    console.log('게임 페이지로 이동합니다!');
-                    // window.location.href = `/rooms/${roomKey}/gameplay`;
-                    // window.location.href 대신 navigate 사용
+                    // 세션스토리지에는 필요한 정보만 저장
+                    sessionStorage.setItem('roomKey', roomKey);
+                    
+                    // 현재 플레이어 찾기
+                    const currentPlayerData = JSON.parse(sessionStorage.getItem('player'));
+                    const updatedPlayer = gameStartData.players.find(
+                        p => p.playerNumber === currentPlayerData.playerNumber
+                    );
+                    
+                    if (updatedPlayer) {
+                        sessionStorage.setItem('player', JSON.stringify(updatedPlayer));
+                    }
+
+                    // 로딩 화면 표시 및 네비게이션
+                    // ... 기존 로딩 화면 코드 ...
+
                     navigate(`/rooms/${roomKey}/gameplay`);
                     
                 } catch (error) {
-                    console.error('게임 시작 처리 중 오류 발생:', error);
+                    console.error('게임 시작 처리 중 오류:', error);
+                    alert('게임 시작 처리 중 오류가 발생했습니다.');
                 }
             }
         );
@@ -205,26 +211,23 @@ export const RoomProvider = ({ roomKey, children }) => {
                 { withCredentials: true }
             );
 
-            // 2. 응답으로 받은 플레이어 정보를 세션스토리지에 저장
-            if (response.data) {
-                sessionStorage.setItem('player', JSON.stringify(response.data));
-                console.log('플레이어 상태가 업데이트되었어요:', response.data);
-            }
-
-            // 3. 소켓으로 게임 시작 신호 전송
+            // 2. 소켓으로 게임 시작 신호 전송 (response.data를 활용)
             if (isConnected && clientRef.current) {
-                const startMessage = { roomKey, message: '게임 시작' };
+                const startMessage = { 
+                    roomKey, 
+                    message: '게임 시작',
+                    players: response.data.players,  // 서버에서 받은 최신 플레이어 정보
+                    gameStatus: response.data.gameStatus  // 서버에서 받은 게임 상태
+                };
+                
                 clientRef.current.publish({
                     destination: `/fromapp/room.game.start/${roomKey}`,
                     body: JSON.stringify(startMessage)
                 });
-                console.log('게임 시작 신호를 보냈어요!');
-            } else {
-                throw new Error('소켓 연결이 되어있지 않아요');
             }
         } catch (error) {
-            console.error('게임 시작 처리 중 문제가 발생했어요:', error);
-            alert('게임 시작에 실패했어요. 다시 시도해주세요.');
+            console.error('게임 시작 처리 중 오류:', error);
+            alert('게임 시작 실패');
         }
     }, [isConnected, roomKey]);
 
