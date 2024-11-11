@@ -65,6 +65,7 @@
 
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { RoomProvider } from '../contexts/socket/room/RoomContext';
 import RoomComponent from '../components/socket/room/RoomComponent';
 
@@ -82,11 +83,40 @@ function TestRoom() {
         }
     }, [navigate]);
 
+    // 방 나가기 함수
+    const handleLeaveRoom = async () => {
+        try {
+            const player = JSON.parse(sessionStorage.getItem('player'));
+            if (!player) {
+                console.error('플레이어 정보를 찾을 수 없어요!');
+                return;
+            }
+
+            // 서버에 방 나가기 요청
+            await axios.post(`http://localhost:8080/api/rooms/${roomKey}/leave`, {}, {
+                withCredentials: true
+            });
+
+            // 세션 스토리지에서 플레이어 정보 및 방 키 삭제
+            sessionStorage.removeItem('player');
+            sessionStorage.removeItem('roomKey');
+
+            // 로비로 이동
+            navigate('/TestLobby');
+        } catch (error) {
+            console.error('방 나가기 실패:', error);
+            alert('방을 나가는데 실패했습니다. 다시 시도해 주세요.');
+        }
+    };
+
     return (
         <div style={{ padding: '20px' }}>
             <RoomProvider roomKey={roomKey}>
                 <RoomComponent roomKey={roomKey} />
             </RoomProvider>
+            <button onClick={handleLeaveRoom} style={{ marginTop: '20px' }}>
+                방 나가기
+            </button>
         </div>
     );
 }

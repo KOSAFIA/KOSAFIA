@@ -40,8 +40,7 @@
 // }
 
 // export default TestLobby;
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
@@ -55,6 +54,24 @@ function TestLobby() {
         isPrivate: false,
         password: ""
     });
+    const [rooms, setRooms] = useState([]); // 방 목록 상태 추가
+
+    const fetchRooms = async () => {
+        try {
+            const response = await axios.get('http://localhost:8080/api/rooms/all');
+            console.log("방 목록 조회 성공 - 응답 데이터:", response.data);
+
+            // rooms가 객체로 올 경우 배열로 변환
+            const roomsArray = Array.isArray(response.data) ? response.data : Object.values(response.data);
+            setRooms(roomsArray);
+        } catch (error) {
+            console.error("방 목록 조회 실패 - 오류:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchRooms(); // 컴포넌트 마운트 시 방 목록 가져오기
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -65,19 +82,33 @@ function TestLobby() {
     };
 
     const handleCreateRoom = async () => {
+        console.log("방 생성 버튼 클릭됨");
+        console.log("전송할 roomDetails:", roomDetails);
+
         try {
-            const response = await axios.post('http://localhost:8080/api/rooms/create', roomDetails, {
-                withCredentials: true
-            });
+            const response = await axios.post('http://localhost:8080/api/rooms/create', 
+                { 
+                    roomName: roomDetails.roomName, 
+                    maxPlayers: Number(roomDetails.maxPlayers), 
+                    isPrivate: Boolean(roomDetails.isPrivate), 
+                    password: roomDetails.password 
+                }, 
+                { withCredentials: true }
+            );
+            console.log("방 생성 성공 - 응답 데이터:", response.data);
+
             const { player, roomKey } = response.data; 
             
             if (player) {
+                console.log("플레이어 정보 저장:", player);
                 sessionStorage.setItem("player", JSON.stringify(player));
                 sessionStorage.setItem("roomKey", roomKey);
                 navigate(`/rooms/${roomKey}`);
             }
+            // 방 생성 후 목록 갱신
+            fetchRooms();
         } catch (error) {
-            console.error("방 생성 실패:", error);
+            console.error("방 생성 실패 - 오류:", error);
             alert("방 생성에 실패했습니다. 다시 시도해 주세요.");
         }
     };
@@ -86,6 +117,18 @@ function TestLobby() {
         <div>
             <h1>로비 페이지</h1>
             <button onClick={() => setIsModalOpen(true)}>방 생성</button>
+
+            {/* 방 목록 표시 */}
+            <h2>생성된 방 목록</h2>
+            <ul>
+                {rooms.map((room) => (
+                    <li key={room.roomKey}>
+                        <strong>{room.roomName}</strong> ({room.currentPlayers}/{room.maxPlayers}명)
+                        {room.isPrivate && <span> 🔒</span>}
+                        <button onClick={() => navigate(`/rooms/${room.roomKey}`)}>입장</button>
+                    </li>
+                ))}
+            </ul>
 
             <Modal
                 isOpen={isModalOpen}
@@ -106,7 +149,7 @@ function TestLobby() {
                     placeholder="최대 인원"
                     value={roomDetails.maxPlayers}
                     onChange={handleInputChange}
-                    min="2"
+                    min="1"
                     max="12"
                 />
                 <label>
@@ -132,7 +175,7 @@ function TestLobby() {
             </Modal>
         </div>
     );
-
 }
 
 export default TestLobby;
+

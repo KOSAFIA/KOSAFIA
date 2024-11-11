@@ -108,6 +108,9 @@ public class Room {
         // players.remove(index); // 해당 플레이어 제거
         currentPlayers--; // 플레이어 제거 시 현재 인원수 감소
 
+        if(currentPlayers == 0){
+            
+        }
         // // 뒤에 있는 플레이어들의 번호를 앞으로 당김
         // for (int i = index; i < players.size(); i++) {
         //     players.get(i).setPlayerNumber(i + 1); // playerNumber를 i + 1로 업데이트
