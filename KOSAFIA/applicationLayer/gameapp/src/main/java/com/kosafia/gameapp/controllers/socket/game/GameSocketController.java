@@ -19,7 +19,7 @@ public class GameSocketController {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    @Autowired
+    // @Autowired
     // private GameService gameService; 이런 서비스 없자나...
 
     // 채팅 메시지 처리
