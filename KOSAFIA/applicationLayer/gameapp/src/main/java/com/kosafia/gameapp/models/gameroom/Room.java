@@ -20,31 +20,34 @@ public class Room {
 
 
     private final Integer roomKey; // PK와 로비에 보이는 키 (String 형식)
-    private String roomName; // 방제
+    private String roomName; // 방제 //입력받음
     private List<Player> players; // 플레이어 목록
     private String hostName; // 방장 이름
-    private int currentPlayers; // 최대 인원
-    private final Integer maxPlayers=8; // 최대 인원
-    private boolean gameStatus; // 게임 진행 상태
+    private int currentPlayers; // 현재 인원 
+    private int maxPlayers; // 최대 인원 //입력받음
+    private boolean isPlaying; // 게임 진행 여부
     private Integer turn; // 현재 턴
-    private String password; // 방 비밀번호
-    private boolean isPrivate; // 비밀 방 여부
+    private String password; // 방 비밀번호 //입력받음
+    private boolean isPrivate; // 비밀 방 여부 //입력받음
+    private GameStatus gameStatus; //게임 상태: 낮 밤 등등
+    
 
     // private Integer nextPlayerNumber = 1; // 다음에 부여할 번호
      private Random random = new Random();
 
     
 
-    public Room(Integer roomKey, String roomName, String password, boolean isPrivate) {
+    public Room(Integer roomKey, String roomName, int maxPlayers, String password, boolean isPrivate) {
         this.roomKey = roomKey;
         this.roomName = roomName;
         this.players = new ArrayList<>();
         this.hostName = null;        
-        // this.maxPlayers = maxPlayers;
-        this.gameStatus = false;
+        this.maxPlayers = maxPlayers;
+        this.isPlaying = false;
         this.turn = 0;
         this.password = password;
         this.isPrivate = isPrivate;
+        this.gameStatus = GameStatus.NONE;
     }
 
     //가져오기 매서드들
@@ -84,24 +87,34 @@ public class Room {
 
     // 플레이어 제거 메서드
     public boolean removePlayer(Player player) {
-        int index = players.indexOf(player); // 나가는 플레이어의 인덱스 확인
-        if (index == -1) {
-            System.out.println("플레이어를 찾을 수 없습니다.");
-            return false;
-        }
+        // int index = players.indexOf(player); // 나가는 플레이어의 인덱스 확인
+        // if (index == -1) {
+        //     System.out.println("플레이어를 찾을 수 없습니다.");
+        //     return false;
+        // }
 
         // 방장이 나가면 새 방장 지정
         if (player.getUsername().equals(hostName)) {
             assignNewHost(); 
         }
 
-        players.remove(index); // 해당 플레이어 제거
+        // 플레이어를 직접 제거
+        boolean removed = players.remove(player);
+        if (!removed) {
+            System.out.println("플레이어를 찾을 수 없습니다.");
+            return false;
+        }
+
+        // players.remove(index); // 해당 플레이어 제거
         currentPlayers--; // 플레이어 제거 시 현재 인원수 감소
 
-        // 뒤에 있는 플레이어들의 번호를 앞으로 당김
-        for (int i = index; i < players.size(); i++) {
-            players.get(i).setPlayerNumber(i + 1); // playerNumber를 i + 1로 업데이트
+        if(currentPlayers == 0){
+            
         }
+        // // 뒤에 있는 플레이어들의 번호를 앞으로 당김
+        // for (int i = index; i < players.size(); i++) {
+        //     players.get(i).setPlayerNumber(i + 1); // playerNumber를 i + 1로 업데이트
+        // }
         return true;
     }
 
@@ -111,16 +124,20 @@ public class Room {
 
     // 게임 시작 메서드
     public void startGame() {
-        if (!gameStatus && players.size() >= 4) { // 최소 4인 이상일 때 시작 가능
-            this.gameStatus = true;
+        if (!isPlaying && players.size() >= 4) { // 최소 4인 이상일 때 시작 가능
+            this.isPlaying = true;
             this.turn = 1; // 첫 턴 초기화
+            this.gameStatus = GameStatus.NIGHT;
+            // setGameStatus(gameStatus);
         }
     }
 
     // 게임 종료 메서드
     public void endGame() {
-        this.gameStatus = false;
+        this.isPlaying = false;
         this.turn = 0;
+        this.gameStatus = GameStatus.NONE;
+
     }
 
     ///////////////////////////

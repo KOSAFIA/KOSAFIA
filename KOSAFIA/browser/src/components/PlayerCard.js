@@ -1,3 +1,4 @@
+// PlayerCard.js
 import React, { useState, useEffect } from "react";
 import "../styles/components/PlayerCard.css";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -10,7 +11,7 @@ const roles = [
   { name: "시민", image: "/img/citizen.png" },
 ];
 
-const PlayerCard = ({ name, index, role }) => {
+const PlayerCard = ({ name, index, role, isSelected, onSelectPlayer, isNightTime }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [avatar, setAvatar] = useState("/img/default-avatar.png"); // 기본 아바타
 
@@ -22,9 +23,12 @@ const PlayerCard = ({ name, index, role }) => {
     } else {
       setAvatar("/img/default-avatar.png"); // 역할을 찾을 수 없으면 기본 이미지
     }
-  }, [role]); 
+  }, [role]);
 
   const handleCardClick = () => {
+    if (isNightTime) {
+      onSelectPlayer(index + 1); // 클릭한 플레이어 번호 (index + 1)
+    }
     setIsOpen(true);
   };
 
@@ -40,14 +44,11 @@ const PlayerCard = ({ name, index, role }) => {
   return (
     <div>
       <div
-        className="player-card"
+        className={`player-card ${isSelected ? "selected" : ""}`}
         onClick={handleCardClick}
         data-index={index + 1}
       >
-        <div
-          className="player-avatar"
-          style={{ backgroundImage: `url(${avatar})` }}
-        />
+        <div className="player-avatar" style={{ backgroundImage: `url(${avatar})` }} />
         <div className="player-name">{name}</div>
       </div>
 
@@ -72,12 +73,7 @@ const PlayerCard = ({ name, index, role }) => {
             </div>
             <div className="button-wrapper">
               <div className="circle">
-                <button
-                  type="button"
-                  className="btn-close"
-                  aria-label="Close"
-                  onClick={handleClose}
-                ></button>
+                <button type="button" className="btn-close" aria-label="Close" onClick={handleClose}></button>
               </div>
             </div>
           </div>

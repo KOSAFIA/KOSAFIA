@@ -3,6 +3,7 @@ package com.kosafia.gameapp.config;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration // 애너테이션을 통해 스프링이 이 클래스를 설정 클래스로 인식하게 함
@@ -24,5 +25,12 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedMethods("*") // 모든 HTTP 메서드(GET, POST, PUT, DELETE 등)를 허용
                 .allowedHeaders("*") // 모든 헤더를 허용 (클라이언트에서 다양한 정보를 포함하여 서버에 요청할 수 있도록 허용)
                 .allowCredentials(true); // 자격 증명(쿠키, 인증 정보 등)을 허용하여 클라이언트가 서버에 인증된 요청을 보낼 수 있도록 함
+    }
+
+    //이상하게 빠지는거 해결
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        // React Router 경로들을 index.html로 포워딩
+        registry.addViewController("/rooms/**").setViewName("forward:/index.html");
     }
 }

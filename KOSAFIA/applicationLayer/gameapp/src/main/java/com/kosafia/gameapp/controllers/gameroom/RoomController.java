@@ -1,5 +1,6 @@
 package com.kosafia.gameapp.controllers.gameroom;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,11 +11,13 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kosafia.gameapp.models.gameroom.Player;
+import com.kosafia.gameapp.models.gameroom.Role;
 import com.kosafia.gameapp.models.gameroom.Room;
 import com.kosafia.gameapp.models.user.UserData;
 import com.kosafia.gameapp.repositories.gameroom.RoomRepository;
@@ -84,110 +87,157 @@ public class RoomController {
         this.roomService = roomService;
     }
 
-    // 방 생성 엔드포인트
+    record RoomDetails(String roomName, int maxPlayers, boolean isPrivate, String password) {}
+
     @PostMapping("/create")
-    public ResponseEntity<String> createRoom(@RequestParam String roomName,
-                                             @RequestParam String password,
-                                             @RequestParam boolean isPrivate) {
-        Room room = roomService.createRoom(roomName, password, isPrivate);
-        return ResponseEntity.ok("방이 생성되었습니다: Room ID " + room.getRoomKey());
+    public ResponseEntity<?> createRoom(@RequestBody RoomDetails roomDetails,                             
+                                        HttpSession session) {
+        // 세션에서 유저 정보를 가져옴
+        System.out.println("방 생성 요청 - 유저 정보 확인");
+        UserData userData = roomService.getUserDataFromSession(session);
+        
+        if (userData == null) {
+            System.out.println("유저 정보가 없습니다 - 로그인 필요");
+            return ResponseEntity.status(401).body(null);
+            // return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+    
+        // 방 생성 및 플레이어 입장
+        System.out.println("방 생성 중 - 입력된 정보: 방 제목=" + roomDetails.roomName + ", 최대 인원=" + roomDetails.maxPlayers 
+                           + ", 비밀번호=" + roomDetails.password + ", 비밀방 여부=" + roomDetails.isPrivate);
+
+        // Player player = roomService.joinRoom(room.getRoomKey(), userData);
+        Room room = roomService.createRoom(roomDetails.roomName, roomDetails.maxPlayers, roomDetails.password, roomDetails.isPrivate, userData);
+        Integer roomKey = room.getRoomKey();
+        System.out.println("방 생성 완료 - 방 키=" + roomKey);
+
+        // if (player != null) {
+        //     // 세션에 플레이어와 방 정보를 저장
+        //     session.setAttribute("player", player);
+        //     session.setAttribute("roomKey", room.getRoomKey()); // 방의 roomKey를 세션에 저장
+        //     return ResponseEntity.ok(player); // 생성된 방에 입장한 플레이어 정보 반환
+        // } else {
+        //     return ResponseEntity.status(409).body(null); // 입장 불가능한 경우
+        // }
+    
+        // return ResponseEntity.ok("방이 생성되었습니다: Room ID " + room.getRoomKey());
+    
+        return joinRoom(roomKey, session);
     }
 
     // 방 입장 엔드포인트
     @PostMapping("/{roomKey}/join")
-    public ResponseEntity<Player> joinRoom(@PathVariable Integer roomKey, HttpSession session) {
+    public ResponseEntity<?> joinRoom(@PathVariable Integer roomKey, HttpSession session) {
         // 세션에서 유저 정보를 가져옴
+        System.out.println("방 입장 요청 - 방 키=" + roomKey);
         UserData userData = roomService.getUserDataFromSession(session);
+        
         if (userData == null) {
+            System.out.println("유저 정보가 없습니다 - 로그인 필요");
             return ResponseEntity.status(401).body(null);
             // return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
-
-        // 방에 유저 입장 처리
+    
+        // 방에 유저 입장 시도
+        System.out.println("방 입장 중 - 유저 데이터=" + userData);
         Player player = roomService.joinRoom(roomKey, userData);
-        if (player.equals(null)) {
+        
+        if (player != null) {
+            System.out.println("유저 입장 성공 - 플레이어 정보: " + player);
             session.setAttribute("player", player);
             session.setAttribute("roomKey", roomKey);
-            return ResponseEntity.ok(player);
+    
+            // 여러 값 반환을 위한 Map 생성
+            Map<String, Object> response = new HashMap<>();
+            response.put("player", player);
+            response.put("roomKey", roomKey);
+    
+            System.out.println("방 입장 응답 - 플레이어와 방 키를 반환");
+            return ResponseEntity.ok(response);
+    
         } else {
+            System.out.println("방 입장 실패 - 방이 가득 찼거나 입장할 수 없는 상태입니다.");
             return ResponseEntity.status(409).body(null);
             // return ResponseEntity.status(409).body("방이 가득 찼거나 입장할 수 없습니다.");
         }
     }
 
-    // 방에서 플레이어 나가기
     @PostMapping("/{roomKey}/leave")
-    public ResponseEntity<String> leaveRoom(@PathVariable Integer roomKey,
-                                            @RequestParam String username) {
-        boolean success = roomService.leaveRoom(roomKey, username);
-        if (success) {
-            return ResponseEntity.ok(username + "님이 방에서 나갔습니다.");
+    public ResponseEntity<String> leaveRoom(@PathVariable Integer roomKey, HttpSession session) {
+        // 1. 세션에서 플레이어 정보 가져오기
+        Player player = (Player) session.getAttribute("player");
+        if (player == null) {
+            log.warn("로그아웃된 상태이거나 플레이어 정보가 세션에 없습니다. roomKey: {}", roomKey);
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+        
+        log.info("플레이어가 방을 나가려 합니다. roomKey: {}, player: {}", roomKey, player.getUsername());
+    
+        // 2. 방에서 플레이어 제거 요청
+        boolean removed = roomService.leaveRoom(roomKey, player);
+        if (removed) {
+            log.info("플레이어가 방에서 성공적으로 나갔습니다. roomKey: {}, player: {}", roomKey, player.getUsername());
+
+            log.info("방에 남은 플레이어들 : {}", roomService.getRoomById(roomKey).getPlayers());
+    
+            // 3. 세션에서 플레이어와 방 정보 삭제
+            session.removeAttribute("player");
+            session.removeAttribute("roomKey");
+            log.info("세션에서 플레이어 정보와 방 정보를 제거했습니다. player: {}, roomKey: {}", player.getUsername(), roomKey);
+    
+            return ResponseEntity.ok("방에서 성공적으로 나갔습니다.");
         } else {
-            return ResponseEntity.status(404).body("플레이어를 찾을 수 없거나 방에서 나갈 수 없습니다.");
+            log.warn("플레이어를 방에서 제거하는 데 실패했습니다. roomKey: {}, player: {}", roomKey, player.getUsername());
+            
+            log.info("방에 남은 플레이어들 : {}", roomService.getRoomById(roomKey).getPlayers());
+            
+            return ResponseEntity.status(404).body("방을 나가는 데 실패했습니다.");
         }
     }
+    
 
-  // 게임 시작 엔드포인트
+  // 게임 시작 엔드포인트 그런데 방에집중한!!  반환값은 여러개가 있지만 성공하면 데이터로 플레이어값 나갈거야
     @PostMapping("/{roomKey}/start")
     public ResponseEntity<?> startGame(@PathVariable Integer roomKey, HttpSession session) {
-        
-    /* 
-         // 김지연 코드 == 모든 플레이어를 시작하려고 하시는 코드이나.. 시작은 각 클라이언트가 각자가 각각 시작하는거.
-        // 대신 소켓으로 서버 요청 타이밍을 동기화 하는 로직으로 아래 구현하겠음다. -김남영- 
-
-        // 세션에서 유저 정보 확인
-        UserData userData = roomService.getUserDataFromSession(session);
-        if (userData == null) {
-            return ResponseEntity.status(401).body(null); // 로그인된 유저가 아닌 경우
-        }
-        // 게임 시작 요청
-        List<Player> players = roomService.startGame(roomKey, userData);
-        if (players == null) {
-            return ResponseEntity.status(403).body(null); // 방장만 시작 가능 또는 방이 없을 경우
-        }
-        return ResponseEntity.ok(players); // 방의 모든 플레이어 정보 반환
-    */
         log.info("방 {}에서 게임 시작 요청이 왔어요", roomKey);
+        
         try {
-            // 세션에서 유저 정보 가져오기
-            UserData userData = roomService.getUserDataFromSession(session);
-            if (userData == null) {
-                log.error("세션에서 로그인 정보를 찾을 수 없어요");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 안되어 있네요??");
+            // 1. 세션에서 현재 플레이어 정보 확인
+            Player currentPlayer = (Player) session.getAttribute("player");
+            if (currentPlayer == null) {
+                log.error("세션에서 플레이어 정보를 찾을 수 없어요");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("플레이어 정보가 없어요");
             }
 
-            // 방 찾기
+            // 2. 방 존재 여부 및 상태 확인
             Room room = roomService.getRoomById(roomKey);
             if (room == null) {
                 log.error("방 {}을 찾을 수 없어요", roomKey);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("방을 찾을 수 없어요");
             }
 
-            // 게임 시작 조건 체크 (예: 최소 인원수)
-            if (room.getPlayers().size() < room.getMaxPlayers()) {  // 최소 2명 필요
-                log.warn("방 {}에 플레이어가 부족해요: {} 명", roomKey, room.getPlayers().size());
-                return ResponseEntity.badRequest().body("게임을 시작하려면 풀방이어야해요");
+            // 3. 게임 시작 조건 체크
+            if (room.getPlayers().size() < room.getMaxPlayers()) {
+                log.warn("방 {}에 플레이어가 부족해요: {}/{}", roomKey, room.getPlayers().size(), room.getMaxPlayers());
+                return ResponseEntity.badRequest().body("게임을 시작하려면 풀방이어야 해요");
             }
 
-            // 유저를 플레이어로 변환
-            Player player = room.getPlayerByUserEmail(userData.getUserEmail());
-            if (player == null) {
-                log.error("{}님이 플레이어로 등록이 안되어 있어요", player.getUsername());
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("플레이어 정보를 찾을 수 없어요");
-            }
-
-            // 게임 시작 처리
-            room.startGame();  // Room 클래스에 게임 시작 로직 구현 필요
+            ///****** 이부분 매우 중요 하은님이 개발한 현재 룸 랜덤 역할 배정 로직이 여기에 적용되어야함. */
+            // 4. 플레이어 게임 상태로 변경 == 역할 배정 None에서 무언가로 지금은 가라로 다 Citizen 넣을게용
+            currentPlayer.setRole(Role.CITIZEN);
+            session.setAttribute("player", currentPlayer);  // 세션 업데이트
+            
+            // 5. 방 상태 변경 : 로직내용은 턴=1 세팅 게임 진행중 상태 세팅
+            room.startGame();
             log.info("방 {}에서 게임이 시작되었어요!", roomKey);
 
-            return ResponseEntity.ok(player);  // 플레이어 정보 반환
+            return ResponseEntity.ok(currentPlayer);  // 업데이트된 플레이어 정보 반환
 
         } catch (Exception e) {
             log.error("게임 시작 중 오류가 발생했어요", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("게임을 시작하는 중에 문제가 발생했어요: " + e.getMessage());
         }
-
     }
 
     // 게임 종료 엔드포인트

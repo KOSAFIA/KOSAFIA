@@ -61,7 +61,6 @@ public class UserService {
         }
         return false;// 로그인 실패
     }
-
     // 로그아웃 메서드
     public void logoutUser(HttpSession session) {
         session.invalidate(); // 세션 무효화하여 로그아웃 처리
