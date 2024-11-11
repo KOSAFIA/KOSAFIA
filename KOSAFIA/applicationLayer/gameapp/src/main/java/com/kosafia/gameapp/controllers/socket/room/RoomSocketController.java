@@ -5,12 +5,14 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Room;
 import com.kosafia.gameapp.models.user.UserData;
 import com.kosafia.gameapp.repositories.gameroom.RoomRepository;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,20 +48,24 @@ public class RoomSocketController {
 
     // 채팅 메시지를 받으면 처리하는 함수에요
     @MessageMapping("/room.chat.send/{roomKey}")
-    public void handleChatMessage(@DestinationVariable Integer roomKey, @Payload ChatMessage chatMessage) {
-        log.info("방 {}에서 채팅 메시지가 왔어요: {}", roomKey, chatMessage.content());
-        Room room = roomRepository.getRoom(roomKey);
+    public void handleChatMessage( @Payload ChatMessage chatMessage, @DestinationVariable("roomKey") Integer roomKey) {
+        log.info("방 {}에서 채팅 메시지가 왔어요: {}", chatMessage.roomKey(), chatMessage.content());
+        Room room = roomRepository.getRoom(chatMessage.roomKey());
         if (room != null) {
-            messagingTemplate.convertAndSend("/topic/room.chat." + roomKey, chatMessage);
-            log.info("방 {}의 모든 사람들에게 채팅 메시지를 보냈어요: {}", roomKey, chatMessage);
+            messagingTemplate.convertAndSend("/topic/room.chat." + chatMessage.roomKey(), chatMessage);
+            log.info("방 {}의 모든 사람들에게 채팅 메시지를 보냈어요: {}", chatMessage.roomKey(), chatMessage);
         } else {
-            log.warn("앗! 방 {}을 찾을 수 없어서 채팅 메시지를 보낼 수 없어요", roomKey);
+            log.warn("앗! 방 {}을 찾을 수 없어서 채팅 메시지를 보낼 수 없어요", chatMessage.roomKey());
         }
     }
 
     // 새로운 사람이 방에 들어왔을 때 처리하는 함수에요
-    @MessageMapping("/room.player.join/{roomKey}")
-    public void handleplayerJoin(@DestinationVariable Integer roomKey, @Payload Player player) {
+    @MessageMapping("/room.players.join/{roomKey}")
+    public void handleplayerJoin( @Payload Player player , @DestinationVariable("roomKey") Integer roomKey) {
+        //그지같네 왜 roomKey를 다이렉트로 못받아오지? 짜증나서 세션 쓴다 와..
+        // Integer roomKey = (Integer)session.getAttribute("roomKey");
+        log.debug("Received roomKey: {}", roomKey);
+        log.debug("Received player data: {}", player);
         log.info("{}님이 방 {}에 들어오려고 해요", player.getUsername(), roomKey);
 
         // Random rand = new Random();
@@ -89,8 +95,8 @@ public class RoomSocketController {
     }
 
     // 누군가 방에서 나갔을 때 처리하는 함수에요
-    @MessageMapping("/room.player.leave/{roomKey}")
-    public void handleplayerLeave(@DestinationVariable Integer roomKey, @Payload Player player) {
+    @MessageMapping("/room.players.leave/{roomKey}")
+    public void handleplayerLeave(@Payload Player player, @DestinationVariable("roomKey") Integer roomKey) {
         log.info("{}님이 방 {}에서 나가려고 해요", player.getUsername(), roomKey);
         Room room = roomRepository.getRoom(roomKey);
         if (room != null) {
@@ -109,7 +115,7 @@ public class RoomSocketController {
     // 게임 시작 신호를 받으면 처리하는 함수에요 서버는 이미 게임 시작 세팅이 되었다는거고, 얘는 
     //클라이언트 플레이어들에게 브로드 캐스팅 할거에요
     @MessageMapping("/room.game.start/{roomKey}")
-    public void startGame(@DestinationVariable Integer roomKey, @Payload GameStartMessage startMessage) {
+    public void startGame(@Payload GameStartMessage startMessage, @DestinationVariable("roomKey") Integer roomKey) {
         log.info("방 {}에서 게임 시작 소켓 메시지를 받았어요", roomKey);
         Room room = roomRepository.getRoom(roomKey);
         

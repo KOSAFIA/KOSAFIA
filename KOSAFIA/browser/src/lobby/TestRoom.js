@@ -76,6 +76,9 @@ function TestRoom() {
     useEffect(() => {
         // 사용자 데이터 확인
         const userData = sessionStorage.getItem('userData');
+
+        console.log("roomKey: ", roomKey);
+
         if (!userData) {
             console.error('사용자 정보를 찾을 수 없어요!');
             navigate('/');
@@ -86,6 +89,8 @@ function TestRoom() {
     // 방 나가기 함수
     const handleLeaveRoom = async () => {
         try {
+
+
             const player = JSON.parse(sessionStorage.getItem('player'));
             if (!player) {
                 console.error('플레이어 정보를 찾을 수 없어요!');
