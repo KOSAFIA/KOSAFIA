@@ -83,3 +83,7 @@ implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 // tasks.named('test') {
 // 	useJUnitPlatform()
 // }
+
+compileJava {
+    options.compilerArgs << '-parameters'
+}

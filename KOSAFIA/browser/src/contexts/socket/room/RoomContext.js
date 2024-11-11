@@ -28,7 +28,7 @@ export const RoomProvider = ({ roomKey, children }) => {
         if (player) {
             console.log('입장 메시지를 보내기 전 player:', player);
             client.publish({
-                destination: `/fromapp/room.player.join/${roomKey}`,
+                destination: `/fromapp/room.players.join/${roomKey}`,
                 body: JSON.stringify(player)
             });
             console.log('입장 메시지를 보냈어요:', player);
