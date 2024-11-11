@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -86,26 +87,30 @@ public class RoomController {
         this.roomService = roomService;
     }
 
-    // 방 생성 엔드포인트
+    record RoomDetails(String roomName, int maxPlayers, boolean isPrivate, String password) {}
+
     @PostMapping("/create")
-    public ResponseEntity<?> createRoom(@RequestParam String roomName,
-                                             @RequestParam int maxPlayers,
-                                             @RequestParam String password,
-                                             @RequestParam boolean isPrivate,
-                                             HttpSession session) {
-                                                  // 세션에서 유저 정보를 가져옴
+    public ResponseEntity<?> createRoom(@RequestBody RoomDetails roomDetails,                             
+                                        HttpSession session) {
+        // 세션에서 유저 정보를 가져옴
+        System.out.println("방 생성 요청 - 유저 정보 확인");
         UserData userData = roomService.getUserDataFromSession(session);
+        
         if (userData == null) {
+            System.out.println("유저 정보가 없습니다 - 로그인 필요");
             return ResponseEntity.status(401).body(null);
             // return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
-
+    
         // 방 생성 및 플레이어 입장
-        Room room = roomService.createRoom(roomName, maxPlayers, password, isPrivate, userData);
-        Integer roomKey = room.getRoomKey();
+        System.out.println("방 생성 중 - 입력된 정보: 방 제목=" + roomDetails.roomName + ", 최대 인원=" + roomDetails.maxPlayers 
+                           + ", 비밀번호=" + roomDetails.password + ", 비밀방 여부=" + roomDetails.isPrivate);
+
         // Player player = roomService.joinRoom(room.getRoomKey(), userData);
-        return joinRoom(roomKey, session);
-        
+        Room room = roomService.createRoom(roomDetails.roomName, roomDetails.maxPlayers, roomDetails.password, roomDetails.isPrivate, userData);
+        Integer roomKey = room.getRoomKey();
+        System.out.println("방 생성 완료 - 방 키=" + roomKey);
+
         // if (player != null) {
         //     // 세션에 플레이어와 방 정보를 저장
         //     session.setAttribute("player", player);
@@ -116,63 +121,80 @@ public class RoomController {
         // }
     
         // return ResponseEntity.ok("방이 생성되었습니다: Room ID " + room.getRoomKey());
+    
+        return joinRoom(roomKey, session);
     }
-
-
 
     // 방 입장 엔드포인트
     @PostMapping("/{roomKey}/join")
     public ResponseEntity<?> joinRoom(@PathVariable Integer roomKey, HttpSession session) {
         // 세션에서 유저 정보를 가져옴
+        System.out.println("방 입장 요청 - 방 키=" + roomKey);
         UserData userData = roomService.getUserDataFromSession(session);
+        
         if (userData == null) {
+            System.out.println("유저 정보가 없습니다 - 로그인 필요");
             return ResponseEntity.status(401).body(null);
             // return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
-
-        // 방키로 유저 플레이어 리스트를 일단 접근 + 
-        // 유저데이터로 플레이러를 만들어서 저장 + 
-        // 그 플레이어를 사용할수 있게 반환
+    
+        // 방에 유저 입장 시도
+        System.out.println("방 입장 중 - 유저 데이터=" + userData);
         Player player = roomService.joinRoom(roomKey, userData);
-        if (!player.equals(null)) {
+        
+        if (player != null) {
+            System.out.println("유저 입장 성공 - 플레이어 정보: " + player);
             session.setAttribute("player", player);
             session.setAttribute("roomKey", roomKey);
-
-
-               // 여러 값 반환을 위한 Map 생성
+    
+            // 여러 값 반환을 위한 Map 생성
             Map<String, Object> response = new HashMap<>();
             response.put("player", player);
             response.put("roomKey", roomKey);
-
+    
+            System.out.println("방 입장 응답 - 플레이어와 방 키를 반환");
             return ResponseEntity.ok(response);
-
+    
         } else {
+            System.out.println("방 입장 실패 - 방이 가득 찼거나 입장할 수 없는 상태입니다.");
             return ResponseEntity.status(409).body(null);
             // return ResponseEntity.status(409).body("방이 가득 찼거나 입장할 수 없습니다.");
         }
     }
 
-    // 방에서 플레이어 나가기
     @PostMapping("/{roomKey}/leave")
     public ResponseEntity<String> leaveRoom(@PathVariable Integer roomKey, HttpSession session) {
-      // 세션에서 플레이어 정보 가져오기
-      Player player = (Player) session.getAttribute("player");
-      if (player == null) {
-          return ResponseEntity.status(401).body("로그인이 필요합니다.");
-      }
-  
-      // 방에서 플레이어 제거
-      boolean removed = roomService.leaveRoom(roomKey, player);
-      if (removed) {
-          // 세션에서 플레이어와 방 정보 삭제
-          session.removeAttribute("player");
-          session.removeAttribute("roomKey");
-          return ResponseEntity.ok("방에서 성공적으로 나갔습니다.");
-      } else {
-          return ResponseEntity.status(404).body("방을 나가는 데 실패했습니다.");
-      }
-      
+        // 1. 세션에서 플레이어 정보 가져오기
+        Player player = (Player) session.getAttribute("player");
+        if (player == null) {
+            log.warn("로그아웃된 상태이거나 플레이어 정보가 세션에 없습니다. roomKey: {}", roomKey);
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+        
+        log.info("플레이어가 방을 나가려 합니다. roomKey: {}, player: {}", roomKey, player.getUsername());
+    
+        // 2. 방에서 플레이어 제거 요청
+        boolean removed = roomService.leaveRoom(roomKey, player);
+        if (removed) {
+            log.info("플레이어가 방에서 성공적으로 나갔습니다. roomKey: {}, player: {}", roomKey, player.getUsername());
+
+            log.info("방에 남은 플레이어들 : {}", roomService.getRoomById(roomKey).getPlayers());
+    
+            // 3. 세션에서 플레이어와 방 정보 삭제
+            session.removeAttribute("player");
+            session.removeAttribute("roomKey");
+            log.info("세션에서 플레이어 정보와 방 정보를 제거했습니다. player: {}, roomKey: {}", player.getUsername(), roomKey);
+    
+            return ResponseEntity.ok("방에서 성공적으로 나갔습니다.");
+        } else {
+            log.warn("플레이어를 방에서 제거하는 데 실패했습니다. roomKey: {}, player: {}", roomKey, player.getUsername());
+            
+            log.info("방에 남은 플레이어들 : {}", roomService.getRoomById(roomKey).getPlayers());
+            
+            return ResponseEntity.status(404).body("방을 나가는 데 실패했습니다.");
+        }
     }
+    
 
   // 게임 시작 엔드포인트 그런데 방에집중한!!  반환값은 여러개가 있지만 성공하면 데이터로 플레이어값 나갈거야
     @PostMapping("/{roomKey}/start")
