@@ -17,26 +17,34 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     
     const clientRef = useRef(null);
 
+    const roomInfo = { roomKey: roomKey , player: sessionStorage.getItem("player")};
+
     // 게임 초기화 함수를 추가해요
     const initializeGame = useCallback(async () => {
         try {
-            // 서버에서 현재 게임 상태와 플레이어 정보를 가져와요
+            // 서버에서 방 정보 가져오기
             const response = await axios.get(
-                `http://localhost:8080/api/game/current-data`,
+                `http://localhost:8080/api/rooms/${roomKey}`,
                 { withCredentials: true }
             );
             
-            setGameStatus(response.data.gameStatus);
-            setPlayers(response.data.players);
-            setCurrentPlayer(response.data.currentPlayer);
-
-            console.log('게임 정보를 가져왔어요:', {
-                상태: response.data.gameStatus,
-                플레이어목록: response.data.players,
-                내정보: response.data.currentPlayer
-            });
+            if (response.data) {
+                setGameStatus(response.data.gameStatus);
+                setPlayers(response.data.players);
+                // 현재 플레이어 찾기
+                const playerData = sessionStorage.getItem('player');
+                if (playerData) {
+                    const currentPlayerData = JSON.parse(playerData);
+                    const updatedPlayer = response.data.players.find(
+                        p => p.playerNumber === currentPlayerData.playerNumber
+                    );
+                    if (updatedPlayer) {
+                        setCurrentPlayer(updatedPlayer);
+                    }
+                }
+            }
         } catch (error) {
-            console.error('게임 정보를 가져오는데 실패했어요:', error);
+            console.error('게임 초기화 실패:', error);
         }
     }, [roomKey]);
 
@@ -57,23 +65,33 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     // 메시지를 보내는 함수예요
     const sendGameMessage = useCallback((content) => {
         if (!canChat()) {
-            console.log('지금은 채팅을 할 수 없어요!');
+            console.log('채팅 불가 - 상태:', gameStatus, '역할:', currentPlayer?.role);
             return;
         }
 
         if (isConnected && clientRef.current) {
-            const chatMessage = {
-                username: currentPlayer?.username,
-                content,
-                roomKey,
-                gameStatus,
-                role: currentPlayer?.role
-            };
+            try {
+                const chatMessage = {
+                    username: currentPlayer?.username,
+                    content,
+                    roomKey,
+                    gameStatus,
+                    role: currentPlayer?.role
+                };
 
-            clientRef.current.publish({
-                destination: `/fromapp/game.chat.send/${roomKey}`,
-                body: JSON.stringify(chatMessage)
-            });
+                console.log('채팅 메시지 전송 시도:', chatMessage);
+
+                clientRef.current.publish({
+                    destination: `/fromapp/game.chat.send/${roomKey}`,
+                    body: JSON.stringify(chatMessage)
+                });
+
+                console.log('채팅 메시지 전송 완료');
+            } catch (error) {
+                console.error('채팅 메시지 전송 실패:', error);
+            }
+        } else {
+            console.warn('채팅 불가 - 연결 상태:', isConnected);
         }
     }, [isConnected, roomKey, gameStatus, currentPlayer, canChat]);
 
@@ -85,10 +103,17 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         }
 
         if (isConnected && clientRef.current) {
-            console.log('마피아가 타겟을 골랐어요:', targetId);
+            const targetMessage = {
+                mafiaId: currentPlayer.playerNumber,
+                targetId,
+                roomKey
+            };
+
+            console.log('마피아 타겟 선택:', targetMessage);
+
             clientRef.current.publish({
                 destination: `/fromapp/game.mafia.target/${roomKey}`,
-                body: JSON.stringify({ mafiaId: currentPlayer.id, targetId, roomKey })
+                body: JSON.stringify(targetMessage)
             });
         }
     }, [isConnected, roomKey, currentPlayer, gameStatus]);
@@ -117,9 +142,21 @@ export const GameSocketProvider = ({ roomKey, children }) => {
 
                 // 채팅 메시지 구독
                 client.subscribe(`/topic/game.chat.${roomKey}`, (message) => {
-                    const chatMessage = JSON.parse(message.body);
-                    setMessages(prev => [...prev, chatMessage]);
-                    console.log('새로운 채팅 메시지:', chatMessage);
+                    try {
+                        console.log('채팅 메시지 수신:', message);
+                        const chatMessage = JSON.parse(message.body);
+                        console.log('파싱된 채팅 메시지:', chatMessage);
+                        
+                        if (!chatMessage.username || !chatMessage.content) {
+                            console.error('잘못된 채팅 메시지 형식:', chatMessage);
+                            return;
+                        }
+
+                        setMessages(prev => [...prev, chatMessage]);
+                        console.log('채팅 메시지 목록 업데이트 완료');
+                    } catch (error) {
+                        console.error('채팅 메시지 처리 중 오류:', error);
+                    }
                 });
 
                 // 마피아 타겟 구독
@@ -133,9 +170,34 @@ export const GameSocketProvider = ({ roomKey, children }) => {
 
                 // 플레이어 상태 변경 구독
                 client.subscribe(`/topic/game.players.${roomKey}`, (message) => {
-                    const updatedPlayers = JSON.parse(message.body);
-                    setPlayers(updatedPlayers);
-                    console.log('플레이어 목록이 업데이트되었어요:', updatedPlayers);
+                    try {
+                        const response = JSON.parse(message.body);
+                        console.log('플레이어 상태 업데이트 수신:', response);
+                        
+                        if (response.success) {
+                            // 상태 업데이트
+                            setPlayers(response.players);
+                            setGameStatus(response.gameStatus);
+                            
+                            // 현재 플레이어 정보 업데이트
+                            const currentPlayerData = JSON.parse(sessionStorage.getItem('player'));
+                            if (currentPlayerData) {
+                                const updatedPlayer = response.players.find(
+                                    p => p.playerNumber === currentPlayerData.playerNumber
+                                );
+                                if (updatedPlayer) {
+                                    setCurrentPlayer(updatedPlayer);
+                                    sessionStorage.setItem('player', JSON.stringify(updatedPlayer));
+                                }
+                            }
+                            
+                            console.log('플레이어 상태 업데이트 완료');
+                        } else {
+                            console.error('플레이어 상태 업데이트 실패:', response.message);
+                        }
+                    } catch (error) {
+                        console.error('플레이어 상태 업데이트 처리 중 오류:', error);
+                    }
                 });
             },
             onDisconnect: () => {
@@ -154,6 +216,52 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         };
     }, [roomKey, initializeGame]);
 
+    // 테스트용 메서드들 추가
+    const updateGameStatus = useCallback(async (newStatus) => {
+        try {
+            await axios.post('http://localhost:8080/api/game/admin/status', {
+                roomKey,
+                gameStatus: newStatus
+            }, { withCredentials: true });
+        } catch (error) {
+            console.error('게임 상태 변경 실패:', error);
+        }
+    }, [roomKey]);
+
+    // 플레이어 상태 업데이트 함수 통합
+    const updatePlayerStatus = useCallback(async (playerNumber, {isAlive, role }) => {
+        try {
+            console.log('플레이어 상태 업데이트 요청:', {
+                roomKey,
+                playerNumber,
+                isAlive,
+                role
+            });
+
+            const response = await axios.post(
+                'http://localhost:8080/api/game/admin/player/update',
+                {
+                    roomKey,
+                    playerNumber,
+                    isAlive,
+                    role
+                },
+                { withCredentials: true }
+            );
+
+            // HTTP 응답이 성공하면 소켓으로 브로드캐스트
+            if (response.status === 200) {
+                clientRef.current?.publish({
+                    destination: `/fromapp/game.players.update/${roomKey}`,
+                    body: JSON.stringify(response.data)
+                });
+            }
+        } catch (error) {
+            console.error('플레이어 상태 업데이트 실패:', error);
+            throw error;
+        }
+    }, [roomKey]);
+
     const value = {
         messages,
         players,
@@ -164,7 +272,10 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         canChat,
         sendGameMessage,
         setTarget,
-        initializeGame
+        initializeGame,
+        // 테스트용 메서드
+        updateGameStatus,
+        updatePlayerStatus
     };
 
     return (

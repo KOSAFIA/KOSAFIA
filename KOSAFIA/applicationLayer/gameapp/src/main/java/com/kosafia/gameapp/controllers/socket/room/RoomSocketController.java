@@ -30,8 +30,13 @@ public class RoomSocketController {
     // 채팅 메시지를 담는 그릇이에요
     record ChatMessage(String username, String content, Integer roomKey) {}
     
-    // 게임 시작 메시지를 담는 그릇이에요
-    record GameStartMessage(Integer roomKey, String message) {}
+    // 게임 시작 메시지를 담는 그릇을 수정해요
+    record GameStartMessage(
+        Integer roomKey, 
+        String message, 
+        List<Player> players,
+        String gameStatus
+    ) {}
 
     // 방에 있는 사람들 목록을 보내주는 함수에요
     public void sendPlayerList(Integer roomKey) {
@@ -122,12 +127,21 @@ public class RoomSocketController {
         if (room != null) {
             if (room.getPlayers().size() == room.getMaxPlayers()) {
                 try {
-                    // 1. 게임 시작 메시지를 모든 클라이언트에게 브로드캐스트
+                    // 1. 현재 방의 최신 정보로 새로운 메시지 생성
+                    GameStartMessage updatedMessage = new GameStartMessage(
+                        room.getRoomKey(),
+                        "게임이 시작되었습니다",
+                        room.getPlayers(),
+                        room.getGameStatus().toString()
+                    );
+
+                    // 2. 게임 시작 메시지를 모든 클라이언트에게 브로드캐스트
                     messagingTemplate.convertAndSend(
                         "/topic/room.game.start." + roomKey, 
-                        startMessage
+                        updatedMessage
                     );
-                    log.info("방 {}의 모든 플레이어에게 게임 시작 메시지를 보냈어요!", roomKey);
+                    
+                    log.info("방 {} 게임 시작 정보를 전송했습니다: {}", roomKey, updatedMessage);
 
                 } catch (Exception e) {
                     log.error("게임 시작 메시지 전송 중 오류 발생:", e);
