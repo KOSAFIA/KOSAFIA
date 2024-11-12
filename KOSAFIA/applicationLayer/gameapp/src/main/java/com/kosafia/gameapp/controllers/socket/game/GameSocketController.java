@@ -10,6 +10,8 @@ import org.springframework.stereotype.Controller;
 import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Role;
+import com.kosafia.gameapp.models.gameroom.Room;
+import com.kosafia.gameapp.repositories.gameroom.RoomRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,6 +23,9 @@ public class GameSocketController {
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private RoomRepository roomRepository;  
 
     // 채팅 메시지 처리 - @Payload 어노테이션 추가 및 디버그 로그 추가
     @MessageMapping("/game.chat.send/{roomKey}")
@@ -93,5 +98,71 @@ record GameStateMessage(
     String gameStatus,
     List<Player> players
 ){}
+
+    @MessageMapping("/game.state.update/{roomKey}")
+    public void broadcastGameState(
+        @DestinationVariable("roomKey") Integer roomKey,
+        @Payload String gameState
+    ) {
+        try {
+            log.info("게임 상태 브로드캐스트 - 방: {}", roomKey);
+            messagingTemplate.convertAndSend(
+                "/topic/game.state." + roomKey, 
+                gameState
+            );
+        } catch (Exception e) {
+            log.error("게임 상태 브로드캐스트 실패", e);
+        }
+    }
+
+    // 플레이어 상태 업데이트 브로드캐스트
+    @MessageMapping("/game.players.update/{roomKey}")
+    public void broadcastPlayerUpdate(
+        @DestinationVariable("roomKey") Integer roomKey,
+        @Payload List<Player> updatedPlayers
+    ) {
+        try {
+            log.info("플레이어 상태 업데이트 브로드캐스트 시작 - 방: {}", roomKey);
+
+            Room room = roomRepository.getRoom(roomKey);
+            
+            // 업데이트된 플레이어 정보를 포함한 응답 객체 생성
+            PlayerUpdateResponse response = new PlayerUpdateResponse(
+                room.getGameStatus().toString(),
+                updatedPlayers,
+                true,
+                "플레이어 상태가 업데이트되었습니다."
+            );
+
+            // 해당 방의 모든 클라이언트에게 브로드캐스트
+            messagingTemplate.convertAndSend(
+                "/topic/game.players." + roomKey, 
+                response
+            );
+            
+            log.info("플레이어 상태 업데이트 브로드캐스트 완료 - 방: {}, 플레이어 수: {}", 
+                roomKey, room.getPlayers().size());
+        } catch (Exception e) {
+            log.error("플레이어 상태 업데이트 브로드캐스트 실패", e);
+            
+            // 에러 응답 브로드캐스트
+            PlayerUpdateResponse errorResponse = new PlayerUpdateResponse(
+                null, null, false, 
+                "플레이어 상태 업데이트 중 오류가 발생했습니다: " + e.getMessage()
+            );
+            messagingTemplate.convertAndSend(
+                "/topic/game.players." + roomKey, 
+                errorResponse
+            );
+        }
+    }
+
+    // 플레이어 업데이트 응답 형식
+    record PlayerUpdateResponse(
+        String gameStatus,
+        List<Player> players,
+        boolean success,
+        String message
+    ) {}
 
 }

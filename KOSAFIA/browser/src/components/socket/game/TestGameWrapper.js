@@ -7,8 +7,7 @@ const TestControls = () => {
         players, 
         gameStatus,
         updateGameStatus,
-        updatePlayerStatus,
-        updatePlayerRole
+        updatePlayerStatus
     } = useGameContext();
 
     const [selectedGameStatus, setSelectedGameStatus] = useState(gameStatus);
@@ -18,18 +17,29 @@ const TestControls = () => {
 
     const handleApplyChanges = async () => {
         try {
+            console.log('변경사항 적용 시작');
+            
             // 게임 상태 변경
             if (selectedGameStatus !== gameStatus) {
+                console.log('게임 상태 변경 시도:', selectedGameStatus);
                 await updateGameStatus(selectedGameStatus);
             }
 
             // 플레이어 상태 변경
             if (selectedPlayerId) {
-                await updatePlayerStatus(selectedPlayerId, {
+                console.log('플레이어 상태 변경 시도:', {
+                    playerNumber: selectedPlayerId,
+                    isAlive: selectedIsAlive,
+                    role: selectedRole
+                });
+                
+                await updatePlayerStatus(parseInt(selectedPlayerId), {
                     isAlive: selectedIsAlive,
                     role: selectedRole
                 });
             }
+
+            console.log('변경사항 적용 완료');
         } catch (error) {
             console.error('변경사항 적용 중 오류:', error);
             alert('변경사항 적용 실패');

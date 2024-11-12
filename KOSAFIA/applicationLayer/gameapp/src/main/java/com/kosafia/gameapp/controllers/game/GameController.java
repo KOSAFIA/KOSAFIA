@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,9 +27,13 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/game")
+@Slf4j
+@RequiredArgsConstructor
 public class GameController {
 
     @Autowired
@@ -146,107 +151,47 @@ public class GameController {
 
     // 관리자용 API 엔드포인트들
     @PostMapping("/admin/status")
-    public Map<String, Object> updateGameStatus(
-            @RequestBody Map<String, Object> request,
-            HttpSession session) {
-        Map<String, Object> response = new HashMap<>();
-        
+    public ResponseEntity<?> updateGameStatus(@RequestBody Map<String, Object> request) {
         try {
-            Integer roomKey = (Integer) session.getAttribute("roomKey");
+            Integer roomKey = (Integer) request.get("roomKey");
             String newStatus = (String) request.get("gameStatus");
             
-            if (roomKey == null || newStatus == null) {
-                throw new RuntimeException("필수 파라미터가 누락되었습니다");
-            }
-
+            log.info("게임 상태 변경 요청 - 방: {}, 새로운 상태: {}", roomKey, newStatus);
+            
             Room room = roomRepository.getRoom(roomKey);
             room.setGameStatus(GameStatus.valueOf(newStatus));
             
-            // 웹소켓으로 변경사항을 브로드캐스트하기 위해 GameService 메서드 호출
-            gameService.broadcastGameStatus(roomKey, room.getGameStatus(), room.getPlayers());
-            
-            response.put("success", true);
-            response.put("message", "게임 상태가 변경되었습니다");
-            
+            log.info("게임 상태 변경 완료 - 방: {}", roomKey);
+            return ResponseEntity.ok(room);
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "게임 상태 변경 실패: " + e.getMessage());
+            log.error("게임 상태 변경 실패", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        
-        return response;
     }
 
-    @PostMapping("/admin/player/alive")
-    public Map<String, Object> updatePlayerAliveStatus(
-            @RequestBody Map<String, Object> request,
-            HttpSession session) {
-        Map<String, Object> response = new HashMap<>();
-        
+    @PostMapping("/admin/player/update")
+    public ResponseEntity<?> updatePlayerStatus(@RequestBody Map<String, Object> request) {
         try {
-            Integer roomKey = (Integer) session.getAttribute("roomKey");
+            log.info("플레이어 상태 변경 요청: {}", request);
+
+            Integer roomKey = (Integer) request.get("roomKey");
             Integer playerNumber = (Integer) request.get("playerNumber");
             Boolean isAlive = (Boolean) request.get("isAlive");
-            
-            if (roomKey == null || playerNumber == null || isAlive == null) {
-                throw new RuntimeException("필수 파라미터가 누락되었습니다");
-            }
-
-            Room room = roomRepository.getRoom(roomKey);
-            Player targetPlayer = room.getPlayers().stream()
-                .filter(p -> p.getPlayerNumber().equals(playerNumber))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("플레이어를 찾을 수 없습니다"));
-            
-            targetPlayer.setAlive(isAlive);
-            
-            // 웹소켓으로 변경사항을 브로드캐스트
-            gameService.broadcastPlayerUpdate(roomKey, room.getPlayers());
-            
-            response.put("success", true);
-            response.put("message", "플레이어 상태가 변경되었습니다");
-            
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "플레이어 상태 변경 실패: " + e.getMessage());
-        }
-        
-        return response;
-    }
-
-    @PostMapping("/admin/player/role")
-    public Map<String, Object> updatePlayerRole(
-            @RequestBody Map<String, Object> request,
-            HttpSession session) {
-        Map<String, Object> response = new HashMap<>();
-        
-        try {
-            Integer roomKey = (Integer) session.getAttribute("roomKey");
-            Integer playerNumber = (Integer) request.get("playerNumber");
             String role = (String) request.get("role");
             
-            if (roomKey == null || playerNumber == null || role == null) {
-                throw new RuntimeException("필수 파라미터가 누락되었습니다");
-            }
-
             Room room = roomRepository.getRoom(roomKey);
-            Player targetPlayer = room.getPlayers().stream()
-                .filter(p -> p.getPlayerNumber().equals(playerNumber))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("플레이어를 찾을 수 없습니다"));
-            
-            targetPlayer.setRole(Role.valueOf(role));
-            
-            // 웹소켓으로 변경사항을 브로드캐스트
-            gameService.broadcastPlayerUpdate(roomKey, room.getPlayers());
-            
-            response.put("success", true);
-            response.put("message", "플레이어 역할이 변경되었습니다");
-            
+            Player player = null;
+
+            player = room.getPlayerByPlayerNumber(playerNumber);
+
+            if (isAlive != null) player.setAlive(isAlive);
+            if (role != null) player.setRole(Role.valueOf(role));
+
+            log.info("플레이어 상태 변경 완료 - 방: {}, 플레이어: {}", roomKey, playerNumber);
+            return ResponseEntity.ok(room);
         } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "플레이어 역할 변경 실패: " + e.getMessage());
+            log.error("플레이어 상태 변경 실패", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        
-        return response;
     }
 }

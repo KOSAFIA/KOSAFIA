@@ -170,9 +170,34 @@ export const GameSocketProvider = ({ roomKey, children }) => {
 
                 // 플레이어 상태 변경 구독
                 client.subscribe(`/topic/game.players.${roomKey}`, (message) => {
-                    const updatedPlayers = JSON.parse(message.body);
-                    setPlayers(updatedPlayers);
-                    console.log('플레이어 목록이 업데이트되었어요:', updatedPlayers);
+                    try {
+                        const response = JSON.parse(message.body);
+                        console.log('플레이어 상태 업데이트 수신:', response);
+                        
+                        if (response.success) {
+                            // 상태 업데이트
+                            setPlayers(response.players);
+                            setGameStatus(response.gameStatus);
+                            
+                            // 현재 플레이어 정보 업데이트
+                            const currentPlayerData = JSON.parse(sessionStorage.getItem('player'));
+                            if (currentPlayerData) {
+                                const updatedPlayer = response.players.find(
+                                    p => p.playerNumber === currentPlayerData.playerNumber
+                                );
+                                if (updatedPlayer) {
+                                    setCurrentPlayer(updatedPlayer);
+                                    sessionStorage.setItem('player', JSON.stringify(updatedPlayer));
+                                }
+                            }
+                            
+                            console.log('플레이어 상태 업데이트 완료');
+                        } else {
+                            console.error('플레이어 상태 업데이트 실패:', response.message);
+                        }
+                    } catch (error) {
+                        console.error('플레이어 상태 업데이트 처리 중 오류:', error);
+                    }
                 });
             },
             onDisconnect: () => {
@@ -204,11 +229,13 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     }, [roomKey]);
 
     // 플레이어 상태 업데이트 함수 통합
-    const updatePlayerStatus = useCallback(async (playerNumber, updates) => {
+    const updatePlayerStatus = useCallback(async (playerNumber, {isAlive, role }) => {
         try {
-            console.log('플레이어 상태 업데이트 시도:', {
+            console.log('플레이어 상태 업데이트 요청:', {
+                roomKey,
                 playerNumber,
-                updates
+                isAlive,
+                role
             });
 
             const response = await axios.post(
@@ -216,21 +243,21 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                 {
                     roomKey,
                     playerNumber,
-                    ...updates  // { isAlive?: boolean, role?: string }
+                    isAlive,
+                    role
                 },
                 { withCredentials: true }
             );
 
-            if (response.data.success) {
-                console.log('플레이어 상태 업데이트 성공:', response.data);
-                // 서버에서 업데이트된 전체 방 정보를 받아서 상태 업데이트
-                setPlayers(response.data.players);
-            } else {
-                console.error('플레이어 상태 업데이트 실패:', response.data.message);
-                throw new Error(response.data.message);
+            // HTTP 응답이 성공하면 소켓으로 브로드캐스트
+            if (response.status === 200) {
+                clientRef.current?.publish({
+                    destination: `/fromapp/game.players.update/${roomKey}`,
+                    body: JSON.stringify(response.data)
+                });
             }
         } catch (error) {
-            console.error('플레이어 상태 업데이트 중 오류:', error);
+            console.error('플레이어 상태 업데이트 실패:', error);
             throw error;
         }
     }, [roomKey]);
