@@ -11,7 +11,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
-
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import static org.springframework.security.config.Customizer.withDefaults;
 import com.kosafia.gameapp.models.user.UserData;
 import com.kosafia.gameapp.services.user.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -31,12 +34,27 @@ public class SecurityConfig {
                 return new BCryptPasswordEncoder(); // 비밀번호를 BCrypt 방식으로 암호화하여 보안 강화
         }
 
+        // CORS 설정을 위한 빈 등록
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
+                configuration.addAllowedOrigin("http://localhost:3000");
+                configuration.addAllowedOrigin("http://192.168.240.42:3000");
+                configuration.addAllowedMethod("*"); // 모든 HTTP 메서드 허용
+                configuration.addAllowedHeader("*"); // 모든 헤더 허용
+                configuration.setAllowCredentials(true); // 인증 정보 포함 허용
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
+                return source;
+        }
+
         // SecurityFilterChain 빈을 사용하여 보안 설정
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
-
-                                // CSRF 보호 비활성화 (API 서버일 경우 비활성화하는 경우가 많음)
+                                .cors(withDefaults()) // CORS 설정 추가
+                                                      // CSRF 보호 비활성화 (API 서버일 경우 비활성화하는 경우가 많음)
                                 .csrf(csrf -> csrf.disable()) // CSRF 공격 방어를 비활성화 (API 서버일 경우 일반적으로 비활성화)
 
                                 // 요청에 대한 인증/인가 설정
@@ -94,7 +112,7 @@ public class SecurityConfig {
                                                         // 세션에 사용자 데이터 저장
                                                         session.setAttribute("userData", userData);
                                                         // response.sendRedirect("/TestLobby"); // 성공 시 리디렉션
-                                                        response.sendRedirect("/LoginOk"); // 성공 시 리디렉션
+                                                        response.sendRedirect("/TestLobby"); // 성공 시 리디렉션
                                                 })
                                                 .failureUrl("/custom-login?error=true") // 실패 시 리디렉션할 URL
                                 )

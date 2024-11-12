@@ -1,38 +1,56 @@
-import React, { useEffect, useState } from "react";
-import CheckCors from "../utils/CheckCors";
-import Modal from "react-modal";
-import Mypage from "./Mypage"; // Mypage 컴포넌트를 불러옵니다.
-import GameRoom from "../pages/GameRoom";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import React, { useEffect, useState } from "react"; // React에서 제공하는 useEffect와 useState 훅을 가져옵니다.
+import CheckCors from "../utils/CheckCors"; // CORS 확인을 위한 유틸리티 함수를 가져옵니다.
+import Modal from "react-modal"; // 모달을 구현하기 위한 라이브러리 Modal을 임포트합니다.
+import Mypage from "./Mypage"; // 마이페이지 컴포넌트를 가져옵니다.
+import GameRoom from "../pages/GameRoom"; // 게임방 페이지 컴포넌트를 가져옵니다.
+import { useNavigate } from "react-router-dom"; // 페이지 이동을 위해 useNavigate 훅을 가져옵니다.
+import axios from "axios"; // 서버와의 통신을 위해 axios 라이브러리를 가져옵니다.
 
-Modal.setAppElement("#root"); // 모달이 열릴 때 #root 외부의 콘텐츠는 접근 불가로 설정
+import "../styles/components/LoginOk.css";
+
+Modal.setAppElement("#root"); // 모달이 열릴 때 #root 외부의 콘텐츠는 접근 불가로 설정합니다.
 
 function LoginOk() {
-  const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const navigate = useNavigate(); // 페이지 이동을 위한 navigate 함수입니다.
+  const [username, setUsername] = useState(""); // 사용자 닉네임 저장하는 상태입니다.
+  const [useremail, setUserEmail] = useState(""); // 사용자 이메일 저장하는 상태입니다.
   const [isMypageModalOpen, setIsMypageModalOpen] = useState(false); // 마이페이지 모달 열림 상태
+  const [isOAuthUser, setIsOAuthUser] = useState(false); // OAuth 사용자 여부를 저장하는 상태 정의
 
-    //김남영 추가 :: 세션에서 사용자 데이터 가져오기 무조건 한번 페이지 로드시 실행
-    // 컴포넌트가 마운트될 때 세션 데이터를 가져옵니다
-    useEffect(() => {
-      const fetchUserData = async () => {
-          try {
-              // withCredentials: true를 설정하여 쿠키와 함께 요청을 보냅니다
-              const response = await axios.get('http://localhost:8080/api/user/response-userData', {
-                  withCredentials: true
-              });
-              
-              // 응답으로 받은 userData를 sessionStorage에 저장
-              sessionStorage.setItem('userData', JSON.stringify(response.data));
-              console.log('사용자 데이터를 성공적으로 저장했어요:', response.data);
-          } catch (error) {
-              console.error('사용자 데이터를 가져오는데 실패했어요:', error);
+  //김남영 추가 :: 세션에서 사용자 데이터 가져오기 무조건 한번 페이지 로드시 실행
+  // 컴포넌트가 마운트될 때 세션 데이터를 가져옵니다
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // withCredentials: true를 설정하여 쿠키와 함께 요청을 보냅니다
+        const response = await axios.get(
+          "http://localhost:8080/api/user/response-userData",
+          {
+            withCredentials: true,
           }
-      };
+        );
 
-      fetchUserData();
-  }, [navigate]);
+        // 응답으로 받은 userData를 sessionStorage에 저장
+        sessionStorage.setItem("userData", JSON.stringify(response.data));
+
+        // provider 값을 확인하고 OAuth 여부 설정
+        setIsOAuthUser(
+          response.data.provider !== null && response.data.provider !== ""
+        ); // OAuth 사용자 여부를 설정합니다.
+
+        // 사용자 데이터 로그로 확인
+        console.log("사용자 데이터를 성공적으로 저장했어요:", response.data);
+        console.log(
+          "OAuth 사용자 여부:",
+          response.data.provider !== null && response.data.provider !== ""
+        );
+      } catch (error) {
+        console.error("사용자 데이터를 가져오는데 실패했어요:", error);
+      }
+    };
+
+    fetchUserData(); // 사용자 데이터를 가져오는 함수를 호출합니다.
+  }, [navigate]); // navigate가 변경될 때 이 효과가 다시 실행됩니다.
 
   // 컴포넌트가 처음 렌더링될 때 사용자 정보를 가져오는 함수입니다.
   useEffect(() => {
@@ -44,12 +62,15 @@ function LoginOk() {
         const response = await fetch("http://localhost:8080/api/user/profile", {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-          credentials: "include", // 세션 쿠키를 포함하여 요청
+          credentials: "include", // 세션 쿠키를 포함하여 서버에 요청
         });
 
         if (response.ok) {
-          const data = await response.json();
-          setUsername(data.username); // 사용자 이름 상태를 업데이트합니다.
+          const data = await response.json(); // 서버로부터 받은 데이터를 JSON 형태로 파싱
+          console.log("받은 사용자 데이터:", data); // 데이터 확인 로그 추가
+          setUserEmail(data.useremail); // 사용자 이메일 상태 업데이트
+          setUsername(data.username); // 사용자 닉네임 상태를 업데이트합니다.
+          setIsOAuthUser(!!data.provider); // provider 필드가 있으면 OAuth 사용자임을 true로 설정
         } else {
           console.error("사용자 정보를 불러오는 데 실패했습니다.");
           navigate("/custom-login"); // 로그인 실패 시 로그인 페이지로 리디렉션
@@ -60,7 +81,7 @@ function LoginOk() {
       }
     };
 
-    fetchUserInfo();
+    fetchUserInfo(); // 사용자 정보를 가져오는 함수를 호출합니다.
   }, [navigate]); // navigate 의존성을 추가하여 navigate 함수가 변경되면 useEffect가 다시 실행됩니다.
 
   // 로그아웃 핸들러 함수
@@ -95,37 +116,55 @@ function LoginOk() {
     setIsMypageModalOpen(false); // 마이페이지 모달을 닫도록 상태를 false로 변경
   };
 
-    // 게임방 페이지로 이동
-    const goToGameRoom = () => {
-      navigate("/GameRoom"); // 게임방 페이지로 이동
-    };
+  // 게임방 페이지로 이동
+  const goToGameRoom = () => {
+    navigate("/GameRoom"); // 게임방 페이지로 이동
+  };
 
   //김남영 추가 : 김지연 테스트로비로 이동
   const goToTestLobby = () => {
-    navigate("/TestLobby"); 
+    navigate("/TestLobby");
   };
 
   return (
-    <div className="login-ok-container">
-      <h1>홈 페이지</h1>
-      {username && <p>{username}님, 환영합니다!</p>}
-
-      <button className="logout-button" onClick={handleLogout}>
-        로그아웃
-      </button>
-
-      <button className="mypage-button" onClick={openMypageModal}>
-        마이페이지
-      </button>
-      <button className="GameRoombutton" onClick={goToGameRoom}>
-        게임방
-      </button>
-
-//김남영 추가
-      <button className="TestLobbybutton" onClick={goToTestLobby}>
-        테스트로비
-      </button>
-
+    // <div className="login-ok-container">
+    //   <h1>홈 페이지</h1>
+    //   {username && <p>{username}님, 환영합니다!</p>}{" "}
+    //   {/* 로그인한 사용자 이름을 표시합니다. */}
+    //   <button className="logout-button" onClick={handleLogout}>
+    //     로그아웃
+    //   </button>
+    //   <button className="mypage-button" onClick={openMypageModal}>
+    //     마이페이지
+    //   </button>
+    //   <button className="GameRoombutton" onClick={goToGameRoom}>
+    //     게임방
+    //   </button>
+    //   //김남영 추가
+    //   <button className="TestLobbybutton" onClick={goToTestLobby}>
+    //     테스트로비
+    //   </button>
+    <>
+      <nav className="navbar">
+        <h1>KOSAFIA</h1>
+        {username && (
+          <p className="welcome-message">{username}님, 환영합니다!</p>
+        )}
+        <div className="navbar-buttons">
+          <button className="mypage-button" onClick={openMypageModal}>
+            마이페이지
+          </button>
+          <button className="GameRoombutton" onClick={goToGameRoom}>
+            게임방
+          </button>
+          <button className="TestLobbybutton" onClick={goToTestLobby}>
+            테스트로비
+          </button>
+          <button className="logout-button" onClick={handleLogout}>
+            로그아웃
+          </button>
+        </div>
+      </nav>
       <Modal
         isOpen={isMypageModalOpen} // 모달 열림 여부를 결정하는 상태
         onRequestClose={closeMypageModal} // 모달 외부 클릭 시 닫히도록 설정
@@ -133,12 +172,14 @@ function LoginOk() {
         className="mypage-modal" // 모달 스타일 클래스
         overlayClassName="mypage-modal-overlay" // 모달 배경 스타일 클래스
       >
-        <Mypage setUsername={setUsername} /> {/* setUsername을 Mypage에 전달 */}
+        <Mypage setUsername={setUsername} isOAuthUser={isOAuthUser} />
+        {/* isOAuthUser를 Mypage에 전달 */}
+        {/* setUsername을 Mypage에 전달 */}
         <button onClick={closeMypageModal} style={{ marginTop: "10px" }}>
           닫기
         </button>
       </Modal>
-    </div>
+    </>
   );
 }
 

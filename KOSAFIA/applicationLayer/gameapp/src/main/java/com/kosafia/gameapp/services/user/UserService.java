@@ -61,6 +61,7 @@ public class UserService {
         }
         return false;// 로그인 실패
     }
+
     // 로그아웃 메서드
     public void logoutUser(HttpSession session) {
         session.invalidate(); // 세션 무효화하여 로그아웃 처리
@@ -90,11 +91,18 @@ public class UserService {
         return "닉네임이 성공적으로 변경되었습니다.";
     }
 
-    // 비밀번호 업데이트 메서드
+    // 비밀번호 업데이트 메서드 - OAuth 사용자는 비밀번호 변경 불가능
     public String updatePassword(String currentPassword, String newPassword, HttpSession session) {
         User user = (User) session.getAttribute("user");
-        if (user == null)
+        if (user == null) {
             return "로그인이 필요합니다.";
+        }
+        // OAuth 사용자의 경우 비밀번호 변경을 허용하지 않음
+        if (user.getProvider() != null && !user.getProvider().isEmpty())
+
+        {
+            return "OAuth 사용자 계정은 비밀번호를 변경할 수 없습니다.";
+        }
 
         // 현재 비밀번호와 입력된 비밀번호가 일치하는지 확인
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
@@ -106,13 +114,14 @@ public class UserService {
         return "비밀번호가 성공적으로 변경되었습니다.";
     }
 
-    // 회원 탈퇴 메서드
+    // 일반 사용자 탈퇴 메서드
     public String deactivateUser(String password, HttpSession session) {
         User user = (User) session.getAttribute("user");
-        if (user == null)
+        if (user == null) {
             return "로그인이 필요합니다."; // 로그인 상태가 아니면 메시지 반환
+        }
 
-        // 비밀번호가 일치하면 탈퇴 처리
+        // 일반 사용자 탈퇴 처리 (비밀번호 확인 후 탈퇴)
         if (passwordEncoder.matches(password, user.getPassword())) {
             userMapper.deactivateUser(user.getUserId()); // DB에서 사용자 상태 변경
             session.invalidate(); // 세션 무효화
@@ -122,14 +131,32 @@ public class UserService {
         }
     }
 
+    // OAuth 사용자 탈퇴 메서드
+    public String deactivateOAuth2User(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "로그인이 필요합니다."; // 로그인 상태가 아니면 메시지 반환
+        }
+
+        // OAuth 사용자의 경우 비밀번호 확인 없이 탈퇴 처리
+        if (user.getProvider() != null && !user.getProvider().isEmpty()) {
+            userMapper.deactivateUser(user.getUserId()); // DB에서 사용자 상태 변경
+            session.invalidate(); // 세션 무효화
+            return "회원탈퇴가 성공적으로 완료되었습니다.";
+        } else {
+            return "OAuth 사용자 계정이 아닙니다.";
+        }
+    }
+
     // 특정 User를 UserData 형식으로 가져오는 메서드 // 로그인한 user정보 필요한 사람 이거 쓰세요~~~
     public UserData getUserData(HttpSession session) {
         User user = (User) session.getAttribute("user");
+
         if (user == null) {
             return null; // 사용자 정보가 없으면 null 반환
         }
         // UserData 객체로 변환하여 반환
-        return new UserData(user.getUserId(), user.getUserEmail(), user.getUsername());
+        return new UserData(user.getUserId(), user.getUserEmail(), user.getUsername(), user.getProvider());
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -144,6 +171,7 @@ public class UserService {
         // providerId로 기존 사용자 찾기
         User user = userMapper.findByProviderId(providerId);
         if (user == null) {
+
             // 신규 사용자 등록 (Google 계정으로 처음 로그인 시)
             user = new User();
             user.setUserEmail(email);
@@ -162,22 +190,25 @@ public class UserService {
         userData.setUsername(user.getUsername());
         userData.setUserId(user.getUserId());
         userData.setUserEmail(user.getUserEmail());
+        userData.setProvider(user.getProvider()); // OAuth 사용자 여부를 확인할 수 있도록 provider 필드를 추가
         return userData;
     }
 
-    public String deactivateOAuth2User(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null)
-            return "로그인이 필요합니다."; // 로그인 상태가 아니면 메시지 반환
+    // // OAuth Google 로그인 사용자의 탈퇴 처리
+    // public String deactivateOAuth2User(HttpSession session) {
+    // User user = (User) session.getAttribute("user");
+    // if (user == null) {
+    // return "로그인이 필요합니다."; // 로그인 상태가 아니면 메시지 반환
+    // }
 
-        // OAuth 사용자의 탈퇴 처리 (provider가 존재하는 경우)
-        if (user.getProvider() != null && user.getProvider().equals("google")) {
-            userMapper.deactivateUser(user.getUserId()); // STATUS를 0으로 업데이트
-            session.invalidate(); // 세션 무효화
-            return "회원탈퇴가 성공적으로 완료되었습니다.";
-        } else {
-            return "OAuth2 사용자가 아닙니다."; // OAuth2 사용자가 아닌 경우 처리
-        }
-    }
+    // // OAuth 사용자의 탈퇴 처리 (provider가 존재하는 경우)
+    // if (user.getProvider() != null && user.getProvider().equals("google")) {
+    // userMapper.deactivateUser(user.getUserId()); // STATUS를 0으로 업데이트
+    // session.invalidate(); // 세션 무효화
+    // return "회원탈퇴가 성공적으로 완료되었습니다.";
+    // } else {
+    // return "OAuth2 사용자가 아닙니다."; // OAuth2 사용자가 아닌 경우 처리
+    // }
+    // }
 
 }

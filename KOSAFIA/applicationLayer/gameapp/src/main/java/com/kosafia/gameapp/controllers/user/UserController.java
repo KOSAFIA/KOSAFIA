@@ -41,7 +41,7 @@ public class UserController {
 
     // 로그인 엔드포인트
     @PostMapping("/login") // "/api/user/login" 경로로 POST 요청이 올 때 실행
-    //김남영 수정: 반환타입 String -> ?
+    // 김남영 수정: 반환타입 String -> ?
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginData, HttpSession session) {
         // 클라이언트에서 전송된 로그인 데이터를 Map으로 받음
         String email = loginData.get("email"); // loginData에서 "email" 키의 값을 가져옴
@@ -51,7 +51,7 @@ public class UserController {
         // 로그인 성공 시, 세션에 사용자 정보를 저장하고 성공 메시지 반환
         if (userService.loginUser(email, password, session)) { // 로그인 성공 시
             // 200 OK 상태 코드와 함께 "로그인 성공" 메시지를 응답 본문에 포함하여 반환
-            //김남영 수정 : 클라이언트에서 UserData를 반환하지 않으면 클라이언트는 평생모름
+            // 김남영 수정 : 클라이언트에서 UserData를 반환하지 않으면 클라이언트는 평생모름
             // return ResponseEntity.ok("로그인 성공");
             UserData userData = userService.getUserData(session);
             return ResponseEntity.ok(userData);
@@ -109,11 +109,20 @@ public class UserController {
         String currentPassword = requestData.get("currentPassword");
         String newPassword = requestData.get("newPassword");
 
+        // 세션에서 사용자 정보 가져오기
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+        // OAuth 사용자 여부 확인
+        if (user.getProvider() != null && !user.getProvider().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("OAuth 사용자 계정은 비밀번호를 변경할 수 없습니다.");
+        }
+
         // 비밀번호 업데이트 로직 처리 - userService의 updatePassword 메서드 호출
         String result = userService.updatePassword(currentPassword, newPassword, session);
 
-        if ("로그인이 필요합니다.".equals(result) || "현재 비밀번호가 일치하지 않습니다.".equals(result)) {
-            // 로그인되지 않았거나 현재 비밀번호가 일치하지 않는 경우, 401 Unauthorized 상태 코드 반환
+        if ("현재 비밀번호가 일치하지 않습니다.".equals(result)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
         }
 
@@ -122,24 +131,36 @@ public class UserController {
     }
 
     // 회원탈퇴 엔드포인트
-    @DeleteMapping("/delete") // "/api/user/delete" 경로로 DELETE 요청이 올 때 실행
-    public ResponseEntity<String> deactivateUser(@RequestBody Map<String, String> requestData, HttpSession session) {
-        // 요청 데이터에서 비밀번호를 가져옴
-        String password = requestData.get("password");
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deactivateUser(@RequestBody(required = false) Map<String, String> requestData,
+            HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
 
-        // 회원탈퇴 로직 처리 - userService의 deactivateUser 메서드 호출
+        // OAuth 사용자인 경우 비밀번호 확인 없이 탈퇴 처리
+        if (user.getProvider() != null && !user.getProvider().isEmpty()) {
+            String result = userService.deactivateOAuth2User(session);
+            return ResponseEntity.ok(result);
+        }
+
+        // 일반 사용자 탈퇴 처리
+        if (requestData == null || !requestData.containsKey("password")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("비밀번호가 필요합니다.");
+        }
+
+        String password = requestData.get("password");
         String result = userService.deactivateUser(password, session);
 
-        if ("로그인이 필요합니다.".equals(result) || "비밀번호가 일치하지 않습니다.".equals(result)) {
-            // 로그인되지 않았거나 비밀번호가 일치하지 않는 경우, 401 Unauthorized 상태 코드 반환
+        if ("비밀번호가 일치하지 않습니다.".equals(result)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
         }
 
-        // 200 OK 상태 코드와 함께 성공 메시지 반환
         return ResponseEntity.ok(result);
     }
 
-        // 김남영 추가 담백하게 UserData 반환   
+    // 김남영 추가 담백하게 UserData 반환
     @GetMapping("/response-userData") // "/api/user/response-userData" 경로로 GET 요청이 올 때 실행
     public ResponseEntity<UserData> getUserData(HttpSession session) {
         // 세션에 저장된 유저로 유저 데이타 변환해서 호출출
@@ -155,17 +176,24 @@ public class UserController {
 
     //////////////////////////////////////////////////////////////////////
 
-    // OAuth 구글 로그인 사용자가 회원탈퇴시
-    @DeleteMapping("/delete-oauth")
-    public ResponseEntity<String> deactivateOAuthUser(HttpSession session) {
-        String result = userService.deactivateOAuth2User(session);
+    // // oauth 사용자 회원탈퇴 엔드포인트
+    // @DeleteMapping("/delete-oauth")
+    // public ResponseEntity<String> deleteOAuthUserAccount(HttpSession session) {
+    // // 요청 로그 추가
+    // System.out.println("OAuth 회원탈퇴 요청이 수신되었습니다.");
 
-        if ("로그인이 필요합니다.".equals(result)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result);
-        } else if ("OAuth2 사용자가 아닙니다.".equals(result)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
-        }
-
-        return ResponseEntity.ok(result); // 탈퇴 성공 메시지 반환
-    }
+    // // 회원탈퇴 처리 로직
+    // try {
+    // String result = userService.deactivateOAuth2User(session);
+    // if ("회원탈퇴가 성공적으로 완료되었습니다.".equals(result)) {
+    // return ResponseEntity.ok(result);
+    // } else {
+    // return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+    // }
+    // } catch (Exception e) {
+    // System.out.println("회원탈퇴 중 오류 발생: " + e.getMessage());
+    // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원탈퇴
+    // 실패");
+    // }
+    // }
 }

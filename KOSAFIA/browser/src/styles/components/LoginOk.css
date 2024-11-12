@@ -1,0 +1,32 @@
+/* 네비게이션 바 스타일 설정 */
+.navbar {
+  position: fixed; /* 화면 스크롤 시에도 항상 화면 상단에 고정되도록 설정 */
+  top: 0; /* 상단 기준으로 위치를 0으로 설정 */
+  left: 0; /* 왼쪽 기준으로 위치를 0으로 설정 */
+  width: 100%; /* 네비게이션 바가 화면 전체 너비를 차지하도록 설정 */
+  background-color: #333; /* 네비게이션 바 배경색을 어두운 회색(#333)으로 설정 */
+  color: white; /* 네비게이션 바 안의 텍스트 색상을 흰색으로 설정 */
+  display: flex; /* 플렉스 박스를 사용해 내부 요소를 배치 */
+  justify-content: space-between; /* 내부 요소를 양쪽 끝으로 정렬 (왼쪽, 오른쪽) */
+  align-items: center; /* 내부 요소를 세로 가운데 정렬 */
+  padding: 0% 2rem; /* 네비게이션 바의 안쪽 여백 설정 (위아래 1rem, 좌우 2rem) */
+  z-index: 1000; /* 다른 요소들보다 위에 표시되도록 z-index 값을 높게 설정 */
+}
+
+/* 페이지 콘텐츠 스타일 설정 */
+.content {
+  margin-top: 10px; /* 네비게이션 바가 겹치지 않도록 콘텐츠를 아래로 20px 내려서 배치 */
+  padding: 10px; /* 콘텐츠 내부에 여백을 20px 추가 */
+}
+.navbar h1 {
+  color: #ab2d2d; /* KOSAFIA 텍스트 색상을 노란색(#ffcc00)으로 설정 */
+  font-weight: bold; /* 텍스트를 굵게 설정 */
+  margin: 0; /* 상하좌우 여백 제거 */
+  padding: 0; /* 상하좌우 내부 여백 제거 */
+}
+
+.welcome-message {
+  margin-top: 0.5rem; /* 텍스트를 아래로 조금 내리기 위해 여백 추가 */
+  font-size: 1.2rem; /* 텍스트 크기를 조정 */
+  line-height: 1.5; /* 텍스트 높이를 조정하여 보기 좋게 만듦 */
+}

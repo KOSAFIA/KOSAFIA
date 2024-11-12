@@ -1,4 +1,5 @@
-import React, { useState } from "react"; // React와 useState 훅을 가져옵니다.
+import React, { useState } from "react"; // React에서 제공하는 useState 훅을 가져옵니다.
+import axios from "axios"; // axios 모듈 추가
 import { Link, useNavigate } from "react-router-dom"; // 페이지 이동을 위한 Link와 useNavigate를 가져옵니다.
 import "../styles/components/Login.css";
 import {
@@ -22,32 +23,64 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault(); // 폼 제출 시 페이지 새로고침 방지
 
+    // try {
+    //   // 서버에 로그인 요청
+    //   const response = await fetch(
+    //     // "http://localhost:8080/api/user/login"
+    //     "http://192.168.240.42:8080/api/user/login",
+    //     {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" }, // JSON 형식으로 데이터 전송
+    //       body: JSON.stringify({ email, password }), // JSON 형식으로 email과 password를 서버에 전송
+    //       credentials: "include", // 세션 쿠키를 포함하여 요청
+    //     }
+    //   );
     try {
       // 서버에 로그인 요청
-      const response = await fetch("http://localhost:8080/api/user/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }, // JSON 형식으로 데이터 전송
-        body: JSON.stringify({ email, password }), // JSON 형식으로 email과 password를 서버에 전송
-        credentials: "include", // 세션 쿠키를 포함하여 요청
-      });
-
-      if (response.ok) {
+      const response = await axios.post(
+        "http://localhost:8080/api/user/login",
+        // "http://192.168.240.42:8080/api/user/login", // 팀원의 Spring Boot 서버 URL
+        { email, password }, // 요청 데이터
+        { withCredentials: true } // 쿠키 포함
+      );
+      if (response.status === 200) {
         console.log("로그인 성공");
-        //김남영 수정: 클라이언트에서 UserData를 반환하지 않으면 클라이언트는 평생모름
-        const userData = await response.json();
+        const userData = response.data; // 서버에서 반환된 사용자 정보
         // 사용자 정보를 sessionStorage에 저장
-        sessionStorage.setItem('userData', JSON.stringify(userData));
-        console.log('User information saved to sessionStorage:', userData);
-        // navigate("/TestLobby"); // 로그인 성공 시 LoginOk 페이지로 리디렉션 /TestLobby
-        navigate("/LoginOk"); // 로그인 성공 시 LoginOk 페이지로 리디렉션 /TestLobby
-      } else {
-        const errorData = await response.text(); // 오류 메시지를 서버에서 받아옴
-        setError(errorData || "로그인 실패. 다시 시도하세요."); // 오류 메시지 상태 업데이트
+        sessionStorage.setItem("userData", JSON.stringify(userData));
+        console.log("User information saved to sessionStorage:", userData);
+        navigate("/TestLobby"); // 로그인 성공 시 페이지 이동
       }
     } catch (error) {
-      console.error("로그인 오류:", error); // 콘솔에 오류 메시지 출력
-      setError("로그인 중 오류가 발생했습니다."); // 오류 메시지를 사용자에게 표시
+      console.error("로그인 오류:", error);
+      if (error.response) {
+        // 서버에서 반환한 오류 메시지 처리
+        setError(error.response.data || "로그인 실패. 다시 시도하세요.");
+      } else {
+        setError("로그인 중 오류가 발생했습니다.");
+      }
     }
+    //   if (response.ok) {
+    //     console.log("로그인 성공");
+    //     console.log("응답 상태 코드:", response.status);
+    //     //김남영 수정: 클라이언트에서 UserData를 반환하지 않으면 클라이언트는 평생모름
+    //     const userData = await response.json();
+    //     // 사용자 정보를 sessionStorage에 저장
+    //     sessionStorage.setItem("userData", JSON.stringify(userData)); // 세션 저장
+    //     console.log(
+    //       "User information saved to sessionStorage: 응답데이터: ",
+    //       userData
+    //     );
+    //     // navigate("/TestLobby"); // 로그인 성공 시 LoginOk 페이지로 리디렉션 /TestLobby
+    //     navigate("/LoginOk"); // 로그인 성공 시 LoginOk 페이지로 리디렉션 /TestLobby
+    //   } else {
+    //     const errorData = await response.text(); // 오류 메시지를 서버에서 받아옴
+    //     setError(errorData || "로그인 실패. 다시 시도하세요."); // 오류 메시지 상태 업데이트
+    //   }
+    // } catch (error) {
+    //   console.error("로그인 오류:", error); // 콘솔에 오류 메시지 출력
+    //   setError("로그인 중 오류가 발생했습니다."); // 오류 메시지를 사용자에게 표시
+    // }
   };
 
   return (
@@ -61,7 +94,7 @@ function Login() {
           {" "}
           {/* 왼쪽 이미지 영역 */}
           <MDBCardImage
-            src={`${process.env.PUBLIC_URL}/img/초딩마피아.jpg`} // 이미지 경로 설정
+            src={`${process.env.PUBLIC_URL}/img/loginmain.png`} // 이미지 경로 설정
             alt="login form" // 이미지 설명
             className="login-image"
           />
@@ -123,6 +156,7 @@ function Login() {
             </form>
             {/* Google 로그인 버튼 */}
             <a href="http://localhost:8080/oauth2/authorization/google">
+              {/*<a href="http://192.168.240.42:8080/oauth2/authorization/google"> */}
               <button>Google로 로그인</button>
             </a>
             <p className="mt-3 mb-5">

@@ -38,7 +38,7 @@
 
     <!-- providerId로 사용자를 찾는 쿼리 -->
     <!-- findByProviderId: OAuth2 제공자의 고유 ID(provider_id)로 사용자를 찾는 쿼리 -->
-    <select id="findByProviderId" parameterType="string" resultType="com.kosafia.gameapp.models.user.User">
+    <select id="findByProviderId" parameterType="String" resultType="com.kosafia.gameapp.models.user.User">
         SELECT * FROM Users
         WHERE provider_id = #{providerId}
         <!-- #{providerId} : 전달된 providerId 값을 SQL에 바인딩 -->
