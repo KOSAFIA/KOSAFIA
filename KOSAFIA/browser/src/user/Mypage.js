@@ -24,6 +24,10 @@ function Mypage({ setUsername, isOAuthUser }) {
   const [confirmDeletionInput, setConfirmDeletionInput] = useState(""); // 회원탈퇴 확인 입력 상태
   const navigate = useNavigate(); // 로그인 화면으로 이동하기 위해 navigate 설정
 
+  // 서버 URL 환경 변수
+  // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+
   // 사용자 정보를 서버에서 가져오는 함수
   useEffect(() => {
     console.log("마이페이지 컴포넌트 렌더링: OAuth 사용자 여부:", isOAuthUser);
@@ -33,18 +37,24 @@ function Mypage({ setUsername, isOAuthUser }) {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/user/profile", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include", // 쿠키 등 인증 정보를 포함하여 서버에 요청
-        });
+        const response = await fetch(
+          //  "http://localhost:8080/api/user/profile"
+
+          `${BASE_URL}/api/user/profile`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include", // 쿠키 등 인증 정보를 포함하여 서버에 요청
+          }
+        );
 
         if (response.ok) {
           const data = await response.json(); // 서버로부터 받은 데이터를 JSON 형태로 파싱
           console.log("받아온 사용자 정보:", data); // 받아온 사용자 정보 로그로 확인
           setUserEmail(data.user_email); // 사용자 이메일 상태 업데이트
           setLocalUsername(data.username); // 사용자 닉네임 상태 업데이트
-          console.log("OAuth 사용자 여부 (서버 데이터):", !!data.provider); // OAuth 사용자 여부 로그로 확인
+
+          console.log("사용자 프로필 로드 성공:", data);
         } else {
           console.error("사용자 정보를 불러오는 데 실패했습니다."); // 서버 응답 실패 시 오류 메시지 출력
         }
@@ -60,7 +70,10 @@ function Mypage({ setUsername, isOAuthUser }) {
   const handleUsernameSave = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8080/api/user/update-username",
+        // "http://localhost:8080/api/user/update-username",
+
+        `${BASE_URL}/api/user/update-username`,
+
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -93,7 +106,10 @@ function Mypage({ setUsername, isOAuthUser }) {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/user/update-password",
+        // "http://localhost:8080/api/user/update-password",
+
+        `${BASE_URL}/api/user/update-password`,
+
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -121,7 +137,10 @@ function Mypage({ setUsername, isOAuthUser }) {
   // 회원탈퇴 처리 함수
   const handleAccountDeletion = async () => {
     try {
-      const endpoint = "http://localhost:8080/api/user/delete";
+      // const endpoint = "http://localhost:8080/api/user/delete";
+
+      const endpoint = `${BASE_URL}/api/user/delete`;
+
       const response = await fetch(endpoint, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },

@@ -39,7 +39,7 @@ public class SecurityConfig {
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
                 configuration.addAllowedOrigin("http://localhost:3000");
-                configuration.addAllowedOrigin("http://192.168.240.42:3000");
+                configuration.addAllowedOrigin("http://192.168.1.119:3000");
                 configuration.addAllowedMethod("*"); // 모든 HTTP 메서드 허용
                 configuration.addAllowedHeader("*"); // 모든 헤더 허용
                 configuration.setAllowCredentials(true); // 인증 정보 포함 허용
@@ -53,18 +53,19 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
-                                .cors(withDefaults()) // CORS 설정 추가
-                                                      // CSRF 보호 비활성화 (API 서버일 경우 비활성화하는 경우가 많음)
+                                // .cors(withDefaults()) // CORS 설정 추가
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 설정 추가
+                                // CSRF 보호 비활성화 (API 서버일 경우 비활성화하는 경우가 많음)
                                 .csrf(csrf -> csrf.disable()) // CSRF 공격 방어를 비활성화 (API 서버일 경우 일반적으로 비활성화)
 
                                 // 요청에 대한 인증/인가 설정
                                 .authorizeHttpRequests(authz -> authz
                                                 .requestMatchers(
                                                                 "/", "/**", "/index.html", "/react", "/react/**",
-                                                                "/static/**", // 정적
-                                                                              // 파일
-                                                                              // 요청
-                                                                              // 허용
+                                                                "/static/**", "/TestLobby", // 정적
+                                                                // 파일
+                                                                // 요청
+                                                                // 허용
                                                                 "/css/**", "/js/**", "/css", "/js", // CSS 및 JS 파일 접근 허용
                                                                 "/api/user/register", "/api/user/login", "/api/**",
                                                                 "/api/user/profile", // 회원가입, 로그인, 프로필 조회

@@ -19,6 +19,10 @@ function Login() {
   const [error, setError] = useState(""); // 오류 메시지를 저장하는 상태
   const navigate = useNavigate(); // 페이지 이동을 위한 navigate 함수
 
+  // 서버 URL 환경 변수
+  // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+
   // 로그인 처리 함수
   const handleLogin = async (e) => {
     e.preventDefault(); // 폼 제출 시 페이지 새로고침 방지
@@ -36,9 +40,9 @@ function Login() {
     //     }
     //   );
     try {
-      // 서버에 로그인 요청
+      //  axios로 서버에 로그인 요청
       const response = await axios.post(
-        "http://localhost:8080/api/user/login",
+        `${BASE_URL}/api/user/login`, // 환경 변수 기반 URL 사용
         // "http://192.168.240.42:8080/api/user/login", // 팀원의 Spring Boot 서버 URL
         { email, password }, // 요청 데이터
         { withCredentials: true } // 쿠키 포함
@@ -53,6 +57,7 @@ function Login() {
       }
     } catch (error) {
       console.error("로그인 오류:", error);
+
       if (error.response) {
         // 서버에서 반환한 오류 메시지 처리
         setError(error.response.data || "로그인 실패. 다시 시도하세요.");
@@ -155,9 +160,11 @@ function Login() {
               </MDBBtn>
             </form>
             {/* Google 로그인 버튼 */}
-            <a href="http://localhost:8080/oauth2/authorization/google">
-              {/*<a href="http://192.168.240.42:8080/oauth2/authorization/google"> */}
-              <button>Google로 로그인</button>
+            <a
+              href={`${BASE_URL}/oauth2/authorization/google`} // Google OAuth2 URL로 리디렉션
+              className="google-login-btn"
+            >
+              <i className="fab fa-google me-2"></i>Google로 로그인
             </a>
             <p className="mt-3 mb-5">
               계정이 없으신가요?{" "}

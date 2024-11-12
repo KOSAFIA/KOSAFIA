@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus; // HTTP 상태 코드 사용
 import org.springframework.http.ResponseEntity; // HTTP 응답 객체 생성
 import org.springframework.web.bind.annotation.*; // 웹 요청 처리를 위한 애너테이션
 
+import java.util.HashMap;
 import java.util.Map; // JSON 형태의 데이터 처리를 위한 Map 사용
 
 @RestController // 이 클래스가 RESTful 웹 서비스 컨트롤러임을 나타냄
@@ -37,6 +38,24 @@ public class UserController {
             // 409 Conflict 상태 코드와 함께 result 메시지를 응답 본문에 포함하여 반환
             return ResponseEntity.status(HttpStatus.CONFLICT).body(result);
         }
+    }
+
+    // 이메일 중복 검사 엔드포인트
+    @GetMapping("/check-email")
+    public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestParam String email) {
+        boolean isAvailable = userService.isEmailAvailable(email);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("available", isAvailable);
+        return ResponseEntity.ok(response);
+    }
+
+    // 닉네임 중복 검사 엔드포인트
+    @GetMapping("/check-username")
+    public ResponseEntity<Map<String, Boolean>> checkUsername(@RequestParam String username) {
+        boolean isAvailable = userService.isUsernameAvailable(username);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("available", isAvailable);
+        return ResponseEntity.ok(response);
     }
 
     // 로그인 엔드포인트

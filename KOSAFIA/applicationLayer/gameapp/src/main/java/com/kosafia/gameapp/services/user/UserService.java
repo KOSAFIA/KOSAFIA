@@ -51,6 +51,18 @@ public class UserService {
         return "회원가입 성공"; // 성공 메시지 반환
     }
 
+    // 이메일 중복 확인
+    public boolean isEmailAvailable(String email) {
+        // 이메일로 사용자 검색, 결과가 없으면 true 반환
+        return userMapper.findByEmail(email) == null;
+    }
+
+    // 닉네임 중복 확인
+    public boolean isUsernameAvailable(String username) {
+        // 닉네임으로 사용자 검색, 결과가 없으면 true 반환
+        return userMapper.findByUsername(username) == null;
+    }
+
     // 로그인 메서드
     public boolean loginUser(String email, String password, HttpSession session) {
         User user = userMapper.findByEmail(email); // 이메일로 사용자 조회

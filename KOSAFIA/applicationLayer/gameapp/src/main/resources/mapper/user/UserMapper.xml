@@ -9,6 +9,11 @@
          <!-- #{email} : 전달된 이메일 값을 SQL에 바인딩 -->
     </select>
 
+    <!-- 닉네임으로 사용자 조회 -->
+    <select id="findByUsername" parameterType="String" resultType="com.kosafia.gameapp.models.user.User">
+        SELECT * FROM Users WHERE username = #{username}
+    </select>
+
       <!-- 새로운 사용자 추가 (provider와 provider_id 필드 포함) -->
     <!-- insertUser: 새 사용자를 데이터베이스에 추가하는 쿼리 -->
     <insert id="insertUser" parameterType="com.kosafia.gameapp.models.user.User" useGeneratedKeys="true" keyProperty="userId">

@@ -19,4 +19,9 @@ public interface UserMapper {
 
     User findByProviderId(String providerId); // 구글 providerId로 사용자 찾기
 
+    // 이메일로 사용자 조회
+    // User findByEmail(@Param("email") String email);
+
+    // 닉네임으로 사용자 조회
+    User findByUsername(@Param("username") String username);
 }

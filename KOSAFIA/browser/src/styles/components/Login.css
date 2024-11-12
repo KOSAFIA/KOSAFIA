@@ -48,3 +48,32 @@
   display: block; /* 줄바꿈 */
   text-align: center; /* 가운데 정렬 */
 }
+
+/* 구글 로그인 버튼 스타일 */
+.google-login-btn {
+  background-color: #4285f4; /* 구글의 파란색 */
+  color: white; /* 텍스트 색상 */
+  font-size: 16px; /* 버튼 텍스트 크기 */
+  padding: 10px 20px; /* 버튼 내부 여백 */
+  border: none; /* 테두리 제거 */
+  border-radius: 5px; /* 둥근 모서리 */
+  cursor: pointer; /* 클릭 가능한 커서 */
+  text-decoration: none; /* 링크일 경우 밑줄 제거 */
+  display: inline-flex; /* 아이콘과 텍스트를 수평으로 정렬 */
+  align-items: center; /* 아이콘과 텍스트 수직 가운데 정렬 */
+  gap: 8px; /* 아이콘과 텍스트 사이 간격 */
+  transition: background-color 0.2s ease, box-shadow 0.2s ease; /* 클릭 시 효과 */
+}
+
+/* 클릭 시 크기 변화 방지 */
+.google-login-btn:focus,
+.google-login-btn:active {
+  outline: none; /* 외곽선 제거 */
+  transform: scale(1) !important; /* 크기 고정 */
+  box-shadow: none !important; /* 그림자 제거 */
+}
+
+/* 버튼 크기 조정 */
+.google-login-btn:hover {
+  background-color: #357ae8; /* 약간 어두운 파란색으로 변경 */
+}

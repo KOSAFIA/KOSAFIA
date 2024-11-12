@@ -17,6 +17,47 @@ function LoginOk() {
   const [isMypageModalOpen, setIsMypageModalOpen] = useState(false); // 마이페이지 모달 열림 상태
   const [isOAuthUser, setIsOAuthUser] = useState(false); // OAuth 사용자 여부를 저장하는 상태 정의
 
+  // 서버 URL 환경 변수
+  // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
+  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+
+
+  // Google API 초기화
+  useEffect(() => {
+    const loadGoogleAPI = () => {
+      if (window.gapi) {
+        // gapi가 로드되었는지 확인 후 초기화
+        window.gapi.load("auth2", () => {
+          window.gapi.auth2
+            .init({
+              client_id:
+                "5276016200-0akrpvkqj25ibt4pufasavlceldkgmpn.apps.googleusercontent.com", // Google 클라이언트 ID
+            })
+            .then(() => {
+              console.log("Google API 초기화 성공");
+            })
+            .catch((error) => {
+              console.error("Google API 초기화 중 오류 발생:", error);
+            });
+        });
+      } else {
+        console.error("Google API가 로드되지 않았습니다.");
+      }
+    };
+
+    // Google API 로드 상태 확인
+    if (!window.gapi) {
+      const interval = setInterval(() => {
+        if (window.gapi) {
+          clearInterval(interval); // gapi 로드 확인 후 interval 제거
+          loadGoogleAPI();
+        }
+      }, 100); // 100ms 간격으로 Google API 로드 확인
+    } else {
+      loadGoogleAPI();
+    }
+  }, []);
+
   //김남영 추가 :: 세션에서 사용자 데이터 가져오기 무조건 한번 페이지 로드시 실행
   // 컴포넌트가 마운트될 때 세션 데이터를 가져옵니다
   useEffect(() => {
@@ -24,28 +65,31 @@ function LoginOk() {
       try {
         // withCredentials: true를 설정하여 쿠키와 함께 요청을 보냅니다
         const response = await axios.get(
-          "http://localhost:8080/api/user/response-userData",
+          `${BASE_URL}/api/user/response-userData`,
+          // "http://192.168.1.119:8080/api/user/response-userData",
           {
             withCredentials: true,
           }
         );
 
-        // 응답으로 받은 userData를 sessionStorage에 저장
-        sessionStorage.setItem("userData", JSON.stringify(response.data));
+        // 사용자 데이터 초기화
+        const userData = response.data;
 
-        // provider 값을 확인하고 OAuth 여부 설정
-        setIsOAuthUser(
-          response.data.provider !== null && response.data.provider !== ""
-        ); // OAuth 사용자 여부를 설정합니다.
+        // 사용자 데이터 상태 업데이트
+        sessionStorage.setItem("userData", JSON.stringify(userData));
 
-        // 사용자 데이터 로그로 확인
-        console.log("사용자 데이터를 성공적으로 저장했어요:", response.data);
-        console.log(
-          "OAuth 사용자 여부:",
-          response.data.provider !== null && response.data.provider !== ""
-        );
+        setUsername(userData.username);
+        setUserEmail(userData.userEmail);
+
+        // provider 값에 따라 OAuth 여부 설정
+        const isOAuth = userData.provider === "google";
+        setIsOAuthUser(isOAuth);
+
+        console.log("사용자 데이터 로드 성공:", userData);
+        console.log("OAuth 사용자 여부:", isOAuth);
       } catch (error) {
         console.error("사용자 데이터를 가져오는데 실패했어요:", error);
+        navigate("/custom-login"); // 오류 발생 시 로그인 페이지로 이동
       }
     };
 
@@ -59,11 +103,16 @@ function LoginOk() {
       try {
         await CheckCors(); // CORS 확인을 위해 CheckCors 호출
 
-        const response = await fetch("http://localhost:8080/api/user/profile", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include", // 세션 쿠키를 포함하여 서버에 요청
-        });
+        const response = await fetch(
+          `${BASE_URL}/api/user/profile`,
+
+          //"http://192.168.1.119:8080/api/user/profile",
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include", // 세션 쿠키를 포함하여 서버에 요청
+          }
+        );
 
         if (response.ok) {
           const data = await response.json(); // 서버로부터 받은 데이터를 JSON 형태로 파싱
@@ -87,14 +136,45 @@ function LoginOk() {
   // 로그아웃 핸들러 함수
   const handleLogout = async () => {
     try {
-      // 서버에 로그아웃 요청을 보냅니다.
-      const response = await fetch("http://localhost:8080/api/user/logout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // 세션 쿠키를 포함하여 요청
-      });
+      if (isOAuthUser) {
+        // Google OAuth 로그아웃 처리
+        if (window.gapi && window.gapi.auth2) {
+          const auth2 = window.gapi.auth2.getAuthInstance();
+          if (auth2) {
+            await auth2.signOut(); // Google 로그아웃 수행
+            await auth2.disconnect(); // 세션 완전히 종료
+            console.log("Google 계정에서 로그아웃되었습니다.");
+
+            // Google 계정 연결 해제
+            const token = auth2.currentUser.get().getAuthResponse().id_token;
+            await fetch(
+              `https://accounts.google.com/o/oauth2/revoke?token=${token}`,
+              {
+                method: "POST",
+              }
+            );
+          } else {
+            console.error("Google Auth 인스턴스를 찾을 수 없습니다.");
+          }
+        } else {
+          console.error("Google API가 로드되지 않았습니다.");
+        }
+      }
+      // 서버에 일반 로그인 사용자 로그아웃 요청을 보냅니다.
+      const response = await fetch(
+        `${BASE_URL}/api/user/logout`,
+
+        //"http://192.168.1.119:8080/api/user/logout",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // 세션 쿠키를 포함하여 요청
+        }
+      );
 
       if (response.ok) {
+        sessionStorage.clear(); // 세션 데이터 초기화
+        setIsOAuthUser(false); // OAuth 상태 초기화
         alert("로그아웃 되었습니다."); // 로그아웃 성공시 알림
         navigate("/custom-login"); // 로그인 화면으로 리디렉션
       } else {
@@ -102,7 +182,7 @@ function LoginOk() {
       }
     } catch (error) {
       console.error("로그아웃 오류:", error);
-      alert("로그아웃 중 오류가 발생했습니다.");
+      alert("로그아웃 중 오류가 발생했습니다.222");
     }
   };
 
@@ -125,7 +205,13 @@ function LoginOk() {
   const goToTestLobby = () => {
     navigate("/TestLobby");
   };
-
+  //Google 로그아웃 연동
+  const handleGoogleLogout = () => {
+    const auth2 = window.gapi.auth2.getAuthInstance();
+    auth2.signOut().then(() => {
+      console.log("Google 로그아웃 완료");
+    });
+  };
   return (
     // <div className="login-ok-container">
     //   <h1>홈 페이지</h1>
