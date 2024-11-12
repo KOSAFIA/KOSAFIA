@@ -40,6 +40,8 @@
 // }
 
 // export default TestLobby;
+
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -54,14 +56,14 @@ function TestLobby() {
         isPrivate: false,
         password: ""
     });
-    const [rooms, setRooms] = useState([]); // 방 목록 상태 추가
+    const [rooms, setRooms] = useState([]);
 
+    // 서버에서 방 목록 조회
     const fetchRooms = async () => {
         try {
             const response = await axios.get('http://localhost:8080/api/rooms/all');
             console.log("방 목록 조회 성공 - 응답 데이터:", response.data);
 
-            // rooms가 객체로 올 경우 배열로 변환
             const roomsArray = Array.isArray(response.data) ? response.data : Object.values(response.data);
             setRooms(roomsArray);
         } catch (error) {
@@ -70,7 +72,7 @@ function TestLobby() {
     };
 
     useEffect(() => {
-        fetchRooms(); // 컴포넌트 마운트 시 방 목록 가져오기
+        fetchRooms();
     }, []);
 
     const handleInputChange = (e) => {
@@ -105,7 +107,6 @@ function TestLobby() {
                 sessionStorage.setItem("roomKey", roomKey);
                 navigate(`/rooms/${roomKey}`);
             }
-            // 방 생성 후 목록 갱신
             fetchRooms();
         } catch (error) {
             console.error("방 생성 실패 - 오류:", error);
@@ -123,8 +124,11 @@ function TestLobby() {
             <ul>
                 {rooms.map((room) => (
                     <li key={room.roomKey}>
-                        <strong>{room.roomName}</strong> ({room.currentPlayers}/{room.maxPlayers}명)
-                        {room.isPrivate && <span> 🔒</span>}
+                          {console.log("roomKey:", room.roomKey, "isPrivate:", room.isPrivate)}
+                        <strong>{room.roomKey}</strong>. <strong>{room.roomName}</strong> 
+                        ({room.currentPlayers}/{room.maxPlayers}명) 
+                        {room.isPrivate && <span>🔒 </span>}
+                        {/* {room.isPrivate ? <span> 비밀방 </span> : <span> 공개방 </span>} */}
                         <button onClick={() => navigate(`/rooms/${room.roomKey}`)}>입장</button>
                     </li>
                 ))}

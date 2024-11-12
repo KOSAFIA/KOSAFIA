@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,9 +27,11 @@ public class Room {
     private String hostName; // 방장 이름
     private int currentPlayers; // 현재 인원 
     private int maxPlayers; // 최대 인원 //입력받음
+    @JsonProperty("isPlaying")
     private boolean isPlaying; // 게임 진행 여부
     private Integer turn; // 현재 턴
     private String password; // 방 비밀번호 //입력받음
+    @JsonProperty("isPrivate") // JSON 필드 이름을 "isPrivate"으로 변경
     private boolean isPrivate; // 비밀 방 여부 //입력받음
     private GameStatus gameStatus; //게임 상태: 낮 밤 등등
     
@@ -50,10 +54,20 @@ public class Room {
         this.gameStatus = GameStatus.NONE;
     }
 
-    //가져오기 매서드들
+    //플레이어 조회
     public Player getPlayerByUserEmail(String userEmail){
         for (Player player : players) {
             if(player.getUserEmail() == userEmail){
+                return player;
+            }
+        }
+        return null;
+    }
+
+  
+    public Player getPlayerByPlayerNumber(Integer playerNumber){
+        for (Player player : players) {
+            if(player.getPlayerNumber() == playerNumber){
                 return player;
             }
         }
