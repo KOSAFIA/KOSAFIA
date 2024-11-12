@@ -153,7 +153,8 @@ public class GameController {
     @PostMapping("/admin/status")
     public ResponseEntity<?> updateGameStatus(@RequestBody Map<String, Object> request) {
         try {
-            Integer roomKey = (Integer) request.get("roomKey");
+            // String을 Integer로 파싱
+            Integer roomKey = Integer.parseInt(request.get("roomKey").toString());
             String newStatus = (String) request.get("gameStatus");
             
             log.info("게임 상태 변경 요청 - 방: {}, 새로운 상태: {}", roomKey, newStatus);
@@ -174,15 +175,14 @@ public class GameController {
         try {
             log.info("플레이어 상태 변경 요청: {}", request);
 
-            Integer roomKey = (Integer) request.get("roomKey");
-            Integer playerNumber = (Integer) request.get("playerNumber");
+            // String을 Integer로 파싱
+            Integer roomKey = Integer.parseInt(request.get("roomKey").toString());
+            Integer playerNumber = Integer.parseInt(request.get("playerNumber").toString());
             Boolean isAlive = (Boolean) request.get("isAlive");
             String role = (String) request.get("role");
             
             Room room = roomRepository.getRoom(roomKey);
-            Player player = null;
-
-            player = room.getPlayerByPlayerNumber(playerNumber);
+            Player player = room.getPlayerByPlayerNumber(playerNumber);
 
             if (isAlive != null) player.setAlive(isAlive);
             if (role != null) player.setRole(Role.valueOf(role));
