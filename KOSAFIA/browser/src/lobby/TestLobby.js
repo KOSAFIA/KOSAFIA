@@ -1,45 +1,3 @@
-// import React, { useEffect } from 'react';
-// import axios from 'axios';
-// import { useNavigate } from 'react-router-dom';
-
-// function TestLobby() {
-//     const navigate = useNavigate();
-//     const roomKey = 1; // 테스트용으로 roomKey를 임의로 설정
-//     console.log("roomKey:", roomKey); // roomKey 값을 확인하는 로그
-//     const handleJoinRoom = async () => {
-//     // 수정된 버전
-//     try {
-//         const response = await axios.post(`http://localhost:8080/api/rooms/${roomKey}/join`, {}, {
-//         withCredentials: true
-//     });
-    
-//     // axios는 2xx 응답을 자동으로 처리합니다
-//     console.log('방 입장 성공:', response.data);
-//     sessionStorage.setItem("player", JSON.stringify(response.data));
-//     navigate(`/rooms/${roomKey}`); // 성공시 바로 이동
-//     } catch (error) {
-//         if (error.response) {
-//             if (error.response.status === 409) {
-//             // 이미 방에 있는 경우
-//                 navigate(`/rooms/${roomKey}`);
-//             } else {
-//                 alert(`방 입장 실패: ${error.response.data}`);
-//             }
-//         } else {
-//             alert('서버 연결 오류');
-//         }
-//         }
-//     };
-
-//     return (
-//         <div style={{ padding: '20px', textAlign: 'center' }}>
-//             <h1>Lobby</h1>
-//             <button onClick={handleJoinRoom}>입장</button>
-//         </div>
-//     );
-// }
-
-// export default TestLobby;
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -113,6 +71,58 @@ function TestLobby() {
         }
     };
 
+    // 방 입장 처리 함수 추가
+    const handleJoinRoom = async (roomKey) => {
+        try {
+            console.log(`방 ${roomKey} 입장 시도`);
+            const response = await axios.post(
+                `http://localhost:8080/api/rooms/${roomKey}/join`,
+                {},
+                { withCredentials: true }
+            );
+
+            if (response.data) {
+                console.log('방 입장 성공:', response.data);
+                // 플레이어 정보와 roomKey 저장
+                sessionStorage.setItem('player', JSON.stringify(response.data.player));
+                sessionStorage.setItem('roomKey', response.data.roomKey);
+                navigate(`/rooms/${roomKey}`);
+            }
+        } catch (error) {
+            handleJoinError(error);
+        }
+    };
+
+    // 에러 처리 함수
+    const handleJoinError = (error) => {
+        console.error('방 입장 중 에러 발생:', error);
+        
+        if (error.response) {
+            const errorMessage = error.response.data.error || '알 수 없는 오류가 발생했습니다.';
+            
+            switch (error.response.status) {
+                case 401:
+                    alert('로그인이 필요합니다.');
+                    navigate('/');
+                    break;
+                case 404:
+                    alert('존재하지 않는 방입니다.');
+                    fetchRooms(); // 방 목록 새로고침
+                    break;
+                case 409:
+                    alert('방이 가득 찼거나 게임이 진행 중입니다.');
+                    fetchRooms(); // 방 목록 새로고침
+                    break;
+                default:
+                    alert(errorMessage);
+            }
+        } else if (error.request) {
+            alert('서버에 연결할 수 없습니다.');
+        } else {
+            alert('방 입장 중 오류가 발생했습니다.');
+        }
+    };
+
     return (
         <div>
             <h1>로비 페이지</h1>
@@ -123,9 +133,19 @@ function TestLobby() {
             <ul>
                 {rooms.map((room) => (
                     <li key={room.roomKey}>
-                        <strong>{room.roomName}</strong> ({room.currentPlayers}/{room.maxPlayers}명)
+                        <strong>{room.roomName}</strong> 
+                        ({room.players?.length || 0}/{room.maxPlayers}명)
                         {room.isPrivate && <span> 🔒</span>}
-                        <button onClick={() => navigate(`/rooms/${room.roomKey}`)}>입장</button>
+                        <button 
+                            onClick={() => handleJoinRoom(room.roomKey)}
+                            disabled={
+                                room.players?.length >= room.maxPlayers || 
+                                room.gameStatus !== 'NONE'
+                            }
+                        >
+                            {room.players?.length >= room.maxPlayers ? '만원' : 
+                             room.gameStatus !== 'NONE' ? '게임중' : '입장'}
+                        </button>
                     </li>
                 ))}
             </ul>

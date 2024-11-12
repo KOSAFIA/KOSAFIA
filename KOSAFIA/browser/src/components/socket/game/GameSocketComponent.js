@@ -40,15 +40,15 @@ const GameSocketComponent = () => {
                 <h3>플레이어 목록:</h3>
                 <ul>
                     {players.map((player) => (
-                        <li key={player.id}>
+                        <li key={player.playerNumber}>
                             {player.username}
                             {currentPlayer?.role === 'MAFIA' && gameStatus === 'NIGHT' && (
                                 <input
                                     type="radio"
                                     name="mafiaTarget"
-                                    checked={mafiaTarget === player.id}
-                                    onChange={() => handleTargetSelection(player.id)}
-                                    disabled={player.id === currentPlayer.id}
+                                    checked={mafiaTarget === player.playerNumber}
+                                    onChange={() => handleTargetSelection(player.playerNumber)}
+                                    disabled={player.playerNumber === currentPlayer.playerNumber}
                                 />
                             )}
                         </li>

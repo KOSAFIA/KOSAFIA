@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,9 +27,13 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/game")
+@Slf4j
+@RequiredArgsConstructor
 public class GameController {
 
     @Autowired
@@ -100,11 +105,13 @@ public class GameController {
 
     //김남영 추가
     // 현재 게임 상태를 가져오는 API
-    @GetMapping("/current-data")
-    public Map<String, Object> getGameData(HttpSession session) {
+    @PostMapping("/current-data")
+    public Map<String, Object> getGameData(HttpSession session, @RequestBody Map<String, Object> roomInfo) {
         Map<String, Object> gameData = new HashMap<>();
         
+        // Integer roomKey = (Integer)roomInfo.get("roomKey");
         Integer roomKey = null;
+
         //이 자식의 세션값에서 룸키 값 가져오기
         try {
             roomKey = (Integer)session.getAttribute("roomKey");
@@ -140,5 +147,51 @@ public class GameController {
         }
         
         return gameData;
+    }
+
+    // 관리자용 API 엔드포인트들
+    @PostMapping("/admin/status")
+    public ResponseEntity<?> updateGameStatus(@RequestBody Map<String, Object> request) {
+        try {
+            Integer roomKey = (Integer) request.get("roomKey");
+            String newStatus = (String) request.get("gameStatus");
+            
+            log.info("게임 상태 변경 요청 - 방: {}, 새로운 상태: {}", roomKey, newStatus);
+            
+            Room room = roomRepository.getRoom(roomKey);
+            room.setGameStatus(GameStatus.valueOf(newStatus));
+            
+            log.info("게임 상태 변경 완료 - 방: {}", roomKey);
+            return ResponseEntity.ok(room);
+        } catch (Exception e) {
+            log.error("게임 상태 변경 실패", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/admin/player/update")
+    public ResponseEntity<?> updatePlayerStatus(@RequestBody Map<String, Object> request) {
+        try {
+            log.info("플레이어 상태 변경 요청: {}", request);
+
+            Integer roomKey = (Integer) request.get("roomKey");
+            Integer playerNumber = (Integer) request.get("playerNumber");
+            Boolean isAlive = (Boolean) request.get("isAlive");
+            String role = (String) request.get("role");
+            
+            Room room = roomRepository.getRoom(roomKey);
+            Player player = null;
+
+            player = room.getPlayerByPlayerNumber(playerNumber);
+
+            if (isAlive != null) player.setAlive(isAlive);
+            if (role != null) player.setRole(Role.valueOf(role));
+
+            log.info("플레이어 상태 변경 완료 - 방: {}, 플레이어: {}", roomKey, playerNumber);
+            return ResponseEntity.ok(room);
+        } catch (Exception e) {
+            log.error("플레이어 상태 변경 실패", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

@@ -59,6 +59,15 @@ public class Room {
         }
         return null;
     }
+    //------김남영 추가------
+    public Player getPlayerByPlayerNumber(Integer playerNumber){
+        for (Player player : players) {
+            if(player.getPlayerNumber() == playerNumber){
+                return player;
+            }
+        }
+        return null;
+    }
 
 
     // 플레이어 추가 메서드

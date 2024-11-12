@@ -2,11 +2,16 @@ package com.kosafia.gameapp.services.game;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Role;
 
@@ -95,4 +100,24 @@ public class GameServiceImpl implements GameService {
         this.mafiaTargetNumber = null;
         this.doctorSaveTargetNumber = null;
     }
+
+    //===============김남영 추가=============
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    @Override
+    // 게임 상태 변경을 브로드캐스트
+    public void broadcastGameStatus(Integer roomKey, GameStatus gameStatus, List<Player> players) {
+        Map<String, Object> message = new HashMap<>();
+        message.put("gameStatus", gameStatus);
+        message.put("players", players);
+        
+        messagingTemplate.convertAndSend("/topic/game.state." + roomKey, message);
+    }
+
+    // 플레이어 정보 변경을 브로드캐스트
+    public void broadcastPlayerUpdate(Integer roomKey, List<Player> players) {
+        messagingTemplate.convertAndSend("/topic/game.players." + roomKey, players);
+    }
+    //=========================================
 }
