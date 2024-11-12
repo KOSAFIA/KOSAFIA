@@ -1,10 +1,13 @@
 package com.kosafia.gameapp.models.gameroom;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,10 +33,16 @@ public class Room {
     private String password; // 방 비밀번호 //입력받음
     private boolean isPrivate; // 비밀 방 여부 //입력받음
     private GameStatus gameStatus; //게임 상태: 낮 밤 등등
-    
+
+    //김남영이 추가함 버그나면 김남영 불러
+
+    // 투표 현황 (targetId -> 득표수)
+    private Map<Integer, Integer> voteStatus;
+    // 투표자별 투표 대상 기록 (voterId -> targetId)
+    private Map<Integer, Integer> voterRecords;
 
     // private Integer nextPlayerNumber = 1; // 다음에 부여할 번호
-     private Random random = new Random();
+    private Random random = new Random();
 
     
 
@@ -48,6 +57,70 @@ public class Room {
         this.password = password;
         this.isPrivate = isPrivate;
         this.gameStatus = GameStatus.NONE;
+        
+    //김남영이 추가함 버그나면 김남영 불러
+        this.voteStatus = new HashMap<>();
+        this.voterRecords = new HashMap<>();
+    }
+    //투표 매서드: 이전에 이미 등록된 투표자의 타겟은 1만큼 감소시키고 다시 현재 투표 반영
+    //그러면 최종적으로는 아무도 투표안하면 비어있고
+    //투표를 막 바꾸면 총 8개의 키값이 생성되고 그 안에 밸류는 무작위인데 결국 총합은 8이 될것
+    public void vote(Integer voterId, Integer targetId) {
+        // 이전 투표가 있다면 해당 타겟의 득표수 감소
+        Integer previousTarget = voterRecords.get(voterId);
+        if (previousTarget != null) {
+            voteStatus.merge(previousTarget, -1, Integer::sum);
+        }
+
+        // 새로운 투표 기록
+        voterRecords.put(voterId, targetId);
+        voteStatus.merge(targetId, 1, Integer::sum);
+    }
+
+        // 최다 득표자 반환 그냥 플레이어로 반환하는걸로 고침 멍청한 gpt 동률이면 null 반환
+    public Player getMostVotedPlayer() {
+        if (voteStatus.isEmpty()) {
+            return null;
+        }
+
+        // 득표수 집계
+        Map<Integer, Long> voteCounts = voteStatus.values().stream()
+            .collect(Collectors.groupingBy(
+                targetId -> targetId,
+                Collectors.counting()
+            ));
+
+        // 최다 득표수 찾기
+        long maxVotes = voteCounts.values().stream()
+            .mapToLong(count -> count)
+            .max()
+            .orElse(0);
+
+        if(maxVotes == 0){
+            return null;
+        }
+        else if(voteCounts.values().stream().filter(count -> count == maxVotes).count() > 1){
+            return null;
+        }
+        else{
+            return getPlayerByPlayerNumber(voteCounts.entrySet().stream()
+                .filter(entry -> entry.getValue() == maxVotes)
+                .map(Map.Entry::getKey)
+                .findFirst().orElse(null));
+        }
+    }
+
+    // 특정 플레이어의 득표수 확인
+    public int getVoteCount(Integer playerId) {
+        return (int) voteStatus.values().stream()
+            .filter(targetId -> targetId.equals(playerId))
+            .count();
+    }
+
+    // 투표 초기화
+    public void clearVotes() {
+        voteStatus.clear();
+        voterRecords.clear();
     }
 
     //가져오기 매서드들
@@ -59,6 +132,7 @@ public class Room {
         }
         return null;
     }
+
     //------김남영 추가------
     public Player getPlayerByPlayerNumber(Integer playerNumber){
         for (Player player : players) {
@@ -68,7 +142,6 @@ public class Room {
         }
         return null;
     }
-
 
     // 플레이어 추가 메서드
     public boolean addPlayer(String username, String userEmail) {
@@ -168,7 +241,5 @@ public class Room {
             hostName = null; // 방에 남아 있는 플레이어가 없으면 방장 없음
         }
     }
-
-
 
 }

@@ -153,36 +153,46 @@ public class GameController {
     @PostMapping("/admin/status")
     public ResponseEntity<?> updateGameStatus(@RequestBody Map<String, Object> request) {
         try {
-            // String을 Integer로 파싱
-            Integer roomKey = Integer.parseInt(request.get("roomKey").toString());
+            Integer roomKey = (Integer) request.get("roomKey");
             String newStatus = (String) request.get("gameStatus");
             
             log.info("게임 상태 변경 요청 - 방: {}, 새로운 상태: {}", roomKey, newStatus);
             
             Room room = roomRepository.getRoom(roomKey);
+            if (room == null) {
+                return ResponseEntity.badRequest().body("방을 찾을 수 없습니다: " + roomKey);
+            }
+
             room.setGameStatus(GameStatus.valueOf(newStatus));
             
             log.info("게임 상태 변경 완료 - 방: {}", roomKey);
             return ResponseEntity.ok(room);
         } catch (Exception e) {
             log.error("게임 상태 변경 실패", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("게임 상태 변경 실패: " + e.getMessage());
         }
     }
 
     @PostMapping("/admin/player/update")
     public ResponseEntity<?> updatePlayerStatus(@RequestBody Map<String, Object> request) {
         try {
-            log.info("플레이어 상태 변경 요청: {}", request);
-
-            // String을 Integer로 파싱
-            Integer roomKey = Integer.parseInt(request.get("roomKey").toString());
-            Integer playerNumber = Integer.parseInt(request.get("playerNumber").toString());
+            Integer roomKey = (Integer) request.get("roomKey");
+            Integer playerNumber = (Integer) request.get("playerNumber");
             Boolean isAlive = (Boolean) request.get("isAlive");
             String role = (String) request.get("role");
             
+            log.info("플레이어 상태 변경 요청 - 방: {}, 플레이어: {}, 생존: {}, 역할: {}", 
+                roomKey, playerNumber, isAlive, role);
+            
             Room room = roomRepository.getRoom(roomKey);
+            if (room == null) {
+                return ResponseEntity.badRequest().body("방을 찾을 수 없습니다: " + roomKey);
+            }
+
             Player player = room.getPlayerByPlayerNumber(playerNumber);
+            if (player == null) {
+                return ResponseEntity.badRequest().body("플레이어를 찾을 수 없습니다: " + playerNumber);
+            }
 
             if (isAlive != null) player.setAlive(isAlive);
             if (role != null) player.setRole(Role.valueOf(role));
@@ -191,7 +201,7 @@ public class GameController {
             return ResponseEntity.ok(room);
         } catch (Exception e) {
             log.error("플레이어 상태 변경 실패", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("플레이어 상태 변경 실패: " + e.getMessage());
         }
     }
 }
