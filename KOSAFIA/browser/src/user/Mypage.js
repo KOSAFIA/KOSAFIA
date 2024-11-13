@@ -5,7 +5,7 @@ import "../styles/components/Mypage.css";
 
 Modal.setAppElement("#root");
 
-function Mypage({ setUsername, isOAuthUser }) {
+function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   // isOAuthUser를 상위 컴포넌트에서 props로 전달받아 사용}) {
   // 상위 컴포넌트에서 setUsername 과 isOAuthUser을 props로 전달받아 사용
   const [userEmail, setUserEmail] = useState(""); // 사용자 이메일 상태 관리
@@ -22,6 +22,7 @@ function Mypage({ setUsername, isOAuthUser }) {
   const [deletePassword, setDeletePassword] = useState(""); // 회원탈퇴 시 입력할 비밀번호
   const [isOAuthDeleteModalOpen, setIsOAuthDeleteModalOpen] = useState(false); // OAuth 사용자를 위한 회원탈퇴 모달 열림 여부
   const [confirmDeletionInput, setConfirmDeletionInput] = useState(""); // 회원탈퇴 확인 입력 상태
+
   const navigate = useNavigate(); // 로그인 화면으로 이동하기 위해 navigate 설정
 
   // 서버 URL 환경 변수
@@ -31,6 +32,9 @@ function Mypage({ setUsername, isOAuthUser }) {
   // 사용자 정보를 서버에서 가져오는 함수
   useEffect(() => {
     console.log("마이페이지 컴포넌트 렌더링: OAuth 사용자 여부:", isOAuthUser);
+  }, [isOAuthUser]);
+  useEffect(() => {
+    console.log("isOAuthUser 상태가 변경되었습니다:", isOAuthUser);
   }, [isOAuthUser]);
 
   // 사용자 정보를 서버에서 가져오는 함수
@@ -51,10 +55,19 @@ function Mypage({ setUsername, isOAuthUser }) {
         if (response.ok) {
           const data = await response.json(); // 서버로부터 받은 데이터를 JSON 형태로 파싱
           console.log("받아온 사용자 정보:", data); // 받아온 사용자 정보 로그로 확인
+
+          // 사용자 상태 업데이트
           setUserEmail(data.user_email); // 사용자 이메일 상태 업데이트
           setLocalUsername(data.username); // 사용자 닉네임 상태 업데이트
 
-          console.log("사용자 프로필 로드 성공:", data);
+          // OAuth 사용자 여부 판단
+          const isOAuth = data.provider === "google";
+          setIsOAuthUser(isOAuth);
+          console.log(
+            isOAuth ? "OAuth 사용자 설정 완료" : "일반 사용자 설정 완료"
+          );
+
+          // console.log("OAuth 사용자 여부:", data.provider === "google");
         } else {
           console.error("사용자 정보를 불러오는 데 실패했습니다."); // 서버 응답 실패 시 오류 메시지 출력
         }
@@ -64,7 +77,7 @@ function Mypage({ setUsername, isOAuthUser }) {
     };
 
     fetchUserProfile(); // 컴포넌트가 렌더링될 때 사용자 정보 가져오기
-  }, []); // 빈 배열은 이 함수가 컴포넌트가 처음 렌더링될 때만 실행되도록 함
+  }, [setIsOAuthUser]); // 의존성 배열에 상태 업데이트 함수를 추가
 
   // 닉네임 저장 함수
   const handleUsernameSave = async () => {
@@ -243,6 +256,7 @@ function Mypage({ setUsername, isOAuthUser }) {
 
     setMessage(""); // 메시지 초기화
   };
+
   return (
     <div>
       <h1>마이페이지</h1>

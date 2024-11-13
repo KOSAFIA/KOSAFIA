@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired; // @Autowired 애
 import org.springframework.http.HttpStatus; // HTTP 상태 코드 사용
 import org.springframework.http.ResponseEntity; // HTTP 응답 객체 생성
 import org.springframework.web.bind.annotation.*; // 웹 요청 처리를 위한 애너테이션
+import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map; // JSON 형태의 데이터 처리를 위한 Map 사용
@@ -83,10 +84,26 @@ public class UserController {
     // 로그아웃 엔드포인트
     @PostMapping("/logout") // "/api/user/logout" 경로로 POST 요청이 올 때 실행
     public ResponseEntity<String> logout(HttpSession session) {
-        // 로그아웃 로직 처리 - userService의 logoutUser 메서드 호출
-        userService.logoutUser(session);
-        // 200 OK 상태 코드와 함께 "로그아웃 성공" 메시지를 응답 본문에 포함하여 반환
-        return ResponseEntity.ok("로그아웃 성공");
+        try {
+            // 세션 무효화
+            userService.logoutUser(session);
+            return ResponseEntity.ok("로그아웃 성공");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("로그아웃 중 오류가 발생했습니다.");
+        }
+    }
+
+    @PostMapping("/api/user/google-logout")
+    public ResponseEntity<Void> googleLogout() {
+        RestTemplate restTemplate = new RestTemplate();
+        String googleLogoutUrl = "https://accounts.google.com/logout";
+        try {
+            restTemplate.getForObject(googleLogoutUrl, String.class);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     // 프로필 조회 엔드포인트

@@ -23,8 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**") // addMapping("/**")는 모든 경로에 대해 CORS 설정을 적용
                 .allowedOrigins(
                         "http://localhost:3000", // 로컬 React 개발 서버
-                        "http://192.168.1.119:3000", // 팀원의 React 서버 IP
-                 "http://192.168.1.119:8080" // 팀원의 Spring Boot 서버 IP
+                        "http://192.168.240.5:3000" // 팀원의 React 서버 IP
                 ) // React 개발 서버 도메인(localhost:3000)에서 오는 요청을 허용
                 .allowedMethods("*") // 모든 HTTP 메서드(GET, POST, PUT, DELETE 등)를 허용
                 .allowedHeaders("*") // 모든 헤더를 허용 (클라이언트에서 다양한 정보를 포함하여 서버에 요청할 수 있도록 허용)

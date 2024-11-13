@@ -11,16 +11,15 @@ import "../styles/components/LoginOk.css";
 Modal.setAppElement("#root"); // 모달이 열릴 때 #root 외부의 콘텐츠는 접근 불가로 설정합니다.
 
 function LoginOk() {
-  const navigate = useNavigate(); // 페이지 이동을 위한 navigate 함수입니다.
   const [username, setUsername] = useState(""); // 사용자 닉네임 저장하는 상태입니다.
   const [useremail, setUserEmail] = useState(""); // 사용자 이메일 저장하는 상태입니다.
   const [isMypageModalOpen, setIsMypageModalOpen] = useState(false); // 마이페이지 모달 열림 상태
   const [isOAuthUser, setIsOAuthUser] = useState(false); // OAuth 사용자 여부를 저장하는 상태 정의
 
+  const navigate = useNavigate(); // 페이지 이동을 위한 navigate 함수입니다.
   // 서버 URL 환경 변수
   // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
   const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
-
 
   // Google API 초기화
   useEffect(() => {
@@ -96,37 +95,63 @@ function LoginOk() {
     fetchUserData(); // 사용자 데이터를 가져오는 함수를 호출합니다.
   }, [navigate]); // navigate가 변경될 때 이 효과가 다시 실행됩니다.
 
-  // 컴포넌트가 처음 렌더링될 때 사용자 정보를 가져오는 함수입니다.
+  // // 컴포넌트가 처음 렌더링될 때 사용자 정보를 가져오는 함수입니다.
+  // useEffect(() => {
+  //   // 로그인한 사용자 정보 가져오기와 CORS 확인
+  //   const fetchUserInfo = async () => {
+  //     try {
+  //       await CheckCors(); // CORS 확인을 위해 CheckCors 호출
+
+  //       const response = await fetch(
+  //         `${BASE_URL}/api/user/profile`,
+
+  //         //"http://192.168.1.119:8080/api/user/profile",
+  //         {
+  //           method: "GET",
+  //           headers: { "Content-Type": "application/json" },
+  //           credentials: "include", // 세션 쿠키를 포함하여 서버에 요청
+  //         }
+  //       );
+
+  //       if (response.ok) {
+  //         const data = await response.json(); // 서버로부터 받은 데이터를 JSON 형태로 파싱
+  //         console.log("받은 사용자 데이터:", data); // 데이터 확인 로그 추가
+  //         setUserEmail(data.useremail); // 사용자 이메일 상태 업데이트
+  //         setUsername(data.username); // 사용자 닉네임 상태를 업데이트합니다.
+  //         setIsOAuthUser(!!data.provider); // provider 필드가 있으면 OAuth 사용자임을 true로 설정
+  //       } else {
+  //         console.error("사용자 정보를 불러오는 데 실패했습니다.");
+  //         navigate("/custom-login"); // 로그인 실패 시 로그인 페이지로 리디렉션
+  //       }
+  //     } catch (error) {
+  //       console.error("사용자 정보 로드 오류:", error);
+  //       navigate("/custom-login"); // 오류 발생 시 로그인 페이지로 리디렉션
+  //     }
+  //   };
+  // 사용자 정보를 가져오는 함수 (fetchUserInfo)
   useEffect(() => {
-    // 로그인한 사용자 정보 가져오기와 CORS 확인
     const fetchUserInfo = async () => {
       try {
-        await CheckCors(); // CORS 확인을 위해 CheckCors 호출
+        const response = await axios.get(`${BASE_URL}/api/user/profile`, {
+          withCredentials: true, // 쿠키 포함
+        });
 
-        const response = await fetch(
-          `${BASE_URL}/api/user/profile`,
+        if (response.status === 200) {
+          const data = response.data; // 응답 데이터
+          console.log("받은 사용자 데이터:", data);
 
-          //"http://192.168.1.119:8080/api/user/profile",
-          {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include", // 세션 쿠키를 포함하여 서버에 요청
-          }
-        );
+          // 사용자 상태 업데이트
+          setUsername(data.username);
+          setUserEmail(data.user_email);
 
-        if (response.ok) {
-          const data = await response.json(); // 서버로부터 받은 데이터를 JSON 형태로 파싱
-          console.log("받은 사용자 데이터:", data); // 데이터 확인 로그 추가
-          setUserEmail(data.useremail); // 사용자 이메일 상태 업데이트
-          setUsername(data.username); // 사용자 닉네임 상태를 업데이트합니다.
-          setIsOAuthUser(!!data.provider); // provider 필드가 있으면 OAuth 사용자임을 true로 설정
-        } else {
-          console.error("사용자 정보를 불러오는 데 실패했습니다.");
-          navigate("/custom-login"); // 로그인 실패 시 로그인 페이지로 리디렉션
+          // OAuth 사용자 여부 판단 및 설정
+          const isOAuth = data.provider === "google";
+          setIsOAuthUser(isOAuth);
+          console.log("OAuth 사용자 여부:", isOAuth);
         }
       } catch (error) {
         console.error("사용자 정보 로드 오류:", error);
-        navigate("/custom-login"); // 오류 발생 시 로그인 페이지로 리디렉션
+        navigate("/custom-login"); // 오류 발생 시 로그인 페이지로 이동
       }
     };
 
@@ -135,54 +160,266 @@ function LoginOk() {
 
   // 로그아웃 핸들러 함수
   const handleLogout = async () => {
+    //   try {
+    //     if (isOAuthUser) {
+    //       // Google OAuth 로그아웃 처리
+    //       if (window.gapi && window.gapi.auth2) {
+    //         const auth2 = window.gapi.auth2.getAuthInstance();
+    //         if (auth2) {
+    //           await auth2.signOut(); // Google 로그아웃 수행
+    //           await auth2.disconnect(); // 세션 완전히 종료
+    //           console.log("Google 계정에서 로그아웃되었습니다.");
+
+    //           // Google 계정 연결 해제
+    //           const token = auth2.currentUser.get().getAuthResponse().id_token;
+    //           await fetch(
+    //             `https://accounts.google.com/o/oauth2/revoke?token=${token}`,
+    //             {
+    //               method: "POST",
+    //             }
+    //           );
+    //         } else {
+    //           console.error("Google Auth 인스턴스를 찾을 수 없습니다.");
+    //         }
+    //       } else {
+    //         console.error("Google API가 로드되지 않았습니다.");
+    //       }
+    //     }
+    //     // 서버에 일반 로그인 사용자 로그아웃 요청을 보냅니다.
+    //     const response = await fetch(
+    //       `${BASE_URL}/api/user/logout`,
+
+    //       //"http://192.168.1.119:8080/api/user/logout",
+    //       {
+    //         method: "POST",
+    //         headers: { "Content-Type": "application/json" },
+    //         credentials: "include", // 세션 쿠키를 포함하여 요청
+    //       }
+    //     );
+
+    //     if (response.ok) {
+    //       sessionStorage.clear(); // 세션 데이터 초기화
+    //       setIsOAuthUser(false); // OAuth 상태 초기화
+    //       alert("로그아웃 되었습니다."); // 로그아웃 성공시 알림
+    //       navigate("/custom-login"); // 로그인 화면으로 리디렉션
+    //     } else {
+    //       alert("로그아웃에 실패했습니다. 다시 시도해주세요.");
+    //     }
+    //   } catch (error) {
+    //     console.error("로그아웃 오류:", error);
+    //     alert("로그아웃 중 오류가 발생했습니다.222");
+    //   }
+    // };
+    ////////////////////////////////////////////////////////////////////
+
+    //   try {
+    //     // Google OAuth 로그아웃 처리
+    //     if (isOAuthUser && window.gapi && window.gapi.auth2) {
+    //       const auth2 = window.gapi.auth2.getAuthInstance();
+    //       if (auth2) {
+    //         await auth2.signOut(); // Google 로그아웃
+    //         await auth2.disconnect(); // 세션 완전 종료
+    //         console.log("Google 계정에서 로그아웃되었습니다.");
+    //       }
+    //     }
+
+    //     // 백엔드 로그아웃 처리
+    //     const response = await fetch(`${BASE_URL}/api/user/logout`, {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" },
+    //       credentials: "include", // 세션 쿠키 포함
+    //     });
+
+    //     if (response.ok) {
+    //       console.log("백엔드 로그아웃 성공");
+    //       // 세션 초기화
+    //       sessionStorage.clear();
+    //       setIsOAuthUser(false); // OAuth 상태 초기화
+    //       alert("로그아웃 되었습니다.");
+    //       navigate("/custom-login"); // 로그인 페이지로 리디렉션
+    //     } else {
+    //       alert("백엔드 로그아웃에 실패했습니다.");
+    //     }
+    //   } catch (error) {
+    //     console.error("로그아웃 오류:", error);
+    //     alert("로그아웃 중 오류가 발생했습니다.");
+    //   }
+    // };
+    /////////////////////////////////////////////////////////////////////
+
+    //   try {
+    //     if (isOAuthUser && window.gapi && window.gapi.auth2) {
+    //       const auth2 = window.gapi.auth2.getAuthInstance();
+    //       if (auth2) {
+    //         await auth2.signOut(); // Google 로그아웃 수행
+    //         console.log("Google 계정에서 로그아웃되었습니다.");
+    //       }
+    //     }
+
+    //     // 백엔드 로그아웃 요청
+    //     const response = await fetch(`${BASE_URL}/api/user/logout`, {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" },
+    //       credentials: "include",
+    //     });
+
+    //     if (response.ok) {
+    //       console.log("백엔드 로그아웃 성공");
+
+    //       // Google 로그아웃 리디렉션 (CORS 문제 해결)
+    //       if (isOAuthUser) {
+    //         window.location.href =
+    //           "https://accounts.google.com/logout?continue=http://localhost:3000/custom-login";
+    //       } else {
+    //         sessionStorage.clear(); // 일반 사용자 세션 초기화
+    //         alert("로그아웃 되었습니다.");
+    //         navigate("/custom-login"); // 로그인 페이지로 리디렉션
+    //       }
+    //     } else {
+    //       alert("백엔드 로그아웃에 실패했습니다.");
+    //     }
+    //   } catch (error) {
+    //     console.error("로그아웃 오류:", error);
+    //     alert("로그아웃 중 오류가 발생했습니다.");
+    //   }
+    // };
+    //////////////////////////////////////////////////////////////////////////
+
+    //   try {
+    //     // OAuth 사용자 로그아웃 처리
+    //     if (isOAuthUser && window.gapi && window.gapi.auth2) {
+    //       const auth2 = window.gapi.auth2.getAuthInstance();
+    //       if (auth2) {
+    //         await auth2.signOut(); // Google 로그아웃 수행
+    //         console.log("Google 계정에서 로그아웃되었습니다.");
+
+    //         // Google 계정 연결 해제 (선택 사항)
+    //         const token = auth2.currentUser.get().getAuthResponse().id_token;
+    //         await fetch(
+    //           `https://accounts.google.com/o/oauth2/revoke?token=${token}`,
+    //           {
+    //             method: "POST",
+    //           }
+    //         );
+
+    //         // Google 로그아웃 후 리디렉션
+    //         window.location.href =
+    //           "https://accounts.google.com/logout?continue=http://localhost:3000/custom-login";
+    //         return; // 이후 코드를 실행하지 않도록 반환
+    //       } else {
+    //         console.error("Google Auth 인스턴스를 찾을 수 없습니다.");
+    //       }
+    //     }
+
+    //     // 일반 사용자 로그아웃 처리
+    //     const response = await fetch(`${BASE_URL}/api/user/logout`, {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" },
+    //       credentials: "include", // 세션 쿠키 포함
+    //     });
+
+    //     if (response.ok) {
+    //       console.log("백엔드 로그아웃 성공");
+    //       sessionStorage.clear(); // 세션 데이터 초기화
+    //       alert("로그아웃 되었습니다.");
+    //       navigate("/custom-login"); // 일반 사용자 로그인 페이지로 리디렉션
+    //     } else {
+    //       alert("백엔드 로그아웃에 실패했습니다.");
+    //     }
+    //   } catch (error) {
+    //     console.error("로그아웃 오류:", error);
+    //     alert("로그아웃 중 오류가 발생했습니다.");
+    //   }
+    // };
+    ///////////////////////////////////////////////////////////////////////
+    //   try {
+    //     // OAuth 사용자 로그아웃 처리
+    //     if (isOAuthUser && window.gapi && window.gapi.auth2) {
+    //       const auth2 = window.gapi.auth2.getAuthInstance();
+    //       if (auth2) {
+    //         await auth2.signOut(); // Google 로그아웃 수행
+    //         console.log("Google 계정에서 로그아웃되었습니다.55");
+    //       }
+    //     }
+
+    //     // 백엔드 로그아웃 요청
+    //     const response = await fetch(`${BASE_URL}/api/user/logout`, {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" },
+    //       credentials: "include", // 세션 쿠키 포함
+    //     });
+
+    //     if (response.ok) {
+    //       console.log("백엔드 로그아웃 성공55");
+
+    //       // Google 로그아웃 리디렉션
+    //       if (isOAuthUser) {
+    //         window.location.href =
+    //           //  "https://accounts.google.com/logout?continue=http://localhost:3000/custom-login";
+    //           "https://accounts.google.com/logout?continue=http://localhost:8080/custom-login";
+    //       } else {
+    //         sessionStorage.clear(); // 세션 초기화
+    //         alert("로그아웃 되었습니다.55");
+    //         navigate("/custom-login"); // 일반 사용자 로그인 페이지로 리디렉션
+    //       }
+    //     } else {
+    //       alert("백엔드 로그아웃에 실패했습니다.55");
+    //     }
+    //   } catch (error) {
+    //     console.error("로그아웃 오류:", error);
+    //     alert("로그아웃 중 오류가 발생했습니다.55");
+    //   }
+    // };
+    /////////////////////////////////////////////////////////////////////////////
+    //   try {
+    //     // OAuth 사용자 로그아웃 처리
+    //     if (isOAuthUser && window.gapi && window.gapi.auth2) {
+    //       const auth2 = window.gapi.auth2.getAuthInstance();
+    //       if (auth2) {
+    //         await auth2.signOut(); // Google 로그아웃 수행
+    //         console.log("Google 계정에서 로그아웃되었습니다.66");
+    //       }
+    //     }
+
+    //     // 백엔드 로그아웃 요청
+    //     const response = await fetch(`${BASE_URL}/api/user/logout`, {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" },
+    //       credentials: "include", // 세션 쿠키 포함
+    //     });
+
+    //     if (response.ok) {
+    //       console.log("백엔드 로그아웃 성공66");
+
+    //       // Google 로그아웃 리다이렉션 (CORS 문제를 우회)
+    //       if (isOAuthUser) {
+    //         window.location.href =
+    //           "https://accounts.google.com/logout?continue=http://localhost:3000/custom-login";
+    //         return; // 이후 코드를 실행하지 않음
+    //       }
+
+    //       sessionStorage.clear(); // 일반 사용자 세션 초기화
+    //       alert("로그아웃 되었습니다.66");
+    //       navigate("/custom-login"); // 일반 사용자 로그인 페이지로 리디렉션
+    //     } else {
+    //       alert("백엔드 로그아웃에 실패했습니다.66");
+    //     }
+    //   } catch (error) {
+    //     console.error("로그아웃 오류66:", error);
+    //     alert("로그아웃 중 오류가 발생했습니다.66");
+    //   }
+    // };
+    ////////////////////////////////////////////////////////////////////////////////////
     try {
       if (isOAuthUser) {
-        // Google OAuth 로그아웃 처리
-        if (window.gapi && window.gapi.auth2) {
-          const auth2 = window.gapi.auth2.getAuthInstance();
-          if (auth2) {
-            await auth2.signOut(); // Google 로그아웃 수행
-            await auth2.disconnect(); // 세션 완전히 종료
-            console.log("Google 계정에서 로그아웃되었습니다.");
-
-            // Google 계정 연결 해제
-            const token = auth2.currentUser.get().getAuthResponse().id_token;
-            await fetch(
-              `https://accounts.google.com/o/oauth2/revoke?token=${token}`,
-              {
-                method: "POST",
-              }
-            );
-          } else {
-            console.error("Google Auth 인스턴스를 찾을 수 없습니다.");
-          }
-        } else {
-          console.error("Google API가 로드되지 않았습니다.");
-        }
+        await fetch(`${BASE_URL}/api/user/google-logout`, { method: "POST" });
       }
-      // 서버에 일반 로그인 사용자 로그아웃 요청을 보냅니다.
-      const response = await fetch(
-        `${BASE_URL}/api/user/logout`,
-
-        //"http://192.168.1.119:8080/api/user/logout",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include", // 세션 쿠키를 포함하여 요청
-        }
-      );
-
-      if (response.ok) {
-        sessionStorage.clear(); // 세션 데이터 초기화
-        setIsOAuthUser(false); // OAuth 상태 초기화
-        alert("로그아웃 되었습니다."); // 로그아웃 성공시 알림
-        navigate("/custom-login"); // 로그인 화면으로 리디렉션
-      } else {
-        alert("로그아웃에 실패했습니다. 다시 시도해주세요.");
-      }
+      sessionStorage.clear();
+      alert("로그아웃 되었습니다.77");
+      navigate("/custom-login");
     } catch (error) {
-      console.error("로그아웃 오류:", error);
-      alert("로그아웃 중 오류가 발생했습니다.222");
+      console.error("로그아웃 오류:77", error);
+      alert("로그아웃 중 오류가 발생했습니다.77");
     }
   };
 
@@ -258,7 +495,11 @@ function LoginOk() {
         className="mypage-modal" // 모달 스타일 클래스
         overlayClassName="mypage-modal-overlay" // 모달 배경 스타일 클래스
       >
-        <Mypage setUsername={setUsername} isOAuthUser={isOAuthUser} />
+        <Mypage
+          setUsername={setUsername}
+          isOAuthUser={isOAuthUser}  // 상태 전달
+          setIsOAuthUser={setIsOAuthUser} // 상태 업데이트 함수 전달
+        />
         {/* isOAuthUser를 Mypage에 전달 */}
         {/* setUsername을 Mypage에 전달 */}
         <button onClick={closeMypageModal} style={{ marginTop: "10px" }}>
