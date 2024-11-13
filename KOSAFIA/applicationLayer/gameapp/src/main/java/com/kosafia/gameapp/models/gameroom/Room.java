@@ -74,6 +74,8 @@ public class Room {
     }
 
 
+
+
     // 플레이어 추가 메서드
     public boolean addPlayer(String username, String userEmail) {
         if (players.size() >= maxPlayers) {
@@ -90,6 +92,7 @@ public class Room {
         // 방장이 없는 경우 첫 번째 플레이어를 방장으로 설정
         if (hostName == null) {
             hostName = player.getUsername();
+            log.info("방장이 지정 되었습니다: "+hostName);
         }
 
         return true;
@@ -106,10 +109,7 @@ public class Room {
         //     return false;
         // }
 
-        // 방장이 나가면 새 방장 지정
-        if (player.getUsername().equals(hostName)) {
-            assignNewHost(); 
-        }
+       
 
         // 플레이어를 직접 제거
         boolean removed = players.remove(player);
@@ -121,7 +121,16 @@ public class Room {
         // players.remove(index); // 해당 플레이어 제거
         currentPlayers--; // 플레이어 제거 시 현재 인원수 감소
 
-      
+       // 방장이 나가면 새 방장 지정
+       if (player.getUsername().equals(hostName)) {
+            assignNewHost(); 
+        }
+
+         // playerNumber 재정렬: 나간 플레이어의 위치 이후의 모든 플레이어의 playerNumber를 재정렬
+        for (int i = 0; i < players.size(); i++) {
+            players.get(i).setPlayerNumber(i + 1); // 새 번호를 1부터 다시 부여
+        }
+
         // // 뒤에 있는 플레이어들의 번호를 앞으로 당김
         // for (int i = index; i < players.size(); i++) {
         //     players.get(i).setPlayerNumber(i + 1); // playerNumber를 i + 1로 업데이트
@@ -168,6 +177,8 @@ public class Room {
             System.out.println("새 방장으로 " + hostName + "가 지정되었습니다.");
         } else {
             hostName = null; // 방에 남아 있는 플레이어가 없으면 방장 없음
+            System.out.println("방장없음!!!");
+
         }
     }
 

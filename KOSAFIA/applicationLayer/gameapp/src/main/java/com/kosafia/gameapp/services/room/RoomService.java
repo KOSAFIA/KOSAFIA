@@ -85,6 +85,14 @@ public class RoomService {
     }
 
 
+    public boolean validateRoomPassword(Integer roomKey, String password) {
+        Room room = roomRepository.getRoom(roomKey);
+        if (room != null && room.isPrivate()) {
+            return room.getPassword().equals(password);
+        }
+        return true; // 비밀방이 아니면 바로 입장 허용
+    }
+
 
     // 방에 플레이어 추가(입장)
     public Player joinRoom(Integer roomKey, UserData userData) {
