@@ -22,12 +22,13 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   const [deletePassword, setDeletePassword] = useState(""); // 회원탈퇴 시 입력할 비밀번호
   const [isOAuthDeleteModalOpen, setIsOAuthDeleteModalOpen] = useState(false); // OAuth 사용자를 위한 회원탈퇴 모달 열림 여부
   const [confirmDeletionInput, setConfirmDeletionInput] = useState(""); // 회원탈퇴 확인 입력 상태
-
+  const BASE_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate(); // 로그인 화면으로 이동하기 위해 navigate 설정
 
   // 서버 URL 환경 변수
   // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+  // const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+  //const BASE_URL = process.env.REACT_APP_API_URL || "https://ba09-115-90-99-121.ngrok-free.app";
 
   // 사용자 정보를 서버에서 가져오는 함수
   useEffect(() => {

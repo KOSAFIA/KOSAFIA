@@ -15,11 +15,12 @@ function LoginOk() {
   const [useremail, setUserEmail] = useState(""); // 사용자 이메일 저장하는 상태입니다.
   const [isMypageModalOpen, setIsMypageModalOpen] = useState(false); // 마이페이지 모달 열림 상태
   const [isOAuthUser, setIsOAuthUser] = useState(false); // OAuth 사용자 여부를 저장하는 상태 정의
-
+  const BASE_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate(); // 페이지 이동을 위한 navigate 함수입니다.
   // 서버 URL 환경 변수
   // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+  // const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+  //const BASE_URL = process.env.REACT_APP_API_URL || "https://ba09-115-90-99-121.ngrok-free.app";
 
   // Google API 초기화
   useEffect(() => {
@@ -497,7 +498,7 @@ function LoginOk() {
       >
         <Mypage
           setUsername={setUsername}
-          isOAuthUser={isOAuthUser}  // 상태 전달
+          isOAuthUser={isOAuthUser} // 상태 전달
           setIsOAuthUser={setIsOAuthUser} // 상태 업데이트 함수 전달
         />
         {/* isOAuthUser를 Mypage에 전달 */}

@@ -6,9 +6,13 @@ import axios from "axios"; // HTTP 요청을 보내기 위해 axios 라이브러
 const CheckCors = async () => {
   try {
     // 백엔드 서버에 GET 요청을 보냅니다. 이 요청은 세션이 필요한 경우 쿠키를 포함하여 전송합니다.
-    const response = await axios.get("http://localhost:8080/api/user/profile", {
-      withCredentials: true, // 쿠키 인증을 허용하여 요청 (세션 정보 포함)
-    });
+    //  const response = await axios.get("http://localhost:8080/api/user/profile", {
+    const response = await axios.get(
+      "https://ba09-115-90-99-121.ngrok-free.app/api/user/profile",
+      {
+        withCredentials: true, // 쿠키 인증을 허용하여 요청 (세션 정보 포함)
+      }
+    );
     console.log("CORS 적용 성공:", response.data); // 요청 성공 시 서버에서 받은 데이터를 콘솔에 출력
   } catch (error) {
     // 요청이 실패할 경우, CORS 문제나 기타 오류 메시지를 콘솔에 출력

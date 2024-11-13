@@ -18,10 +18,11 @@ function Login() {
   const [password, setPassword] = useState(""); // 사용자 비밀번호를 저장하는 상태
   const [error, setError] = useState(""); // 오류 메시지를 저장하는 상태
   const navigate = useNavigate(); // 페이지 이동을 위한 navigate 함수
-
+  const BASE_URL = process.env.REACT_APP_API_URL;
   // 서버 URL 환경 변수
   // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+  // const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+  //const BASE_URL = process.env.REACT_APP_API_URL || "https://ba09-115-90-99-121.ngrok-free.app";
 
   // 로그인 처리 함수
   const handleLogin = async (e) => {

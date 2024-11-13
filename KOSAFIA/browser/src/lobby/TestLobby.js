@@ -59,7 +59,10 @@ function TestLobby() {
 
   const fetchRooms = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/rooms/all");
+      // const response = await axios.get("http://localhost:8080/api/rooms/all");
+      const response = await axios.get(
+        "https://ba09-115-90-99-121.ngrok-free.app/api/rooms/all"
+      );
       console.log("방 목록 조회 성공 - 응답 데이터:", response.data);
 
       // rooms가 객체로 올 경우 배열로 변환
@@ -90,7 +93,8 @@ function TestLobby() {
 
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/rooms/create",
+        //  "http://localhost:8080/api/rooms/create",
+        "https://ba09-115-90-99-121.ngrok-free.app/api/rooms/create",
         {
           roomName: roomDetails.roomName,
           maxPlayers: Number(roomDetails.maxPlayers),

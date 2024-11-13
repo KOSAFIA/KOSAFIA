@@ -21,12 +21,13 @@ function Register() {
   const [error, setError] = useState("");
   const [emailAvailable, setEmailAvailable] = useState(null);
   const [usernameAvailable, setUsernameAvailable] = useState(null);
-
+  const BASE_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
 
   // 서버 URL 환경 변수
   // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
-  const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+  // const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+  //const BASE_URL = process.env.REACT_APP_API_URL || "https://ba09-115-90-99-121.ngrok-free.app";
 
   // 이메일 중복 체크 함수
   const checkEmailAvailability = async () => {
