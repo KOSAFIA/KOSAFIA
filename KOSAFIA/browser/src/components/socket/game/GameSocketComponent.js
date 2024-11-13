@@ -3,15 +3,19 @@ import { useGameContext } from '../../../contexts/socket/game/GameSocketContext'
 
 const GameSocketComponent = () => {
     const { 
-        messages, 
-        players, 
-        gameStatus, 
-        currentPlayer,
-        mafiaTarget,
-        canChat,
+        messages, //채팅할때 필요해
+        players, //플레이리스트 동기화
+        gameStatus, //게임 상태 동기화
+        currentPlayer, //현재 플레이어 상태 동기화
+        mafiaTarget, //마피아의 타겟은 동기화
+        canChat, //채팅할수 있는지 컨텍스트 동기화
         sendGameMessage,
         setTarget,
-        isConnected 
+        isConnected,
+        //투표 변수들...
+        voteStatus,
+        sendVote,
+        canVote 
     } = useGameContext();
     
     const [inputMessage, setInputMessage] = useState('');
@@ -23,10 +27,26 @@ const GameSocketComponent = () => {
         }
     };
 
-    const handleTargetSelection = (targetId) => {
-        if (currentPlayer?.role === 'MAFIA' && gameStatus === 'NIGHT') {
+    const handlePlayerSelection = (targetId) => {
+        if (gameStatus === 'NIGHT' && currentPlayer?.role === 'MAFIA') {
             setTarget(targetId);
         }
+        else if (gameStatus === 'VOTE' && canVote()) {
+            sendVote(targetId);
+        }
+    };
+
+    const canSelect = (targetId) => {
+        const isMafiaNight = gameStatus === 'NIGHT' && currentPlayer?.role === 'MAFIA';
+        const isVoteTime = gameStatus === 'VOTE' && canVote();
+        return (isMafiaNight || isVoteTime) && targetId !== currentPlayer?.playerNumber;
+    };
+
+    const isSelected = (playerId) => {
+        if (gameStatus === 'NIGHT' && currentPlayer?.role === 'MAFIA') {
+            return mafiaTarget === playerId;
+        }
+        return false;
     };
 
     return (
@@ -38,32 +58,82 @@ const GameSocketComponent = () => {
 
             <div className="players-list">
                 <h3>플레이어 목록:</h3>
-                <ul>
-                    {players.map((player) => (
-                        <li key={player.playerNumber}>
-                            {player.username}
-                            {currentPlayer?.role === 'MAFIA' && gameStatus === 'NIGHT' && (
-                                <input
-                                    type="radio"
-                                    name="mafiaTarget"
-                                    checked={mafiaTarget === player.playerNumber}
-                                    onChange={() => handleTargetSelection(player.playerNumber)}
-                                    disabled={player.playerNumber === currentPlayer.playerNumber}
-                                />
-                            )}
-                        </li>
-                    ))}
-                </ul>
+                {players.map((player) => (
+                    <div 
+                        key={player.playerNumber}
+                        className={`player-item ${isSelected(player.playerNumber) ? 'selected' : ''}`}
+                        onClick={() => canSelect(player.playerNumber) && handlePlayerSelection(player.playerNumber)}
+                        style={{
+                            cursor: canSelect(player.playerNumber) ? 'pointer' : 'default',
+                            padding: '10px',
+                            margin: '5px',
+                            border: '1px solid #ccc',
+                            borderRadius: '5px',
+                            backgroundColor: isSelected(player.playerNumber) ? '#e6e6e6' : 'white',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <span>{player.username}</span>
+                        
+                        {gameStatus === 'NIGHT' && currentPlayer?.role === 'MAFIA' && (
+                            <input
+                                type="radio"
+                                checked={mafiaTarget === player.playerNumber}
+                                onChange={() => handlePlayerSelection(player.playerNumber)}
+                                disabled={player.playerNumber === currentPlayer.playerNumber}
+                                style={{ marginLeft: '10px' }}
+                            />
+                        )}
+                        
+                        {gameStatus === 'VOTE' && (
+                            <span style={{ 
+                                marginLeft: '10px', 
+                                color: 'blue',
+                                fontWeight: voteStatus[player.playerNumber] > 0 ? 'bold' : 'normal'
+                            }}>
+                                {voteStatus[player.playerNumber] || 0}표
+                            </span>
+                        )}
+                    </div>
+                ))}
             </div>
 
             <div className="chat-container">
                 <div className="chat-messages" style={{ height: '300px', overflowY: 'auto' }}>
-                    {messages.map((msg, index) => (
-                        <div key={index} className={`message ${msg.role}`}>
-                            <strong>{msg.username}:</strong> {msg.content}
-                        </div>
-                    ))}
+                    {messages.map((msg, index) => {
+                        if (gameStatus === 'NIGHT') {
+                            if (currentPlayer?.role !== 'MAFIA') {
+                                console.log('밤 시간: 마피아가 아닌 플레이어는 채팅을 볼 수 없습니다');
+                                return null;
+                            }
+                            if (!msg.isMafiaChat) {
+                                console.log('밤 시간: 마피아 채팅만 표시됩니다');
+                                return null;
+                            }
+                        }
+                        
+                        return (
+                            <div key={index} className={`message ${msg.isMafiaChat ? 'mafia-chat' : ''}`}>
+                                <strong>{msg.username}:</strong> {msg.content}
+                                {msg.isMafiaChat && <span className="mafia-tag">[마피아]</span>}
+                            </div>
+                        );
+                    })}
                 </div>
+
+                <style jsx>{`
+                    .mafia-chat {
+                        color: red;
+                        background-color: rgba(255, 0, 0, 0.1);
+                    }
+                    .mafia-tag {
+                        margin-left: 5px;
+                        color: red;
+                        font-size: 0.8em;
+                    }
+                `}</style>
 
                 <div className="chat-input">
                     <input

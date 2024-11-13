@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { useGameContext } from '../../../contexts/socket/game/GameSocketContext';
 import GameSocketComponent from './GameSocketComponent';
 
+// 게임 상태별 간단한 테마 색상
+const GAME_THEMES = {
+    DAY: '#E6F3FF',      // 하늘색 배경
+    NIGHT: '#1A0000',    // 어두운 붉은 배경
+    VOTE: '#E6E6FA',     // 연보라색 배경
+    FINAL_VOTE: '#F5F5F5', // 회색 배경
+    DELAY: '#FFFFFF'     // 흰색 배경
+};
+
 const TestControls = () => {
     const { 
         players, 
@@ -33,7 +42,7 @@ const TestControls = () => {
                     role: selectedRole
                 });
                 
-                await updatePlayerStatus(parseInt(selectedPlayerId), {
+                await updatePlayerStatus(selectedPlayerId, {
                     isAlive: selectedIsAlive,
                     role: selectedRole
                 });
@@ -42,7 +51,7 @@ const TestControls = () => {
             console.log('변경사항 적용 완료');
         } catch (error) {
             console.error('변경사항 적용 중 오류:', error);
-            alert('변경사항 적용 실패');
+            alert('변경사항 적용 실패: ' + error.message);
         }
     };
 
@@ -70,7 +79,7 @@ const TestControls = () => {
                     <option value="NIGHT">NIGHT</option>
                     <option value="DELAY">DELAY</option>
                     <option value="VOTE">VOTE</option>
-                    <option value="FINAL_VOTE">FINAL_VOTE</option>
+                    <option value="FINALVOTE">FINALVOTE</option>
                 </select>
             </div>
 
@@ -135,11 +144,17 @@ const TestControls = () => {
 };
 
 const TestGameWrapper = () => {
+    const { gameStatus } = useGameContext();
+
+    // 현재 게임 상태에 따른 배경색 설정
+    const backgroundColor = GAME_THEMES[gameStatus] || GAME_THEMES.DAY;
+
     return (
         <div style={{ 
-            position: 'relative',
-            width: '100%',
-            height: '100%'
+            padding: '20px',
+            backgroundColor,
+            minHeight: '100vh',
+            transition: 'background-color 0.5s ease' // 부드러운 색상 전환
         }}>
             <TestControls />
             <GameSocketComponent />
