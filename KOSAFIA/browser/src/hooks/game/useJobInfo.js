@@ -1,40 +1,39 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
-const useJobInfo = (playerNames) => {
-  const [job, setJob] = useState(null);
-  // 요청이 발생했는지 추적 -> 한 번만 실행되도록 하려는 목적
-  const hasFetched = useRef(false); 
+const useJobInfo = (playerNumbers) => {
+  const [jobs, setJobs] = useState([]); // 모든 플레이어의 역할 정보 저장
 
   useEffect(() => {
     const fetchJobInfo = async () => {
       try {
-        console.log("요청 보내기 전에 메서드 확인: GET");
-
         const response = await fetch(
-          `/api/game/getRoles?name=${playerNames.join('&name=')}`,
+          `/api/game/getRoles?playerNumber=${playerNumbers.join("&playerNumber=")}`,
           {
             method: "GET",
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json" },
           }
         );
-
         const players = await response.json();
 
         if (players.length > 0) {
-          setJob(players[0]?.role); // 첫 번째 플레이어의 역할 설정
+          const playerJobs = players.map((player) => ({
+            playerNumber: player.playerNumber,
+            username: player.username,
+            role: player.role,
+          }));
+          setJobs(playerJobs);
         }
       } catch (error) {
         console.error("역할 정보를 가져오는 중 오류 발생:", error);
       }
     };
 
-    if (playerNames && playerNames.length > 0 && !hasFetched.current) {
-      fetchJobInfo(); // 요청 전송
-      hasFetched.current = true; // 요청이 이미 발생했음을 설정
+    if (playerNumbers && playerNumbers.length > 0) {
+      fetchJobInfo(); // 서버에서 역할 정보 받아오기
     }
-  }, [playerNames]); // playerNames가 변경될 때 실행
+  }, [playerNumbers]); // playerNumbers가 변경될 때마다 역할 정보 갱신
 
-  return job;
+  return jobs; // 모든 플레이어의 역할 정보를 반환
 };
 
 export default useJobInfo;

@@ -32,10 +32,9 @@ public class GameController {
         gameService.assignRoles(players);
     }
 
-    // 역할을 조회하고 players 리스트 초기화
     @GetMapping("/getRoles")
-    public ArrayList<Player> getRoles(@RequestParam List<String> name) {
-        // 하드코딩된 플레이어 목록 생성 -> 후에 수정
+    public ArrayList<Player> getRoles(@RequestParam List<Integer> playerNumber) {
+        // 하드코딩된 플레이어 목록 생성 -> 후에 수정 가능
         players = new ArrayList<>(); // 기존 players 인스턴스 변수 초기화
         players.add(new Player(1, "Player1", "player1@example.com"));
         players.add(new Player(2, "Player2", "player2@example.com"));
@@ -48,39 +47,41 @@ public class GameController {
 
         // 역할을 할당하는 로직 호출
         gameService.assignRoles(players);
-        System.out.println("응답 데이터: " + players);
+        System.out.println("전체 플레이어 리스트: " + players);
 
-        return players;
+        // 요청된 playerNumber 리스트에 따라 필터링
+        ArrayList<Player> filteredPlayers = new ArrayList<>();
+        for (Player player : players) {
+            if (playerNumber.contains(player.getPlayerNumber())) {
+                filteredPlayers.add(player);
+            }
+        }
+
+        System.out.println("필터링된 플레이어 리스트: " + filteredPlayers);
+        return filteredPlayers;
     }
 
-    // 마피아 밤 상호작용 메소드 (GET 요청)
-    @GetMapping("/mafia/select")
-    public boolean mafiaSelectTarget(@RequestParam Integer targetNumber) {
-        return gameService.mafiaSelectTarget(players, targetNumber);
+    @PostMapping("/night/mafia")
+    public String selectMafiaTarget(@RequestParam Integer targetNumber) {
+        gameService.mafiaSelectTarget(players, targetNumber);
+        return "마피아 타겟이 설정되었습니다.";
     }
 
-    // 의사 밤 상호작용 메소드 (GET 요청)
-    @GetMapping("/doctor/save")
-    public boolean doctorSavePlayer(@RequestParam Integer targetNumber) {
-        return gameService.doctorSavePlayer(players, targetNumber);
+    @PostMapping("/night/doctor")
+    public String selectDoctorTarget(@RequestParam Integer targetNumber) {
+        gameService.doctorSavePlayer(players, targetNumber);
+        return "의사가 치료할 타겟이 설정되었습니다.";
     }
 
-    // 경찰 밤 상호작용 메소드 (GET 요청)
-    @GetMapping("/police/check")
-    public String policeCheckRole(@RequestParam Integer targetNumber) {
+    @GetMapping("/night/police")
+    public String checkPoliceTarget(@RequestParam Integer targetNumber) {
         Role role = gameService.policeCheckRole(players, targetNumber);
-        return "Role: " + role;
+        return "타겟의 역할은: " + role;
     }
 
-    // 밤 상호작용 결과를 처리하는 메소드
-    @GetMapping("/night/result")
-    public void resolveNightActions() {
+    @PostMapping("/night/resolve")
+    public String resolveNightActions() {
         gameService.nightActionResult(players);
-    }
-
-    // 현재 플레이어 목록을 반환
-    @GetMapping("/players")
-    public List<Player> getPlayers() {
-        return players;
+        return "밤 상호작용 결과가 처리되었습니다.";
     }
 }
