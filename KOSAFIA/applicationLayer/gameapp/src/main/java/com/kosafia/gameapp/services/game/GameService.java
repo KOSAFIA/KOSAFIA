@@ -14,13 +14,13 @@ public interface GameService {
     void assignRoles(ArrayList<Player> players);
 
     // 마피아 상호작용
-    boolean mafiaSelectTarget(List<Player> players, Integer targetNumber);
+    boolean mafiaSelectTarget(ArrayList<Player> players, Integer targetNumber);
 
     // 의사 상호작용
-    boolean doctorSavePlayer(List<Player> players, Integer targetNumber);
+    boolean doctorSavePlayer(ArrayList<Player> players, Integer targetNumber);
 
     // 경찰 상호작용
-    Role policeCheckRole(List<Player> players, Integer targetNumber);
+    Role policeCheckRole(ArrayList<Player> players, Integer targetNumber);
 
     void nightActionResult(ArrayList<Player> players);
 

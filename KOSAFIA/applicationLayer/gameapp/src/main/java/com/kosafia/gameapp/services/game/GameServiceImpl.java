@@ -44,19 +44,19 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public boolean mafiaSelectTarget(List<Player> players, Integer targetNumber) {
+    public boolean mafiaSelectTarget(ArrayList<Player> players, Integer targetNumber) {
         this.mafiaTarget = targetNumber;
         return true;
     }
 
     @Override
-    public boolean doctorSavePlayer(List<Player> players, Integer targetNumber) {
+    public boolean doctorSavePlayer(ArrayList<Player> players, Integer targetNumber) {
         this.doctorSaveTarget = targetNumber;
         return true;
     }
 
     @Override
-    public Role policeCheckRole(List<Player> players, Integer targetNumber) {
+    public Role policeCheckRole(ArrayList<Player> players, Integer targetNumber) {
         Optional<Player> targetPlayer = players.stream()
                 .filter(p -> p.getPlayerNumber().equals(targetNumber))
                 .findFirst();
@@ -64,7 +64,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public void nightActionResult(List<Player> players) {
+    public void nightActionResult(ArrayList<Player> players) {
         // 결과를 처리할 로직
         if (mafiaTarget != null) {
             Optional<Player> mafiaTargetPlayer = players.stream()
@@ -86,7 +86,7 @@ public class GameServiceImpl implements GameService {
         this.doctorSaveTarget = null;
     }
 
-    //===============김남영 추가=============
+    // ===============김남영 추가=============
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
@@ -96,7 +96,7 @@ public class GameServiceImpl implements GameService {
         Map<String, Object> message = new HashMap<>();
         message.put("gameStatus", gameStatus);
         message.put("players", players);
-        
+
         messagingTemplate.convertAndSend("/topic/game.state." + roomKey, message);
     }
 
@@ -104,5 +104,5 @@ public class GameServiceImpl implements GameService {
     public void broadcastPlayerUpdate(Integer roomKey, List<Player> players) {
         messagingTemplate.convertAndSend("/topic/game.players." + roomKey, players);
     }
-    //=========================================
+    // =========================================
 }
