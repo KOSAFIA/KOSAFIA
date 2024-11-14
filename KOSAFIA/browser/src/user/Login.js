@@ -80,7 +80,7 @@ function Login() {
     <MDBContainer className="my-login-background">
       {" "}
       {/* 로그인 배경 컨테이너 */}
-      <MDBCard className="my-login-card d-flex flex-row">
+      <MDBCard className="common-card login-card d-flex flex-row">
         {" "}
         {/* 로그인 카드 스타일 */}
         <MDBCol md="6">
@@ -89,7 +89,7 @@ function Login() {
           <MDBCardImage
             src={`${process.env.PUBLIC_URL}/img/loginmain.png`} // 이미지 경로 설정
             alt="login form" // 이미지 설명
-            className="my-login-image"
+            className="common-image"
           />
         </MDBCol>
         <MDBCol md="6" className="my-login-card-body">
@@ -147,7 +147,6 @@ function Login() {
                 Login
               </MDBBtn>
               <hr />
-              
             </form>
             {/* Google 로그인 버튼 */}
             <a

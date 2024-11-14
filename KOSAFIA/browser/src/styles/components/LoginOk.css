@@ -1,34 +1,74 @@
-/* 네비게이션 바 스타일 설정 */
+/* 네비게이션 바 스타일 */
 .navbar {
-  position: fixed; /* 화면 스크롤 시에도 항상 화면 상단에 고정되도록 설정 */
-  top: 0; /* 상단 기준으로 위치를 0으로 설정 */
-  left: 0; /* 왼쪽 기준으로 위치를 0으로 설정 */
-  width: 100%; /* 네비게이션 바가 화면 전체 너비를 차지하도록 설정 */
-  height: 60px; /* 네비게이션 바 높이를 명시적으로 설정 */
-  background-color: #333; /* 네비게이션 바 배경색을 어두운 회색(#333)으로 설정 */
-  color: white; /* 네비게이션 바 안의 텍스트 색상을 흰색으로 설정 */
-  display: flex; /* 플렉스 박스를 사용해 내부 요소를 배치 */
-  justify-content: space-between; /* 내부 요소를 양쪽 끝으로 정렬 (왼쪽, 오른쪽) */
-  align-items: center; /* 내부 요소를 세로 가운데 정렬 */
-  padding: 0% 2rem; /* 네비게이션 바의 안쪽 여백 설정 (위아래 1rem, 좌우 2rem) */
-  z-index: 1000; /* 다른 요소들보다 위에 표시되도록 z-index 값을 높게 설정 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: linear-gradient(to right, #333, #444); /* 그라데이션 배경 */
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+  z-index: 1000;
 }
 
-/* 페이지 콘텐츠 스타일 설정 */
+/* 로고 스타일 */
+.navbar h1 {
+  color: #5b0606;
+  font-weight: bold;
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+/* 버튼 컨테이너 */
+.navbar-buttons {
+  display: flex;
+  gap: 1rem; /* 버튼 간 간격 */
+}
+
+/* 버튼 스타일 */
+.navbar-buttons button {
+  background-color: #4d4b4b;
+  color: rgb(164, 160, 160);
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 25px; /* 둥근 모서리 */
+  cursor: pointer;
+  transition: all 0.3s ease; /* 부드러운 전환 효과 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* 그림자 효과 */
+}
+
+/* 버튼 호버 효과 */
+.navbar-buttons button:hover {
+  background-color: #530505; /* 호버 시 배경색 변경 */
+  color: rgb(138, 134, 134);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3); /* 호버 시 그림자 확대 */
+  transform: translateY(-3px); /* 살짝 떠오르는 효과 */
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .navbar-buttons button {
+    font-size: 0.9rem; /* 작은 화면에서는 버튼 크기 조정 */
+    padding: 8px 16px;
+  }
+}
+
+.welcome-message {
+  margin-top: 1rem; /* 텍스트를 아래로 조금 내리기 위해 여백 추가 */
+  font-size: 1.2rem; /* 텍스트 크기를 조정 */
+  line-height: 1.5; /* 텍스트 높이를 조정하여 보기 좋게 만듦 */
+  color: rgb(12, 19, 114);
+}
+
 .content {
   margin-top: 60px; /* 네비게이션 바 높이만큼 아래로 여백 추가 */
   padding: 10px; /* 페이지 내용에 여백 추가 */
 }
 
-.navbar h1 {
-  color: #ab2d2d; /* KOSAFIA 텍스트 색상을 노란색(#ffcc00)으로 설정 */
-  font-weight: bold; /* 텍스트를 굵게 설정 */
-  margin: 0; /* 상하좌우 여백 제거 */
-  padding: 0; /* 상하좌우 내부 여백 제거 */
-}
-
-.welcome-message {
-  margin-top: 0.5rem; /* 텍스트를 아래로 조금 내리기 위해 여백 추가 */
-  font-size: 1.2rem; /* 텍스트 크기를 조정 */
-  line-height: 1.5; /* 텍스트 높이를 조정하여 보기 좋게 만듦 */
-}
