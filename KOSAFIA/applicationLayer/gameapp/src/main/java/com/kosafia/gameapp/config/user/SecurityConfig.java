@@ -161,7 +161,7 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.addAllowedOrigin("https://ba09-115-90-99-121.ngrok-free.app");
+                configuration.addAllowedOrigin("https://definite-grackle-centrally.ngrok-free.app");
                 configuration.addAllowedOrigin("http://localhost:3000");
                 // configuration.addAllowedOriginPattern("*"); // 모든 도메인 허용 (특정 도메인으로 제한하려면 수정)
                 configuration.addAllowedMethod("*"); // 모든 HTTP 메서드 허용

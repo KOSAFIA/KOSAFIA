@@ -451,23 +451,7 @@ function LoginOk() {
     });
   };
   return (
-    // <div className="login-ok-container">
-    //   <h1>홈 페이지</h1>
-    //   {username && <p>{username}님, 환영합니다!</p>}{" "}
-    //   {/* 로그인한 사용자 이름을 표시합니다. */}
-    //   <button className="logout-button" onClick={handleLogout}>
-    //     로그아웃
-    //   </button>
-    //   <button className="mypage-button" onClick={openMypageModal}>
-    //     마이페이지
-    //   </button>
-    //   <button className="GameRoombutton" onClick={goToGameRoom}>
-    //     게임방
-    //   </button>
-    //   //김남영 추가
-    //   <button className="TestLobbybutton" onClick={goToTestLobby}>
-    //     테스트로비
-    //   </button>
+
     <>
       <nav className="navbar">
         <h1>KOSAFIA</h1>

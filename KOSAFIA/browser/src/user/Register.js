@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "../styles/components/Login.css";
+import "../styles/components/Register.css";
 
 import {
   MDBBtn,
@@ -23,11 +23,6 @@ function Register() {
   const [usernameAvailable, setUsernameAvailable] = useState(null);
   const BASE_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
-
-  // 서버 URL 환경 변수
-  // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
-  // const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
-  //const BASE_URL = process.env.REACT_APP_API_URL || "https://ba09-115-90-99-121.ngrok-free.app";
 
   // 이메일 중복 체크 함수
   const checkEmailAvailability = async () => {
@@ -99,16 +94,16 @@ function Register() {
   };
 
   return (
-    <MDBContainer className="login-background">
-      <MDBCard className="login-card d-flex flex-row">
+    <MDBContainer className="register-background">
+      <MDBCard className="common-card register-card d-flex flex-row">
         <MDBCol md="6">
           <MDBCardImage
             src={`${process.env.PUBLIC_URL}/img/loginmain.png`}
             alt="register form"
-            className="login-image"
+            className="common-image"
           />
         </MDBCol>
-        <MDBCol md="6" className="login-card-body">
+        <MDBCol md="6" className="register-card-body">
           <MDBCardBody className="d-flex flex-column align-items-center">
             <div className="d-flex flex-row mt-2">
               <MDBIcon
@@ -116,13 +111,13 @@ function Register() {
                 icon="user-plus fa-3x me-3"
                 style={{ color: "#ff6219" }}
               />
-              <span className="h1 fw-bold">Register</span>
+              <span className="h1 fw-bold">회원가입</span>
             </div>
             <h5
               className="fw-normal my-4 pb-3"
               style={{ letterSpacing: "1px" }}
             >
-              Create your account
+              양식을 작성해주세요
             </h5>
             <form onSubmit={handleRegister} className="w-100">
               <MDBInput
@@ -149,7 +144,7 @@ function Register() {
                 wrapperClass="mb-4"
                 type="text"
                 size="lg"
-                placeholder="닉네임"
+                placeholder=" 닉네임"
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value);

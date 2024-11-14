@@ -28,23 +28,10 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault(); // 폼 제출 시 페이지 새로고침 방지
 
-    // try {
-    //   // 서버에 로그인 요청
-    //   const response = await fetch(
-    //     // "http://localhost:8080/api/user/login"
-    //     "http://192.168.240.42:8080/api/user/login",
-    //     {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" }, // JSON 형식으로 데이터 전송
-    //       body: JSON.stringify({ email, password }), // JSON 형식으로 email과 password를 서버에 전송
-    //       credentials: "include", // 세션 쿠키를 포함하여 요청
-    //     }
-    //   );
     try {
       //  axios로 서버에 로그인 요청
       const response = await axios.post(
         `${BASE_URL}/api/user/login`, // 환경 변수 기반 URL 사용
-        // "http://192.168.240.42:8080/api/user/login", // 팀원의 Spring Boot 서버 URL
         { email, password }, // 요청 데이터
         { withCredentials: true } // 쿠키 포함
       );
@@ -90,10 +77,10 @@ function Login() {
   };
 
   return (
-    <MDBContainer className="login-background">
+    <MDBContainer className="my-login-background">
       {" "}
       {/* 로그인 배경 컨테이너 */}
-      <MDBCard className="login-card d-flex flex-row">
+      <MDBCard className="common-card login-card d-flex flex-row">
         {" "}
         {/* 로그인 카드 스타일 */}
         <MDBCol md="6">
@@ -102,10 +89,10 @@ function Login() {
           <MDBCardImage
             src={`${process.env.PUBLIC_URL}/img/loginmain.png`} // 이미지 경로 설정
             alt="login form" // 이미지 설명
-            className="login-image"
+            className="common-image"
           />
         </MDBCol>
-        <MDBCol md="6" className="login-card-body">
+        <MDBCol md="6" className="my-login-card-body">
           {" "}
           {/* 오른쪽 로그인 폼 영역 */}
           <MDBCardBody className="d-flex flex-column align-items-center">
@@ -159,18 +146,19 @@ function Login() {
               >
                 Login
               </MDBBtn>
+              <hr />
             </form>
             {/* Google 로그인 버튼 */}
             <a
               href={`${BASE_URL}/oauth2/authorization/google`} // Google OAuth2 URL로 리디렉션
               className="google-login-btn"
             >
-              <i className="fab fa-google me-2"></i>Google로 로그인
+              <i className="fab fa-google me-2"></i>Sign in with Google
             </a>
             <p className="mt-3 mb-5">
-              계정이 없으신가요?{" "}
+              Don't have an account?{" "}
               <Link to="/register" className="text-muted">
-                회원가입
+                Sign Up
               </Link>
             </p>
           </MDBCardBody>

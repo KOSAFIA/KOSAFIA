@@ -1,0 +1,157 @@
+/* 배경 설정 */
+.register-background {
+  background: linear-gradient(
+    to right,
+    #000000ec,
+    #0f0a0200,
+    #6b5603
+  ); /* 배경 그라데이션 설정 */
+  min-height: 100vh; /* 화면 높이를 100%로 설정 */
+  display: flex; /* 컨텐츠를 수평/수직 중앙 정렬 */
+  justify-content: center;
+  align-items: center;
+}
+
+/* 카드 설정 */
+.register-card {
+  display: flex !important;
+  flex-wrap: nowrap !important; /* 두 열을 한 줄로 배치 */
+  max-width: 930px !important; /* 카드 최대 너비 */
+  height: 690px!important; 
+  width: 900px !important; /* 카드 전체 너비 */
+  border-radius: 20px !important; /* 둥근 모서리 */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7) !important; /* 그림자 효과 */
+  overflow: hidden !important;
+  backdrop-filter: blur(40px) !important; /* 블러 효과 */
+  border: 1px solid rgba(0, 0, 0, 0.8) !important; /* 테두리 색상 */
+}
+
+/* 이미지 설정 */
+.register-image {
+  width: 100%; /* 이미지가 부모 너비를 채움 */
+  height: 100%; /* 이미지가 부모 높이를 채움 */
+  object-fit: cover; /* 이미지 비율을 유지하며 채움 */
+  opacity: 0.9; /* 이미지 투명도 */
+}
+
+/* 카드 본문 설정 */
+.register-card-body {
+  padding: 3rem; /* 내부 여백 */
+  flex: 1; /* 본문이 이미지와 균등한 공간을 차지 */
+  color: #807e7ee8; /* 텍스트 색상 */
+  background-color: rgba(230, 226, 226, 0.742); /* 배경 색상 */
+  display: flex;
+  flex-direction: column; /* 플렉스 방향 설정 */
+  justify-content: center; /* 수직 정렬 */
+  align-items: center; /* 수평 정렬 */
+}
+
+/* 버튼 스타일 */
+.register-btn {
+  margin-top: 10px;
+  background: linear-gradient(to right, #0ea2cb, #0072ff); /* 버튼 그라데이션 */
+  color: #d31919;
+  border: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* 버튼 효과 */
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 50px; /* 둥근 모서리 */
+  padding: 12px 24px; /* 내부 여백 */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* 그림자 효과 */
+}
+
+.register-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.3); /* 호버 시 그림자 확대 */
+}
+
+/* 오류 메시지 */
+.text-danger {
+  color: #ff4b4b !important; /* 오류 텍스트 색상 */
+  margin-top: -10px;
+}
+
+/* 성공 메시지 */
+.text-success {
+  color: #28a745 !important; /* 성공 텍스트 색상 */
+  margin-top: -10px;
+}
+
+/* 회원가입 링크 스타일 */
+.text-muted {
+  display: block;
+  text-align: center;
+  color: #1191d2; /* 연한 색상 */
+  text-decoration: none; /* 밑줄 제거 */
+}
+
+.text-muted:hover {
+  color: #007bff; /* 호버 시 색상 변경 */
+}
+
+/* 하단 구분선 */
+hr {
+  border: 1px solid rgba(0, 0, 0, 0.203); /* 구분선 색상 */
+  width: 100%;
+  margin: 20px auto;
+}
+/* 입력 필드 간 간격 및 스타일 통일 */
+form .mb-4,
+form .register-mb-4 {
+  margin-bottom: 20px !important; /* 입력 필드 간 동일한 간격 */
+  width: 100%; /* 동일한 너비 */
+}
+
+/* 모든 입력 필드의 스타일 통일 */
+input.form-control,
+input.form-control-lg {
+  width: 100%; /* 너비 통일 */
+  height: 48px; /* 높이 통일 */
+  background-color: #ffffff !important; /* 배경색 */
+  color: #000000 !important; /* 텍스트 색상 */
+  border-radius: 5px !important; /* 둥근 모서리 */
+  border: 1px solid #ccc !important; /* 테두리 색상 통일 */
+  padding: 10px 15px; /* 내부 여백 */
+  font-size: 16px; /* 글꼴 크기 */
+  box-sizing: border-box; /* 박스 모델 */
+  transition: box-shadow 0.2s ease, border-color 0.2s ease; /* 포커스 효과 */
+  outline: none; /* 기본 outline 제거 */
+}
+
+/* placeholder 스타일 */
+input.form-control::placeholder {
+  color: #888888; /* placeholder 텍스트 색상 */
+  opacity: 1;
+}
+
+/* 포커스 시 효과 */
+input.form-control:focus {
+  border-color: #8a90de; /* 포커스 시 테두리 색상 */
+  box-shadow: 0 0 5px rgba(88, 126, 188, 0.7); /* 포커스 시 그림자 효과 */
+}
+
+.common-card {
+  display: flex;
+  flex-wrap: nowrap;
+  max-width: 900px;
+  height: 500px; /* 카드 높이를 고정 */
+  width: 100%;
+  border-radius: 30px !important; /* 둥근 모서리 */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(0, 0, 0, 0.8);
+}
+.common-image {
+  width: 100%;
+  height: 100%;
+  object-fit: fill; /* 이미지가 전체 영역을 꽉 채우도록 설정 */
+  max-height: 100%; /* 카드의 높이에 맞추어 이미지가 조정되도록 설정 */
+  opacity: 0.9;
+}
+form .mb-4 {
+  margin-bottom: 20px; /* 동일한 간격 적용 */
+  width: 100%; /* 동일한 너비 */
+}
