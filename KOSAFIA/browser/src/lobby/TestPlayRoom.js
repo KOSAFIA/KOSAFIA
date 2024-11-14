@@ -1,20 +1,45 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { GameSocketProvider } from '../contexts/socket/game/GameSocketContext';
+import TestGameWrapper from '../components/socket/game/TestGameWrapper';
 
 function TestPlayRoom() {
-    const location = useLocation();
-    const { users, roomKey } = location.state || {}; // 이전 페이지에서 전달된 상태
+    const { roomKey } = useParams();
+    const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const validateSession = async () => {
+            try {
+                const playerData = sessionStorage.getItem('player');
+                const storedRoomKey = sessionStorage.getItem('roomKey');
+
+                if (!playerData || !storedRoomKey || storedRoomKey !== roomKey) {
+                    console.error('세션 검증 실패');
+                    navigate('/TestLobby');
+                    return;
+                }
+
+                setIsLoading(false);
+            } catch (error) {
+                console.error('세션 검증 중 오류:', error);
+                navigate('/TestLobby');
+            }
+        };
+
+        validateSession();
+    }, [roomKey, navigate]);
+
+    if (isLoading) {
+        return <div>로딩 중...</div>;
+    }
 
     return (
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h1>게임 진행 창</h1>
-            <p>방 번호: {roomKey}</p>
-            <h2>참여자 목록:</h2>
-            <ul>
-                {users && users.map((user) => (
-                    <li key={user.id}>{user.username}</li>
-                ))}
-            </ul>
+        <div style={{ padding: '20px'}}>
+            <h1>게임 진행 창 - 방 {roomKey}</h1>
+            <GameSocketProvider roomKey={roomKey}>
+                <TestGameWrapper />
+            </GameSocketProvider>
         </div>
     );
 }
