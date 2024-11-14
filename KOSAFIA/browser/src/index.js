@@ -6,13 +6,23 @@ import LoginOk from "./user/LoginOk"; //로그인 성공시 나오는 화면
 import Mypage from "./user/Mypage";
 import TestLobby from "./lobby/TestLobby";
 import GameRoom from "./pages/GameRoom";
-import TestRoom from './lobby/TestRoom';
-import TestPlayRoom from './lobby/TestPlayRoom';
-
-
+import TestRoom from "./lobby/TestRoom";
+import TestPlayRoom from "./lobby/TestPlayRoom";
 import { BrowserRouter, Routes, Route } from "react-router-dom"; // React Router 라이브러리에서 필요한 컴포넌트를 불러옵니다.
 
+// TestLobby에 네비게이션 바 포함한 레이아웃 컴포넌트 //수현
+function TestLobbyWithNavbar() {
+  return (
+    <>
+      <LoginOk /> {/* 항상 상단에 네비게이션 바 표시 */}
+      <div className="content">
+        <TestLobby /> {/* TestLobby 내용 */}
+      </div>
+    </>
+  );
+}
 
+//김남영 유저 리스트 리프레시 업데이트
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <Routes>
@@ -23,7 +33,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Route path="/register" element={<Register />} />
       {/* <Route path="/LoginOk" element={<Lobby />} /> */}
       <Route path="/mypage" element={<Mypage />} />
-      <Route path="/TestLobby" element={<TestLobby />} />
+      <Route path="/TestLobby" element={<TestLobbyWithNavbar />} />
+      {/* TestLobby에만 네비게이션 포함 */}
       <Route path="/rooms/:roomKey" element={<TestRoom />} />
       <Route path="/rooms/:roomKey/gameplay" element={<TestPlayRoom />} />
 
