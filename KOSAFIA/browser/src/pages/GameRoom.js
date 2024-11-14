@@ -6,6 +6,7 @@ import ChatBox from "../components/ChatBox";
 import Popup from "../components/JobExpectationPopUp";
 import JobInfoIcon from "../components/JobInfoIcon";
 import useJobInfo from "../hooks/game/useJobInfo";
+import { useGameContext } from "../contexts/socket/game/GameSocketContext";
 import "../styles/GameRoom.css";
 
 const GameRoom = () => {
@@ -13,30 +14,67 @@ const GameRoom = () => {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [stageIndex, setStageIndex] = useState(0);
   const chatBoxRef = useRef();
+  
+  // GameSocketContext에서 필요한 상태들을 가져옴
+  const { 
+    roomKey,
+    players,
+    messages,
+    gameStatus,
+    currentPlayer,
+    mafiaTarget,
+    setTarget,
+    canVote,
+    sendVote,
+    sendGameMessage,
+    canChat
+  } = useGameContext();
 
-  // 방에 있는 플레이어 번호를 서버나 소켓에서 동적으로 받아옵니다.
+  // playerNumbers 상태 유지
   const [playerNumbers, setPlayerNumbers] = useState([]);
 
-  // 서버나 소켓에서 플레이어 목록을 실시간으로 받아오는 방식 (후에 수정하기)
-  useEffect(() => {
-    // 예시로 Socket 이벤트를 통해 플레이어 목록을 받아올 수 있습니다.
-    // socket.on('playerJoined', (newPlayerNumber) => {
-    //   setPlayerNumbers((prev) => [...prev, newPlayerNumber]);
-    // });
-
-    // 예시로 방에 있는 플레이어 번호를 임의로 설정 (실제로는 서버에서 받아올 것)
-    setPlayerNumbers([1, 2, 3, 4, 5, 6, 7, 8]);
-  }, []);
-
-  // useJobInfo 훅을 통해 실제 역할 정보 목록을 가져옴
+  // useJobInfo 훅 사용 유지
   const PlayerInfo = useJobInfo(playerNumbers);
+
+  // PlayerInfo 업데이트 부분 수정
+  useEffect(() => {
+    if (players.length > 0) {
+      // playerNumbers 업데이트
+      const numbers = players.map(p => p.playerNumber);
+      setPlayerNumbers(numbers);
+
+      // 서버의 플레이어 정보를 PlayerInfo 형식에 맞게 업데이트
+      players.forEach(serverPlayer => {
+        const localPlayer = PlayerInfo.find(p => p.playerNumber === serverPlayer.playerNumber);
+        if (localPlayer) {
+          // 기존 PlayerInfo 구조 유지하면서 서버 데이터 반영
+          Object.assign(localPlayer, {
+            role: serverPlayer.role || localPlayer.role,
+            isAlive: serverPlayer.isAlive ?? true,
+            isVoteTarget: serverPlayer.isVoteTarget ?? false,
+            username: serverPlayer.username || `Player ${serverPlayer.playerNumber}`
+          });
+        }
+      });
+    }
+  }, [players, PlayerInfo]);
+
+  // 게임 상태에 따른 stageIndex 설정
+  useEffect(() => {
+    const newStageIndex = (() => {
+      switch(gameStatus) {
+        case 'NIGHT': return 1;
+        case 'DAY': return 0;
+        case 'VOTE': return 2;
+        case 'FINALVOTE': return 3;
+        default: return 0;
+      }
+    })();
+    setStageIndex(newStageIndex);
+  }, [gameStatus]);
 
   const sendMessageToChat = (message) => {
     chatBoxRef.current?.receiveMessage(message);
-  };
-
-  const handleStageChange = (newStageIndex) => {
-    setStageIndex(newStageIndex);
   };
 
   const handleOpenPopup = (playerName) => {
@@ -49,43 +87,65 @@ const GameRoom = () => {
     setSelectedPlayer(null);
   };
 
+  // 플레이어 선택 핸들러 수정
+  const handlePlayerSelect = (targetId) => {
+    if (gameStatus === 'NIGHT' && currentPlayer?.role === 'MAFIA') {
+      setTarget(targetId);
+    } else if (gameStatus === 'VOTE' && canVote()) {
+      sendVote(targetId);
+    }
+    
+    // 기존의 팝업 로직 유지
+    const player = PlayerInfo.find(p => p.playerNumber === targetId);
+    if (player) {
+      const playerName = `Player ${player.playerNumber} (${player.role})`;
+      handleOpenPopup(playerName);
+    }
+  };
+
   return (
     <div className={`game-room ${stageIndex === 1 ? "shadow-inset-top" : ""}`}>
       <div className="chat-area">
         <div className="player-area">
           <div className="header">
-            {/* Timer에서 role과 playerNumber를 전달 */}
             {PlayerInfo.length > 0 && (
               <Timer
                 onSendMessage={sendMessageToChat}
-                onStageChange={handleStageChange}
-                playerNumber={PlayerInfo[0].playerNumber} // 첫 번째 플레이어 번호 전달
-                role={PlayerInfo[0].role} // 첫 번째 플레이어 역할 전달
+                onStageChange={setStageIndex}
+                playerNumber={currentPlayer?.playerNumber}
+                role={currentPlayer?.role}
               />
             )}
             <DayIndicator currentPhase={stageIndex === 1 ? "밤" : "낮"} />
           </div>
-          {PlayerInfo.length > 0 && <JobInfoIcon role={PlayerInfo[0].role} />}
+          {currentPlayer && <JobInfoIcon role={currentPlayer.role} />}
           <div className="player-cards">
-            {PlayerInfo.map((player, index) => {
-              return (
-                <PlayerCard
-                  key={index}
-                  name={`Player ${player.playerNumber}`} // playerNumber로 플레이어 이름 생성
-                  index={player.playerNumber - 1}
-                  role={player.role} // player.role을 그대로 전달
-                  isNight={stageIndex === 4} // 밤인지 여부
-                  onClick={() => {
-                    const playerName = `Player ${player.playerNumber} (${player.role})`;
-                    console.log("Opening Popup for:", playerName); // 클릭 시 확인
-                    handleOpenPopup(playerName);
-                  }}
-                />
-              );
-            })}
+            {PlayerInfo.map((player, index) => (
+              <PlayerCard
+                key={index}
+                name={`Player ${player.playerNumber}`}
+                index={player.playerNumber - 1}
+                role={player.role}
+                isNight={stageIndex === 1}
+                isSelected={mafiaTarget === player.playerNumber}
+                onClick={() => {
+                  const playerName = `Player ${player.playerNumber} (${player.role})`;
+                  console.log("Opening Popup for:", playerName);
+                  handleOpenPopup(playerName);
+                  handlePlayerSelect(player.playerNumber);
+                }}
+              />
+            ))}
           </div>
         </div>
-        <ChatBox ref={chatBoxRef} stageIndex={stageIndex} />
+        <ChatBox 
+          ref={chatBoxRef} 
+          stageIndex={stageIndex} 
+          messages={messages}
+          canChat={canChat()}
+          onSendMessage={sendGameMessage}
+          currentPlayer={currentPlayer}
+        />
       </div>
       {isPopupOpen && (
         <Popup onClose={handleClosePopup} selectedPlayer={selectedPlayer} />

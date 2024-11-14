@@ -460,7 +460,10 @@ const handleInputChange = (e) => {
   };
 
   return (
-    <div className="room-list-container">
+
+
+    <div className="jiyeon">
+            <div className="room-list-container">
       <header className="header">
         <button className="create-room-button" onClick={openModal}>방 만들기</button>
       </header>
@@ -560,6 +563,8 @@ const handleInputChange = (e) => {
           </div>
         </div>
       )}
+    </div>
+
     </div>
   );
 };

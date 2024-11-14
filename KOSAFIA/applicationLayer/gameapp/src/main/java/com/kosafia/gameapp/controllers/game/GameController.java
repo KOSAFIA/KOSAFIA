@@ -191,7 +191,7 @@ public class GameController {
             Boolean isAlive = (Boolean) request.get("isAlive");
             String role = (String) request.get("role");
             
-            log.info("플레이어 상태 변경 요청 - 방: {}, ��이어: {}, 생존: {}, 역할: {}", 
+            log.info("플레이어 상태 변경 요청 - 방: {}, 레이어: {}, 생존: {}, 역할: {}", 
                 roomKey, playerNumber, isAlive, role);
             
             Room room = roomRepository.getRoom(roomKey);
@@ -253,8 +253,8 @@ public class GameController {
         else{ return ResponseEntity.ok(mostVotedPlayer);    }
     }
 
-    @PostMapping("/game/finalvote")
-    public ResponseEntity<?> handleFinalVote(@RequestBody FinalVoteRequest request) {
+    @PostMapping("/finalvote/{roomKey}")
+    public ResponseEntity<?> handleFinalVote(@PathVariable("roomKey") Integer roomKey, @RequestBody FinalVoteRequest request) {
         try {
             Room room = roomRepository.getRoom(request.roomKey());
             if (room == null) {
@@ -262,7 +262,7 @@ public class GameController {
             }
 
             room.processFinalVote(request.playerNumber(), request.isAgree());
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(true);
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("투표 처리 실패: " + e.getMessage());
