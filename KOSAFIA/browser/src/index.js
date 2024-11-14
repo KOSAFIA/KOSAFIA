@@ -37,6 +37,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       {/* TestLobby에만 네비게이션 포함 */}
       <Route path="/rooms/:roomKey" element={<TestRoom />} />
       <Route path="/rooms/:roomKey/gameplay" element={<TestPlayRoom />} />
+      {/* 김남영 추가: 이하은 페이지로 이동 테스트 플레이룸은 소켓과 이하은 게임룸을 감쌈쌈*/}
+      {/* <Route path="/rooms/:roomKey/gameplay" element={<GameRoom />} /> */}
 
       <Route path="/GameRoom" element={<GameRoom />} />
     </Routes>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGameContext } from '../../../contexts/socket/game/GameSocketContext';
 
 const GameSocketComponent = () => {
@@ -15,10 +15,26 @@ const GameSocketComponent = () => {
         //투표 변수들...
         voteStatus,
         sendVote,
-        canVote 
+        canVote,
+        canFinalVote,
+        sendFinalVote,
+        finalVotes,
+        isHost,
+        processVoteResult,
+        requestFinalVoteResult,
+        updateGameStatus
     } = useGameContext();
     
     const [inputMessage, setInputMessage] = useState('');
+
+    useEffect(() => {
+        if (!isConnected) {
+            console.warn('게임쪽 소켓 연결이 끊어졌습니다');
+            return;
+        }
+        console.log('현재 게임 상태:', gameStatus);
+        console.log('현재 플레이어:', currentPlayer);
+    }, [isConnected, gameStatus, currentPlayer]);
 
     const handleSendMessage = () => {
         if (inputMessage.trim() && canChat()) {
@@ -49,6 +65,75 @@ const GameSocketComponent = () => {
         return false;
     };
 
+    // 최종투표 UI 렌더링
+    const renderFinalVoteUI = () => {
+        const [myVote, setMyVote] = useState(null); // 'agree' 또는 'disagree' 또는 null
+        
+        if (gameStatus !== 'FINALVOTE') return null;
+
+        if (currentPlayer?.isVoteTarget) {
+            return <div>당신은 최종투표 대상자입니다. 최후의 변론을 하세요.</div>;
+        }
+
+        const handleVote = async (isAgree) => {
+            try {
+                // 같은 버튼을 다시 누르면 투표 취소
+                if (myVote === (isAgree ? 'agree' : 'disagree')) {
+                    setMyVote(null);
+                } else {
+                    // 다른 버튼을 누르면 투표 변경
+                    await sendFinalVote(isAgree);
+                    setMyVote(isAgree ? 'agree' : 'disagree');
+                }
+            } catch (error) {
+                console.error('투표 처리 중 오류:', error);
+            }
+        };
+
+        return (
+            <div>
+                <h3>최종 투표</h3>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button 
+                        onClick={() => handleVote(true)}
+                        disabled={!canFinalVote()}
+                        style={{
+                            padding: '10px 20px',
+                            backgroundColor: myVote === 'agree' ? '#4CAF50' : '#f0f0f0',
+                            color: myVote === 'agree' ? 'white' : 'black',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            cursor: canFinalVote() ? 'pointer' : 'default',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                        }}
+                    >
+                        찬성 {myVote === 'agree' && '✓'}
+                    </button>
+                    <button 
+                        onClick={() => handleVote(false)}
+                        disabled={!canFinalVote()}
+                        style={{
+                            padding: '10px 20px',
+                            backgroundColor: myVote === 'disagree' ? '#f44336' : '#f0f0f0',
+                            color: myVote === 'disagree' ? 'white' : 'black',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            cursor: canFinalVote() ? 'pointer' : 'default',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                        }}
+                    >
+                        반대 {myVote === 'disagree' && '✓'}
+                    </button>
+                </div>
+                {myVote && <p style={{ marginTop: '10px' }}>투표가 완료되었습니다.</p>}
+            </div>
+        );
+    };
+
     return (
         <div className="game-container">
             <div className="game-status">
@@ -61,7 +146,6 @@ const GameSocketComponent = () => {
                 {players.map((player) => (
                     <div 
                         key={player.playerNumber}
-                        className={`player-item ${isSelected(player.playerNumber) ? 'selected' : ''}`}
                         onClick={() => canSelect(player.playerNumber) && handlePlayerSelection(player.playerNumber)}
                         style={{
                             cursor: canSelect(player.playerNumber) ? 'pointer' : 'default',
@@ -69,7 +153,7 @@ const GameSocketComponent = () => {
                             margin: '5px',
                             border: '1px solid #ccc',
                             borderRadius: '5px',
-                            backgroundColor: isSelected(player.playerNumber) ? '#e6e6e6' : 'white',
+                            backgroundColor: isSelected(player.playerNumber) ? '#e6e6e6' : 'yellowgreen',
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center'
@@ -94,6 +178,15 @@ const GameSocketComponent = () => {
                                 fontWeight: voteStatus[player.playerNumber] > 0 ? 'bold' : 'normal'
                             }}>
                                 {voteStatus[player.playerNumber] || 0}표
+                            </span>
+                        )}
+                        {gameStatus === 'FINALVOTE' && (
+                            <span style={{ 
+                                marginLeft: '10px', 
+                                color: 'blue',
+                                fontWeight: player.isVoteTarget ? 'bold' : 'normal'
+                            }}>
+                                {player.isVoteTarget ? '최종투표대상자' : ''}
                             </span>
                         )}
                     </div>
@@ -154,6 +247,8 @@ const GameSocketComponent = () => {
                     </button>
                 </div>
             </div>
+
+            {/* {renderFinalVoteUI()} */}
         </div>
     );
 };
