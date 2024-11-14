@@ -11,7 +11,7 @@ const stages = [
   { name: "밤", image: "/img/night.png" },
 ];
 
-const Timer = ({ onSendMessage, playerName, onStageChange }) => {
+const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
   const [time, setTime] = useState(stageDurations[stages[0].name]);
   const [stageIndex, setStageIndex] = useState(0);
   const [dayCount, setDayCount] = useState(1);
@@ -31,6 +31,11 @@ const Timer = ({ onSendMessage, playerName, onStageChange }) => {
             setHasModifiedTime(false);
           }
 
+          // 밤 단계일 때 역할 처리
+          if (stages[nextStageIndex].name === "밤") {
+            handleNightRoleAction();
+          }
+
           onStageChange(nextStageIndex);
 
           return stageDurations[stages[nextStageIndex].name];
@@ -41,38 +46,71 @@ const Timer = ({ onSendMessage, playerName, onStageChange }) => {
     return () => clearInterval(interval);
   }, [stageIndex, onStageChange]);
 
+  const handleNightRoleAction = () => {
+    switch (role) {
+      case "MAFIA":
+        onSendMessage({ text: `플레이어 ${playerNumber} (마피아)가 타겟을 선택합니다.` });
+        break;
+      case "DOCTOR":
+        onSendMessage({ text: `플레이어 ${playerNumber} (의사)가 치료할 타겟을 선택합니다.` });
+        break;
+      case "POLICE":
+        onSendMessage({ text: `플레이어 ${playerNumber} (경찰)가 조사할 타겟을 선택합니다.` });
+        break;
+      default:
+        onSendMessage({ text: `밤이 되었습니다. 플레이어 ${playerNumber}의 역할은 시민입니다.` });
+        break;
+    }
+  };
+
   const handleIncreaseTime = () => {
     if (stages[stageIndex].name === "낮" && canModifyTime(hasModifiedTime)) {
       setTime((prevTime) => changeTime(prevTime, 10));
-      onSendMessage({ text: `${playerName} 님이 시간을 증가했습니다.`, player: playerName, isTimeModifiedMessage: true });
+      onSendMessage({
+        text: `${playerNumber}번 플레이어가 시간을 증가했습니다.`,
+        player: playerNumber,
+        isTimeModifiedMessage: true,
+      });
       setHasModifiedTime(true);
     }
   };
-  
+
   const handleDecreaseTime = () => {
     if (stages[stageIndex].name === "낮" && canModifyTime(hasModifiedTime)) {
       setTime((prevTime) => changeTime(prevTime, -10));
-      onSendMessage({ text: `${playerName} 님이 시간을 감소했습니다.`, player: playerName, isTimeModifiedMessage: true });
+      onSendMessage({
+        text: `${playerNumber}번 플레이어가 시간을 감소했습니다.`,
+        player: playerNumber,
+        isTimeModifiedMessage: true,
+      });
       setHasModifiedTime(true);
     }
   };
 
   return (
     <div className="timer">
-    <div className="stage-image">
-      <img src={stages[stageIndex].image} alt={stages[stageIndex].name} />
-    </div>
-    <div className="time-display">
-      <div className="timer-button-wrapper">
-        <button className="button decrease-time" onClick={handleDecreaseTime}></button>
-        <span>&nbsp;{`0:${time.toString().padStart(2, "0")}`}&nbsp;&nbsp;</span>
-        <button className="button increase-time" onClick={handleIncreaseTime}></button>
+      <div className="stage-image">
+        <img src={stages[stageIndex].image} alt={stages[stageIndex].name} />
+      </div>
+      <div className="time-display">
+        <div className="timer-button-wrapper">
+          <button
+            className="button decrease-time"
+            onClick={handleDecreaseTime}
+          ></button>
+          <span>
+            &nbsp;{`0:${time.toString().padStart(2, "0")}`}&nbsp;&nbsp;
+          </span>
+          <button
+            className="button increase-time"
+            onClick={handleIncreaseTime}
+          ></button>
+        </div>
+      </div>
+      <div className="stage-info">
+        {dayCount}일차 {stages[stageIndex].name}
       </div>
     </div>
-    <div className="stage-info">
-      {dayCount}일차 {stages[stageIndex].name}
-    </div>
-  </div>
   );
 };
 
