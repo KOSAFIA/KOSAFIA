@@ -248,7 +248,7 @@ const GameSocketComponent = () => {
                 </div>
             </div>
 
-            {renderFinalVoteUI()}
+            {/* {renderFinalVoteUI()} */}
         </div>
     );
 };
