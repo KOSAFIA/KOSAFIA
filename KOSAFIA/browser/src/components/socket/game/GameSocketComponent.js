@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGameContext } from '../../../contexts/socket/game/GameSocketContext';
 
 const GameSocketComponent = () => {
@@ -15,10 +15,26 @@ const GameSocketComponent = () => {
         //투표 변수들...
         voteStatus,
         sendVote,
-        canVote 
+        canVote,
+        canFinalVote,
+        sendFinalVote,
+        finalVotes,
+        isHost,
+        processVoteResult,
+        requestFinalVoteResult,
+        updateGameStatus
     } = useGameContext();
     
     const [inputMessage, setInputMessage] = useState('');
+
+    useEffect(() => {
+        if (!isConnected) {
+            console.warn('게임쪽 소켓 연결이 끊어졌습니다');
+            return;
+        }
+        console.log('현재 게임 상태:', gameStatus);
+        console.log('현재 플레이어:', currentPlayer);
+    }, [isConnected, gameStatus, currentPlayer]);
 
     const handleSendMessage = () => {
         if (inputMessage.trim() && canChat()) {
@@ -49,6 +65,33 @@ const GameSocketComponent = () => {
         return false;
     };
 
+    // 최종투표 UI 렌더링
+    const renderFinalVoteUI = () => {
+        if (gameStatus !== 'FINALVOTE') return null;
+
+        if (currentPlayer?.isVoteTarget) {
+            return <div>당신은 최종투표 대상자입니다. 최후의 변론을 하세요.</div>;
+        }
+
+        return (
+            <div>
+                <h3>최종 투표</h3>
+                <button 
+                    onClick={() => sendFinalVote(true)}
+                    disabled={!canFinalVote()}
+                >
+                    찬성 ({finalVotes.agree})
+                </button>
+                <button 
+                    onClick={() => sendFinalVote(false)}
+                    disabled={!canFinalVote()}
+                >
+                    반대 ({finalVotes.disagree})
+                </button>
+            </div>
+        );
+    };
+
     return (
         <div className="game-container">
             <div className="game-status">
@@ -61,7 +104,6 @@ const GameSocketComponent = () => {
                 {players.map((player) => (
                     <div 
                         key={player.playerNumber}
-                        className={`player-item ${isSelected(player.playerNumber) ? 'selected' : ''}`}
                         onClick={() => canSelect(player.playerNumber) && handlePlayerSelection(player.playerNumber)}
                         style={{
                             cursor: canSelect(player.playerNumber) ? 'pointer' : 'default',
@@ -154,6 +196,8 @@ const GameSocketComponent = () => {
                     </button>
                 </div>
             </div>
+
+            {renderFinalVoteUI()}
         </div>
     );
 };

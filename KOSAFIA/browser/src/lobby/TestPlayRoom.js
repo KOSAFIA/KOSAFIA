@@ -7,6 +7,7 @@ function TestPlayRoom() {
     const { roomKey } = useParams();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true);
+    const [isSocketReady, setIsSocketReady] = useState(false);
 
     useEffect(() => {
         const validateSession = async () => {
@@ -20,6 +21,9 @@ function TestPlayRoom() {
                     return;
                 }
 
+                // 이전 소켓 연결이 완전히 정리될 때까지 더 오래 대기
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                setIsSocketReady(true);
                 setIsLoading(false);
             } catch (error) {
                 console.error('세션 검증 중 오류:', error);
@@ -31,15 +35,17 @@ function TestPlayRoom() {
     }, [roomKey, navigate]);
 
     if (isLoading) {
-        return <div>로딩 중...</div>;
+        return <div>이전 연결 정리 중...</div>;
     }
 
     return (
         <div style={{ padding: '20px'}}>
             <h1>게임 진행 창 - 방 {roomKey}</h1>
-            <GameSocketProvider roomKey={roomKey}>
-                <TestGameWrapper />
-            </GameSocketProvider>
+            {isSocketReady && (
+                <GameSocketProvider roomKey={parseInt(roomKey)}>
+                    <TestGameWrapper />
+                </GameSocketProvider>
+            )}
         </div>
     );
 }

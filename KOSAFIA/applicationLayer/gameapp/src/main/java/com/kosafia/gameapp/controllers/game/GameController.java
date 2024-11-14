@@ -9,6 +9,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -103,7 +104,15 @@ public class GameController {
         return players;
     }
 
-    //김남영 추가
+    //-----------------김남영 추가 시작 리스트-----------------
+    //1. 방장 지정
+    //2. 게임 상태 변경(관리자)
+    //3. 플레이어 상태 변경(관리자)
+    //4. 투표 결과 처리
+    //5. 최종 투표 결과 처리
+    //6. 현재 게임 상태 조회
+    //-----------------김남영 추가 리스트 끝 -----------------
+    
     // 현재 게임 상태를 가져오는 API
     @PostMapping("/current-data")
     public Map<String, Object> getGameData(HttpSession session, @RequestBody Map<String, Object> roomInfo) {
@@ -181,7 +190,7 @@ public class GameController {
             Boolean isAlive = (Boolean) request.get("isAlive");
             String role = (String) request.get("role");
             
-            log.info("플레이어 상태 변경 요청 - 방: {}, 플레이어: {}, 생존: {}, 역할: {}", 
+            log.info("플레이어 상태 변경 요청 - 방: {}, ��이어: {}, 생존: {}, 역할: {}", 
                 roomKey, playerNumber, isAlive, role);
             
             Room room = roomRepository.getRoom(roomKey);
@@ -202,6 +211,106 @@ public class GameController {
         } catch (Exception e) {
             log.error("플레이어 상태 변경 실패", e);
             return ResponseEntity.badRequest().body("플레이어 상태 변경 실패: " + e.getMessage());
+        }
+    }
+
+    //클라이언트의 유저이름이 방장이름과 같은지 확인하고 응답
+    @PostMapping("/host/{roomKey}")
+    public ResponseEntity<?> recieveIsHost(@PathVariable("roomKey") Integer roomKey, @RequestBody Map<String, Object> request) {
+        String userName = (String) request.get("username");
+
+        String hostName = roomRepository.getRoom(roomKey).getHostName();
+
+        if (hostName == null) {
+            log.error("??? 말이 안되요. 왜 호스트가 없어요???");
+            return ResponseEntity.badRequest().body("호스트가 없습니다.");
+        }
+
+        //방장여부 체크해서 클라에 각각 응답
+        if (hostName.equals(userName)) {
+            return ResponseEntity.ok(true);
+        } else {
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    //투표 결과 처리 서버에서 일단 처리 이후 응답해서 클라에서 소켓처리 이 모든 요청은 방장이~~
+    //들어오는 녀석의 정체 룸키, 동기화된 투표 결과
+    @PostMapping("/admin/vote/result")
+    public ResponseEntity<?> recieveVoteResult(@RequestBody Map<String, Object> request) {
+        Integer roomKey = (Integer) request.get("roomKey");
+        Map<Integer, Integer> voteStatus = (Map<Integer, Integer>) request.get("voteStatus");
+
+        Room room = roomRepository.getRoom(roomKey);
+        if (room == null) {
+            return ResponseEntity.badRequest().body("방을 찾을 수 없습니다: " + roomKey);
+        }
+
+        room.setVoteStatus(voteStatus);
+        Player mostVotedPlayer = room.getMostVotedPlayer();
+        if (mostVotedPlayer == null) { return ResponseEntity.ok(null);}
+        else{ return ResponseEntity.ok(mostVotedPlayer);    }
+    }
+
+    @PostMapping("/game/finalvote")
+    public ResponseEntity<?> handleFinalVote(@RequestBody FinalVoteRequest request) {
+        try {
+            Room room = roomRepository.getRoom(request.roomKey());
+            if (room == null) {
+                return ResponseEntity.badRequest().body("방을 찾을 수 없습니다.");
+            }
+
+            room.processFinalVote(request.playerNumber(), request.isAgree());
+            return ResponseEntity.ok().build();
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("투표 처리 실패: " + e.getMessage());
+        }
+    }
+
+    record FinalVoteRequest(
+        Integer roomKey,
+        Integer playerNumber,
+        boolean isAgree
+    ) {}
+
+    //방에 플레이어 목록 조회
+    @GetMapping("/players/{roomKey}")
+    public ResponseEntity<List<Player>> getPlayers(@PathVariable("roomKey") Integer roomKey) {
+        try {
+            Room room = roomRepository.getRoom(roomKey);
+            if (room == null) {
+                return ResponseEntity.notFound().build();
+            }
+            List<Player> players = room.getPlayers();
+            log.info("방 {}의 플레이어 리스트 조회: {}", roomKey, players);
+            return ResponseEntity.ok(players);
+        } catch (Exception e) {
+            log.error("플레이어 리스트 조회 중 오류: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PostMapping("/game/host/{roomKey}")
+    public ResponseEntity<Boolean> checkHost(
+        @PathVariable(name = "roomKey") Integer roomKey,  // name 속성 추가
+        @RequestBody Map<String, String> request
+    ) {
+        try {
+            String username = request.get("username");
+            Room room = roomRepository.getRoom(roomKey);
+            
+            if (room == null || username == null) {
+                log.error("방 또는 유저네임이 없음. roomKey: {}, username: {}", roomKey, username);
+                return ResponseEntity.badRequest().build();
+            }
+            
+            boolean isHost = username.equals(room.getHostName());
+            log.info("방장 여부 확인 - 방: {}, 유저: {}, 결과: {}", roomKey, username, isHost);
+            return ResponseEntity.ok(isHost);
+        } catch (Exception e) {
+            log.error("방장 여부 확인 중 오류: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

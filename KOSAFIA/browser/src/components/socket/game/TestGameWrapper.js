@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGameContext } from '../../../contexts/socket/game/GameSocketContext';
 import GameSocketComponent from './GameSocketComponent';
 
 // 게임 상태별 간단한 테마 색상
 const GAME_THEMES = {
     DAY: '#E6F3FF',      // 하늘색 배경
-    NIGHT: '#1A0000',    // 어두운 붉은 배경
+    NIGHT: '#FFE6E6',    // 연한빨강
     VOTE: '#E6E6FA',     // 연보라색 배경
     FINAL_VOTE: '#F5F5F5', // 회색 배경
     DELAY: '#FFFFFF'     // 흰색 배경
@@ -16,44 +16,44 @@ const TestControls = () => {
         players, 
         gameStatus,
         updateGameStatus,
-        updatePlayerStatus
+        currentPlayer,    // 현재 플레이어 정보 추가
+        isHost,           // 방장 여부 확인 추가
+        voteStatus,       // 투표 상태 추가
+        processVoteResult, // 투표 결과 처리 함수 추가
+        requestFinalVoteResult // 최종 투표 결과 처리 요청 함수 추가
     } = useGameContext();
 
-    const [selectedGameStatus, setSelectedGameStatus] = useState(gameStatus);
-    const [selectedPlayerId, setSelectedPlayerId] = useState('');
-    const [selectedRole, setSelectedRole] = useState('CITIZEN');
-    const [selectedIsAlive, setSelectedIsAlive] = useState(true);
+    const handleNextPhase = async () => {
+        if (!isHost) return;
 
-    const handleApplyChanges = async () => {
         try {
-            console.log('변경사항 적용 시작');
-            
-            // 게임 상태 변경
-            if (selectedGameStatus !== gameStatus) {
-                console.log('게임 상태 변경 시도:', selectedGameStatus);
-                await updateGameStatus(selectedGameStatus);
+            switch(gameStatus) {
+                case 'FINALVOTE':
+                    // 최종 투표 결과 처리 요청
+                    await requestFinalVoteResult();
+                    break;
+                case 'DAY':
+                    await updateGameStatus('VOTE');
+                    break;
+                case 'VOTE':
+                    const voteResult = await processVoteResult(voteStatus);
+                    if (voteResult.success) {
+                        await updateGameStatus('FINALVOTE');
+                    }
+                    break;
+                case 'NIGHT':
+                    await updateGameStatus('DAY');
+                    break;
+                default:
+                    await updateGameStatus('NIGHT');
             }
-
-            // 플레이어 상태 변경
-            if (selectedPlayerId) {
-                console.log('플레이어 상태 변경 시도:', {
-                    playerNumber: selectedPlayerId,
-                    isAlive: selectedIsAlive,
-                    role: selectedRole
-                });
-                
-                await updatePlayerStatus(selectedPlayerId, {
-                    isAlive: selectedIsAlive,
-                    role: selectedRole
-                });
-            }
-
-            console.log('변경사항 적용 완료');
         } catch (error) {
-            console.error('변경사항 적용 중 오류:', error);
-            alert('변경사항 적용 실패: ' + error.message);
+            console.error('게임 상태 전환 실패:', error);
         }
     };
+
+    // 방장이 아니면 컨트롤 패널 숨기기
+    if (!isHost) return null;
 
     return (
         <div style={{
@@ -72,8 +72,8 @@ const TestControls = () => {
             <div style={{ marginBottom: '10px' }}>
                 <label>게임 상태:</label>
                 <select 
-                    value={selectedGameStatus}
-                    onChange={(e) => setSelectedGameStatus(e.target.value)}
+                    value={gameStatus}
+                    onChange={(e) => updateGameStatus(e.target.value)}
                 >
                     <option value="DAY">DAY</option>
                     <option value="NIGHT">NIGHT</option>
@@ -87,8 +87,8 @@ const TestControls = () => {
             <div style={{ marginBottom: '10px' }}>
                 <label>플레이어:</label>
                 <select
-                    value={selectedPlayerId}
-                    onChange={(e) => setSelectedPlayerId(e.target.value)}
+                    value={currentPlayer.playerNumber}
+                    onChange={(e) => updateGameStatus(e.target.value)}
                 >
                     <option value="">선택하세요</option>
                     {players.map(player => (
@@ -99,45 +99,19 @@ const TestControls = () => {
                 </select>
             </div>
 
-            {/* 생존 상태 */}
-            <div style={{ marginBottom: '10px' }}>
-                <label>생존 상태:</label>
-                <select
-                    value={selectedIsAlive.toString()}
-                    onChange={(e) => setSelectedIsAlive(e.target.value === 'true')}
-                >
-                    <option value="true">생존</option>
-                    <option value="false">사망</option>
-                </select>
-            </div>
-
-            {/* 역할 선택 */}
-            <div style={{ marginBottom: '10px' }}>
-                <label>역할:</label>
-                <select
-                    value={selectedRole}
-                    onChange={(e) => setSelectedRole(e.target.value)}
-                >
-                    <option value="CITIZEN">CITIZEN</option>
-                    <option value="POLICE">POLICE</option>
-                    <option value="DOCTOR">DOCTOR</option>
-                    <option value="MAFIA">MAFIA</option>
-                </select>
-            </div>
-
             <button 
-                onClick={handleApplyChanges}
+                onClick={handleNextPhase}
                 style={{
                     marginTop: '10px',
                     padding: '5px 10px',
-                    backgroundColor: '#dc3545',
+                    backgroundColor: '#28a745',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer'
                 }}
             >
-                변경사항 적용
+                Next Phase ({gameStatus})
             </button>
         </div>
     );
@@ -145,6 +119,11 @@ const TestControls = () => {
 
 const TestGameWrapper = () => {
     const { gameStatus } = useGameContext();
+
+    // gameStatus가 제대로 전달되는지 확인
+    useEffect(() => {
+        console.log('게임 상태 변경:', gameStatus);
+    }, [gameStatus]);
 
     // 현재 게임 상태에 따른 배경색 설정
     const backgroundColor = GAME_THEMES[gameStatus] || GAME_THEMES.DAY;
