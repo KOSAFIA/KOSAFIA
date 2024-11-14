@@ -138,6 +138,15 @@ const GameSocketComponent = () => {
                                 {voteStatus[player.playerNumber] || 0}표
                             </span>
                         )}
+                        {gameStatus === 'FINALVOTE' && (
+                            <span style={{ 
+                                marginLeft: '10px', 
+                                color: 'blue',
+                                fontWeight: player.isVoteTarget ? 'bold' : 'normal'
+                            }}>
+                                최종투표대상자
+                            </span>
+                        )}
                     </div>
                 ))}
             </div>

@@ -28,6 +28,25 @@ public class GameSocketController {
     @Autowired
     private RoomRepository roomRepository;
 
+
+    @MessageMapping("/game.chat.mafia/{roomKey}")
+    public void handleMafiaChat(
+        @DestinationVariable("roomKey") Integer roomKey, 
+        @Payload ChatMessage message
+    ) {
+        log.info("마피아 채팅 메시지 수신 - 방: {}, 메시지: {}", roomKey, message);
+        handleGameChat(roomKey, message);
+    }
+
+    @MessageMapping("/game.chat/{roomKey}")
+    public void handleNormalChat(
+        @DestinationVariable("roomKey") Integer roomKey, 
+        @Payload ChatMessage message
+    ) {
+        log.info("일반 채팅 메시지 수신 - 방: {}, 메시지: {}", roomKey, message);
+        handleGameChat(roomKey, message);
+    }
+    
     // 채팅 메시지 처리 - @Payload 어노테이션 추가 및 디버그 로그 추가
     @MessageMapping("/game.chat.send/{roomKey}")
     public void handleGameChat(
@@ -333,7 +352,7 @@ record GameStateMessage(
 
     record VoteResultResponse(
         Player targetPlayer,
-        Map<Integer, Integer> finalVoteStatus,
+        Map<Integer, Integer> voteResult,
         boolean success,
         String message
     ) {}
@@ -348,7 +367,7 @@ record GameStateMessage(
             Room room = roomRepository.getRoom(roomKey);
             if (room == null) return;
 
-            Player executedPlayer = room.processFinalVoteResult();  // 결과 처리를 Room으로 이동
+            Player executedPlayer = room.processFinalVoteResult();
             
             FinalVoteResultResponse response = new FinalVoteResultResponse(
                 room.getGameStatus().toString(),

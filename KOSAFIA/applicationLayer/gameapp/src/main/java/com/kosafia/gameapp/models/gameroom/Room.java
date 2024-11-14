@@ -273,6 +273,11 @@ public void clearVotes() {
             // setGameStatus(gameStatus);
             System.out.println("게임 시작 완료 ");
             System.out.println(this.toString());
+
+            players.forEach(player -> {
+                player.setAlive(true);
+                System.out.println(player.getUsername() + "의 직업은 " + player.getRole() + "입니다.");
+            });
             return true;
         }
         return false;

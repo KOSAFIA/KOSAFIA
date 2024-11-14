@@ -3,6 +3,7 @@ package com.kosafia.gameapp.controllers.gameroom;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -226,6 +227,15 @@ public class RoomController {
                 log.warn("방 {}에 플레이어가 부족해요: {}/{}", roomKey, room.getPlayers().size(), room.getMaxPlayers());
                 return ResponseEntity.badRequest().body("게임을 시작하려면 풀방이어야 해요");
             }
+
+            //4. 김남영 테스트용 시작 나중에 날려도 됨.
+            Random random = new Random();
+            room.getPlayers().forEach(player -> {
+                int randomNumber = random.nextInt(1,5);
+                System.out.println(player.getUsername());
+                //플레이어 랜덤으로 직업 지정
+                player.setRole(Role.values()[randomNumber]);
+            });
 
             // 5. 방 상태 변경 : 로직내용은 턴=1 세팅 게임 진행중 상태 세팅
 
