@@ -214,11 +214,13 @@ public class RoomController {
             }
 
             // 5. 방 상태 변경 : 로직내용은 턴=1 세팅 게임 진행중 상태 세팅
-            room.startGame();
-            log.info("방 {}에서 게임이 시작되었어요!", roomKey);
 
-            // 게임 상태만 변경하고 저장
-            room.setGameStatus(GameStatus.NIGHT);
+            if(room.startGame()){
+                log.info("방 {}에서 게임이 시작되었어요!", roomKey);
+            }
+            else{
+                log.warn("방 {}에서 게임이 이미 진행중이에요!", roomKey);
+            }
             
             log.info("방 {} 게임 시작! 상태: {}", roomKey, room.getGameStatus());
 

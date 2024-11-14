@@ -40,6 +40,8 @@ public class Room {
     private Map<Integer, Integer> voteStatus;
     // 투표자별 투표 대상 기록 (voterId -> targetId)
     private Map<Integer, Integer> voterRecords;
+    // 찬반 투표 현황 (playerNumber -> isAgree)
+    private Map<Integer, Boolean> finalVoteStatus;
 
     // private Integer nextPlayerNumber = 1; // 다음에 부여할 번호
     private Random random = new Random();
@@ -61,6 +63,7 @@ public class Room {
     //김남영이 추가함 버그나면 김남영 불러
         this.voteStatus = new HashMap<>();
         this.voterRecords = new HashMap<>();
+        this.finalVoteStatus = new HashMap<>();
     }
     //투표 매서드: 이전에 이미 등록된 투표자의 타겟은 1만큼 감소시키고 다시 현재 투표 반영
     //그러면 최종적으로는 아무도 투표안하면 비어있고
@@ -133,7 +136,6 @@ public class Room {
         return null;
     }
 
-    //------김남영 추가------
     public Player getPlayerByPlayerNumber(Integer playerNumber){
         for (Player player : players) {
             if(player.getPlayerNumber() == playerNumber){
@@ -142,6 +144,53 @@ public class Room {
         }
         return null;
     }
+
+    public int getAgreeVotes(){
+        return (int) finalVoteStatus.values().stream()
+            .filter(vote -> vote)
+            .count();
+    }
+
+    public int getDisagreeVotes(){
+        return (int) finalVoteStatus.values().stream()
+            .filter(vote -> !vote)
+            .count();
+    }   
+
+    public void processFinalVote(Integer playerNumber, boolean isAgree) {
+        Player voter = getPlayerByPlayerNumber(playerNumber);
+        if (voter == null || !voter.isAlive() || voter.isVoteTarget()) {
+            throw new IllegalArgumentException("유효하지 않은 투표자");
+        }
+        finalVoteStatus.put(playerNumber, isAgree);
+    }
+
+    // 최종 투표 초기화
+    public void clearFinalVotes() {
+        finalVoteStatus.clear();
+    }
+
+    public Player processFinalVoteResult() {
+        Player targetPlayer = players.stream()
+            .filter(Player::isVoteTarget)
+            .findFirst()
+            .orElse(null);
+
+        if (targetPlayer != null && getAgreeVotes() > getDisagreeVotes()) {
+            targetPlayer.setAlive(false);
+            targetPlayer.setVoteTarget(false);
+            setGameStatus(GameStatus.NIGHT);
+            return targetPlayer;
+        }
+        
+        if (targetPlayer != null) {
+            targetPlayer.setVoteTarget(false);
+        }
+        setGameStatus(GameStatus.NIGHT);
+        return null;
+    }
+
+    //-----------김남영 추가 끝------------
 
     // 플레이어 추가 메서드
     public boolean addPlayer(String username, String userEmail) {
@@ -205,13 +254,18 @@ public class Room {
   
 
     // 게임 시작 메서드
-    public void startGame() {
-        if (!isPlaying && players.size() >= 4) { // 최소 4인 이상일 때 시작 가능
+    public boolean startGame() {
+        System.out.println("게임 시작");
+        if (!isPlaying) { 
             this.isPlaying = true;
             this.turn = 1; // 첫 턴 초기화
             this.gameStatus = GameStatus.NIGHT;
             // setGameStatus(gameStatus);
+            System.out.println("게임 시작 완료 ");
+            System.out.println(this.toString());
+            return true;
         }
+        return false;
     }
 
     // 게임 종료 메서드
@@ -241,5 +295,4 @@ public class Room {
             hostName = null; // 방에 남아 있는 플레이어가 없으면 방장 없음
         }
     }
-
 }
