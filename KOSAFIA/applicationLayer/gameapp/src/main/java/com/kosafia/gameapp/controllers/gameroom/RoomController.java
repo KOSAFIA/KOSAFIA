@@ -76,15 +76,20 @@ public class RoomController {
     
         // return ResponseEntity.ok("방이 생성되었습니다: Room ID " + room.getRoomKey());
     
-        return joinRoom(roomKey, session);
+          // 비밀번호 정보 생성
+        Map<String, String> passwordMap = new HashMap<>();
+        passwordMap.put("password", roomDetails.password); // 비밀번호 정보 설정
+
+        return joinRoom(roomKey, passwordMap, session);
     }
 
     // 방 입장 엔드포인트
     @PostMapping("/{roomKey}/join")
-    public ResponseEntity<?> joinRoom(@PathVariable("roomKey") Integer roomKey, HttpSession session) {
+    public ResponseEntity<?> joinRoom(@PathVariable("roomKey") Integer roomKey, @RequestBody Map<String, String> passwordMap, HttpSession session) {
         log.info("방 입장 요청 - roomKey: {}", roomKey);
         
         try {
+            String password = passwordMap.get("password");
             // 1. 세션에서 유저 정보 확인
             UserData userData = roomService.getUserDataFromSession(session);
             if (userData == null) {
@@ -101,8 +106,17 @@ public class RoomController {
                     .body(Map.of("error", "존재하지 않는 방입니다."));
             }
 
+
+            // 3. 비밀방 비밀번호 검증 (비밀방일 경우)
+            boolean isAuthorized = roomService.validateRoomPassword(roomKey, password);
+            if (!isAuthorized) {
+                // return ResponseEntity.status(403).body("비밀번호가 일치하지 않습니다.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "비밀번호가 일치하지 않습니다."));
+            }
+
             //김남영 수정
-            // 3. 방 입장 가능 여부 확인
+            // 4. 방 입장 가능 여부 확인
             if (room.getMaxPlayers() <= room.getCurrentPlayers() || room.getGameStatus() != GameStatus.NONE) {
                 log.warn("입장 불가능한 방 - roomKey: {}, 현재 인원: {}/{}", 
                     roomKey, room.getPlayers().size(), room.getMaxPlayers());
@@ -111,7 +125,7 @@ public class RoomController {
             }
 
             //김남영 수정
-            // 4. 중복 입장 확인
+            // 5. 중복 입장 확인
             if (room.getPlayerByUserEmail(userData.getUserEmail()) != null) {
                 log.warn("이미 방에 있는 플레이어의 재입장 시도 - username: {}", userData.getUsername());
                 Player existingPlayer = room.getPlayerByUserEmail(userData.getUserEmail());
@@ -125,7 +139,7 @@ public class RoomController {
                 ));
             }
 
-            // 5. 새로운 플레이어 생성 및 방 입장
+            // 6. 새로운 플레이어 생성 및 방 입장
             Player newPlayer = roomService.joinRoom(roomKey, userData);
             if (newPlayer == null) {
                 log.error("플레이어 생성 실패 - username: {}", userData.getUsername());
@@ -133,11 +147,11 @@ public class RoomController {
                     .body(Map.of("error", "플레이어 생성에 실패했습니다."));
             }
 
-            // 6. 세션에 정보 저장
+            // 7. 세션에 정보 저장
             session.setAttribute("player", newPlayer);
             session.setAttribute("roomKey", roomKey);
 
-            // 7. 성공 응답
+            // 8. 성공 응답
             Map<String, Object> response = new HashMap<>();
             response.put("player", newPlayer);
             response.put("roomKey", roomKey);
@@ -167,9 +181,9 @@ public class RoomController {
         // 2. 방에서 플레이어 제거 요청
         boolean removed = roomService.leaveRoom(roomKey, player);
         if (removed) {
-            log.info("플레이어가 방에서 성공적으로 나갔습니다. roomKey: {}, player: {}", roomKey, player.getUsername());
-
-            log.info("방에 남은 플레이어들 : {}", roomService.getRoomById(roomKey).getPlayers());
+            log.info("플레이어가 방에서 성공적으로 나갔습니다. roomKey: {}, player: {}", roomKey, player.getUsername());        
+            // log.info("방에 남은 플레이어들 : {}", roomService.getRoomById(roomKey).getPlayers());
+            
     
             // 3. 세션에서 플레이어와 방 정보 삭제
             session.removeAttribute("player");
@@ -262,4 +276,5 @@ public class RoomController {
     public ResponseEntity<Map<Integer, Room>> getAllRooms() {
         return ResponseEntity.ok(roomService.getAllRooms());
     }
+
 }
