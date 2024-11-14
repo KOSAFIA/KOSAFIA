@@ -9,7 +9,7 @@ import GameRoom from "./pages/GameRoom";
 import TestRoom from "./lobby/TestRoom";
 import TestPlayRoom from "./lobby/TestPlayRoom";
 import { BrowserRouter, Routes, Route } from "react-router-dom"; // React Router 라이브러리에서 필요한 컴포넌트를 불러옵니다.
-
+import "./styles/components/index.css"; // 전역 스타일 임포트
 // TestLobby에 네비게이션 바 포함한 레이아웃 컴포넌트 //수현
 function TestLobbyWithNavbar() {
   return (
