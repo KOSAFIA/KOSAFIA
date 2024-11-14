@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Role;
 
@@ -21,6 +22,11 @@ public interface GameService {
     // 경찰 상호작용
     Role policeCheckRole(List<Player> players, Integer targetNumber);
 
-    // 밤 상호작용 정리
-    void nightActionResult(List<Player> players);
+    void nightActionResult(ArrayList<Player> players);
+
+    // ===============김남영 추가=============
+    public void broadcastGameStatus(Integer roomKey, GameStatus gameStatus, List<Player> players);
+
+    public void broadcastPlayerUpdate(Integer roomKey, List<Player> players);
+    // =========================================
 }

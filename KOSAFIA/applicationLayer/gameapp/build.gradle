@@ -71,6 +71,7 @@ dependencies {
 
 	// BCryptPasswordEncoder를 사용하기 위해 필요한 Spring Security 의존성을 추가
  implementation 'org.springframework.boot:spring-boot-starter-security'
+ implementation 'org.springframework.security:spring-security-config'
 testImplementation 'org.springframework.security:spring-security-test'
 
  //구글oauth2 로그인
@@ -83,3 +84,7 @@ implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 // tasks.named('test') {
 // 	useJUnitPlatform()
 // }
+
+compileJava {
+    options.compilerArgs << '-parameters'
+}

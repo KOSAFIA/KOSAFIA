@@ -17,9 +17,10 @@ const RoomComponent = ({ roomKey }) => {
             <h1>방 {roomKey}</h1>
             <div>연결 상태: {isConnected ? '연결됨' : '연결 중...'}</div>
             <h2>사용자들:</h2>
+            {/* 플레이어 리스트의 정체 */}
             <ul>
                 {players.map((player, index) => (
-                    <li key={index}>{player.username}</li>
+                    <li key={index}>{player.playerNumber}{player.username}</li>
                 ))}
             </ul>
             <h2>채팅:</h2>

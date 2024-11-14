@@ -3,34 +3,50 @@
 <mapper namespace="com.kosafia.gameapp.mapper.user.UserMapper">
   
     <!-- 이메일로 사용자 찾기 -->
+    <!-- findByEmail: 이메일을 입력받아 일치하는 사용자 정보를 조회하는 쿼리 -->
     <select id="findByEmail" parameterType="String" resultType="com.kosafia.gameapp.models.user.User">
         SELECT * FROM Users WHERE user_email = #{email}
+         <!-- #{email} : 전달된 이메일 값을 SQL에 바인딩 -->
     </select>
 
-    <!-- 새로운 사용자 추가 (provider와 provider_id 필드 포함) -->
+    <!-- 닉네임으로 사용자 조회 -->
+    <select id="findByUsername" parameterType="String" resultType="com.kosafia.gameapp.models.user.User">
+        SELECT * FROM Users WHERE username = #{username}
+    </select>
+
+      <!-- 새로운 사용자 추가 (provider와 provider_id 필드 포함) -->
+    <!-- insertUser: 새 사용자를 데이터베이스에 추가하는 쿼리 -->
     <insert id="insertUser" parameterType="com.kosafia.gameapp.models.user.User" useGeneratedKeys="true" keyProperty="userId">
         INSERT INTO Users (user_email, username, password, status, created_at, provider, provider_id)
         VALUES (#{userEmail}, #{username}, #{password}, #{status}, #{createdAt}, #{provider}, #{providerId})
+     <!-- useGeneratedKeys="true": 자동 생성된 기본 키(user_id)를 객체의 userId 필드에 설정 -->
+        <!-- keyProperty="userId": User 객체의 userId 필드에 생성된 키 값을 매핑 -->
     </insert>
 
-    <!-- 사용자 업데이트 -->
+     <!-- 사용자 업데이트 -->
+    <!-- updateUser: 사용자의 닉네임과 비밀번호를 업데이트하는 쿼리 -->
     <update id="updateUser" parameterType="com.kosafia.gameapp.models.user.User">
         UPDATE Users
         SET username = #{username}, password = #{password}
         WHERE user_id = #{userId}
+         <!-- user_id에 해당하는 사용자의 정보를 업데이트 -->
     </update>
 
     <!-- 회원 탈퇴: 상태를 비활성화(0)로 업데이트 -->
+    <!-- deactivateUser: 사용자 상태를 0(비활성화)로 변경하는 쿼리 -->
     <update id="deactivateUser" parameterType="long">
         UPDATE Users
         SET status = 0
         WHERE user_id = #{userId}
+         <!-- user_id에 해당하는 사용자의 status를 0으로 업데이트 -->
     </update>
 
     <!-- providerId로 사용자를 찾는 쿼리 -->
-    <select id="findByProviderId" parameterType="string" resultType="com.kosafia.gameapp.models.user.User">
+    <!-- findByProviderId: OAuth2 제공자의 고유 ID(provider_id)로 사용자를 찾는 쿼리 -->
+    <select id="findByProviderId" parameterType="String" resultType="com.kosafia.gameapp.models.user.User">
         SELECT * FROM Users
         WHERE provider_id = #{providerId}
+        <!-- #{providerId} : 전달된 providerId 값을 SQL에 바인딩 -->
     </select>
 
 </mapper>

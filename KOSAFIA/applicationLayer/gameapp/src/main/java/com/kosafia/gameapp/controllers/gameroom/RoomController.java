@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Role;
 import com.kosafia.gameapp.models.gameroom.Room;
@@ -32,53 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/api/rooms")
 public class RoomController {
-
-    // private final RoomRepository roomRepository;
-    // private RoomJoinService roomJoinService;
-    // private UserService userService;
-
-    // @Autowired
-    // public RoomController(RoomRepository roomRepository, RoomJoinService roomJoinService, UserService userService ) {
-    //     this.roomRepository = roomRepository;
-    //     this.roomJoinService = roomJoinService;
-    //     this.userService = userService;
-    // }
-
-    // // 사용자가 방에 입장하는 API
-    // @PostMapping("/{roomId}/join")
-    // public ResponseEntity<String> joinRoom(@PathVariable Integer roomId, HttpSession session) {
-    //     log.info("controller"+roomId);
-    //     log.info(roomRepository.getAllRooms().toString());
-    //     log.info(roomRepository.getRoom(roomId).getUsers().toString());
-    //     UserData userData = userService.getUserData(session);
-
-    //     session.setAttribute("roomId", roomId);
-    //     return roomJoinService.joinRoom(roomId, userData);
-    // }
-
-    //  // 방 정보 조회 엔드포인트 (GET /rooms/{roomId})
-    // @GetMapping("/{roomId}")
-    // public ResponseEntity<Room> getRoom(@PathVariable Integer roomId) {
-    //     Room room = roomRepository.getRoom(roomId); // Room 조회 로직
-    //     if (room != null) {
-    //         return ResponseEntity.ok(room);
-    //     } else {
-    //         return ResponseEntity.status(404).body(null);
-    //     }
-    // }
-
-    // // 게임 시작 엔드포인트 (POST /rooms/{roomId}/start)
-    // @PostMapping("/{roomId}/start")
-    // public ResponseEntity<String> startGame(@PathVariable Integer roomId) {
-    //     // 게임 시작 로직 구현
-    //     Room room = roomRepository.getRoom(roomId);
-    //     if (room != null) {
-    //         // 게임 시작 처리
-    //         return ResponseEntity.ok("게임이 시작되었습니다.");
-    //     } else {
-    //         return ResponseEntity.status(404).body("방을 찾을 수 없습니다.");
-    //     }
-    // }
 
     private final RoomService roomService;
 
@@ -122,48 +76,99 @@ public class RoomController {
     
         // return ResponseEntity.ok("방이 생성되었습니다: Room ID " + room.getRoomKey());
     
-        return joinRoom(roomKey, session);
+          // 비밀번호 정보 생성
+        Map<String, String> passwordMap = new HashMap<>();
+        passwordMap.put("password", roomDetails.password); // 비밀번호 정보 설정
+
+        return joinRoom(roomKey, passwordMap, session);
     }
 
     // 방 입장 엔드포인트
     @PostMapping("/{roomKey}/join")
-    public ResponseEntity<?> joinRoom(@PathVariable Integer roomKey, HttpSession session) {
-        // 세션에서 유저 정보를 가져옴
-        System.out.println("방 입장 요청 - 방 키=" + roomKey);
-        UserData userData = roomService.getUserDataFromSession(session);
+    public ResponseEntity<?> joinRoom(@PathVariable("roomKey") Integer roomKey, @RequestBody Map<String, String> passwordMap, HttpSession session) {
+        log.info("방 입장 요청 - roomKey: {}", roomKey);
         
-        if (userData == null) {
-            System.out.println("유저 정보가 없습니다 - 로그인 필요");
-            return ResponseEntity.status(401).body(null);
-            // return ResponseEntity.status(401).body("로그인이 필요합니다.");
-        }
-    
-        // 방에 유저 입장 시도
-        System.out.println("방 입장 중 - 유저 데이터=" + userData);
-        Player player = roomService.joinRoom(roomKey, userData);
-        
-        if (player != null) {
-            System.out.println("유저 입장 성공 - 플레이어 정보: " + player);
-            session.setAttribute("player", player);
+        try {
+            String password = passwordMap.get("password");
+            // 1. 세션에서 유저 정보 확인
+            UserData userData = roomService.getUserDataFromSession(session);
+            if (userData == null) {
+                log.warn("인증되지 않은 사용자의 방 입장 시도");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "로그인이 필요합니다."));
+            }
+
+            // 2. 방 존재 여부 확인
+            Room room = roomService.getRoomById(roomKey);
+            if (room == null) {
+                log.warn("존재하지 않는 방 입장 시도 - roomKey: {}", roomKey);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "존재하지 않는 방입니다."));
+            }
+
+
+            // 3. 비밀방 비밀번호 검증 (비밀방일 경우)
+            boolean isAuthorized = roomService.validateRoomPassword(roomKey, password);
+            if (!isAuthorized) {
+                // return ResponseEntity.status(403).body("비밀번호가 일치하지 않습니다.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "비밀번호가 일치하지 않습니다."));
+            }
+
+            //김남영 수정
+            // 4. 방 입장 가능 여부 확인
+            if (room.getMaxPlayers() <= room.getCurrentPlayers() || room.getGameStatus() != GameStatus.NONE) {
+                log.warn("입장 불가능한 방 - roomKey: {}, 현재 인원: {}/{}", 
+                    roomKey, room.getPlayers().size(), room.getMaxPlayers());
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "방이 가득 찼거나 게임이 진행 중입니다."));
+            }
+
+            //김남영 수정
+            // 5. 중복 입장 확인
+            if (room.getPlayerByUserEmail(userData.getUserEmail()) != null) {
+                log.warn("이미 방에 있는 플레이어의 재입장 시도 - username: {}", userData.getUsername());
+                Player existingPlayer = room.getPlayerByUserEmail(userData.getUserEmail());
+                session.setAttribute("player", existingPlayer);
+                session.setAttribute("roomKey", roomKey);
+                
+                return ResponseEntity.ok(Map.of(
+                    "player", existingPlayer,
+                    "roomKey", roomKey,
+                    "message", "이미 방에 입장해 있습니다."
+                ));
+            }
+
+            // 6. 새로운 플레이어 생성 및 방 입장
+            Player newPlayer = roomService.joinRoom(roomKey, userData);
+            if (newPlayer == null) {
+                log.error("플레이어 생성 실패 - username: {}", userData.getUsername());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "플레이어 생성에 실패했습니다."));
+            }
+
+            // 7. 세션에 정보 저장
+            session.setAttribute("player", newPlayer);
             session.setAttribute("roomKey", roomKey);
-    
-            // 여러 값 반환을 위한 Map 생성
+
+            // 8. 성공 응답
             Map<String, Object> response = new HashMap<>();
-            response.put("player", player);
+            response.put("player", newPlayer);
             response.put("roomKey", roomKey);
-    
-            System.out.println("방 입장 응답 - 플레이어와 방 키를 반환");
+            response.put("message", "방 입장에 성공했습니다.");
+            
+            log.info("방 입장 성공 - username: {}, roomKey: {}", userData.getUsername(), roomKey);
             return ResponseEntity.ok(response);
-    
-        } else {
-            System.out.println("방 입장 실패 - 방이 가득 찼거나 입장할 수 없는 상태입니다.");
-            return ResponseEntity.status(409).body(null);
-            // return ResponseEntity.status(409).body("방이 가득 찼거나 입장할 수 없습니다.");
+
+        } catch (Exception e) {
+            log.error("방 입장 중 예외 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "서버 오류가 발생했습니다."));
         }
     }
 
     @PostMapping("/{roomKey}/leave")
-    public ResponseEntity<String> leaveRoom(@PathVariable Integer roomKey, HttpSession session) {
+    public ResponseEntity<String> leaveRoom(@PathVariable("roomKey") Integer roomKey, HttpSession session) {
         // 1. 세션에서 플레이어 정보 가져오기
         Player player = (Player) session.getAttribute("player");
         if (player == null) {
@@ -176,9 +181,9 @@ public class RoomController {
         // 2. 방에서 플레이어 제거 요청
         boolean removed = roomService.leaveRoom(roomKey, player);
         if (removed) {
-            log.info("플레이어가 방에서 성공적으로 나갔습니다. roomKey: {}, player: {}", roomKey, player.getUsername());
-
-            log.info("방에 남은 플레이어들 : {}", roomService.getRoomById(roomKey).getPlayers());
+            log.info("플레이어가 방에서 성공적으로 나갔습니다. roomKey: {}, player: {}", roomKey, player.getUsername());        
+            // log.info("방에 남은 플레이어들 : {}", roomService.getRoomById(roomKey).getPlayers());
+            
     
             // 3. 세션에서 플레이어와 방 정보 삭제
             session.removeAttribute("player");
@@ -198,7 +203,7 @@ public class RoomController {
 
   // 게임 시작 엔드포인트 그런데 방에집중한!!  반환값은 여러개가 있지만 성공하면 데이터로 플레이어값 나갈거야
     @PostMapping("/{roomKey}/start")
-    public ResponseEntity<?> startGame(@PathVariable Integer roomKey, HttpSession session) {
+    public ResponseEntity<?> startGame(@PathVariable("roomKey") Integer roomKey, HttpSession session) {
         log.info("방 {}에서 게임 시작 요청이 왔어요", roomKey);
         
         try {
@@ -222,41 +227,41 @@ public class RoomController {
                 return ResponseEntity.badRequest().body("게임을 시작하려면 풀방이어야 해요");
             }
 
-            ///****** 이부분 매우 중요 하은님이 개발한 현재 룸 랜덤 역할 배정 로직이 여기에 적용되어야함. */
-            // 4. 플레이어 게임 상태로 변경 == 역할 배정 None에서 무언가로 지금은 가라로 다 Citizen 넣을게용
-            currentPlayer.setRole(Role.CITIZEN);
-            session.setAttribute("player", currentPlayer);  // 세션 업데이트
-            
             // 5. 방 상태 변경 : 로직내용은 턴=1 세팅 게임 진행중 상태 세팅
-            room.startGame();
-            log.info("방 {}에서 게임이 시작되었어요!", roomKey);
 
-            return ResponseEntity.ok(currentPlayer);  // 업데이트된 플레이어 정보 반환
+            if(room.startGame()){
+                log.info("방 {}에서 게임이 시작되었어요!", roomKey);
+            }
+            else{
+                log.warn("방 {}에서 게임이 이미 진행중이에요!", roomKey);
+            }
+            
+            log.info("방 {} 게임 시작! 상태: {}", roomKey, room.getGameStatus());
 
+            return ResponseEntity.ok(room);  // 방 전체 정보 반환
         } catch (Exception e) {
-            log.error("게임 시작 중 오류가 발생했어요", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("게임을 시작하는 중에 문제가 발생했어요: " + e.getMessage());
+            log.error("게임 시작 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 
     // 게임 종료 엔드포인트
     @PostMapping("/{roomKey}/end")
-    public ResponseEntity<String> endGame(@PathVariable Integer roomKey) {
+    public ResponseEntity<String> endGame(@PathVariable("roomKey") Integer roomKey) {
         roomService.endGame(roomKey);
         return ResponseEntity.ok("게임이 종료되었습니다.");
     }
 
     // 방 삭제 엔드포인트
     @DeleteMapping("/{roomKey}/delete")
-    public ResponseEntity<String> deleteRoom(@PathVariable Integer roomKey) {
+    public ResponseEntity<String> deleteRoom(@PathVariable("roomKey") Integer roomKey) {
         roomService.deleteRoom(roomKey);
         return ResponseEntity.ok("방이 삭제되었습니다.");
     }
 
     // 특정 방 조회
     @GetMapping("/{roomKey}")
-    public ResponseEntity<Room> getRoomById(@PathVariable Integer roomKey) {
+    public ResponseEntity<Room> getRoomById(@PathVariable("roomKey") Integer roomKey) {
         Room room = roomService.getRoomById(roomKey);
         if (room != null) {
             return ResponseEntity.ok(room);
@@ -271,4 +276,5 @@ public class RoomController {
     public ResponseEntity<Map<Integer, Room>> getAllRooms() {
         return ResponseEntity.ok(roomService.getAllRooms());
     }
+
 }
