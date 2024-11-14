@@ -13,17 +13,20 @@ public interface GameService {
     // 역할 부여
     void assignRoles(ArrayList<Player> players);
 
+    // 마피아 상호작용
     boolean mafiaSelectTarget(ArrayList<Player> players, Integer targetNumber);
 
-    boolean doctorSavePlayer(ArrayList<Player> players, Integer saveTargetNumber);
+    // 의사 상호작용
+    boolean doctorSavePlayer(ArrayList<Player> players, Integer targetNumber);
 
-    Role policeCheckRole(ArrayList<Player> players, Integer checkTargetNumber);
+    // 경찰 상호작용
+    Role policeCheckRole(ArrayList<Player> players, Integer targetNumber);
 
     void nightActionResult(ArrayList<Player> players);
 
-
-    //===============김남영 추가=============
+    // ===============김남영 추가=============
     public void broadcastGameStatus(Integer roomKey, GameStatus gameStatus, List<Player> players);
+
     public void broadcastPlayerUpdate(Integer roomKey, List<Player> players);
-    //=========================================
+    // =========================================
 }
