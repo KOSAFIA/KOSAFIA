@@ -1,50 +1,50 @@
 import React, { useState, useEffect } from "react";
-import { stageDurations, getNextStageIndex } from "../utils/TimerUtils";
-import { changeTime, canModifyTime } from "../utils/TimeControlUtils";
+import { STATUS_DURATION, GAME_STATUS, STATUS_INDEX } from "../constants/GameStatus";
 import "../styles/components/Timer.css";
 
 const stages = [
-  { name: "낮", image: "/img/day.png" },
-  { name: "마피아투표", image: "/img/vote.png" },
-  { name: "최후의변론", image: "/img/discussion.png" },
-  { name: "사형투표", image: "/img/judgement.png" },
-  { name: "밤", image: "/img/night.png" },
+  { name: "NONE", image: "/img/discussion.png" },
+  { name: "DAY", image: "/img/day.png" },
+  { name: "NIGHT", image: "/img/night.png" },
+  { name: "DELAY", image: "/img/discussion.png" },
+  { name: "VOTE", image: "/img/vote.png" },
+  { name: "FINALVOTE", image: "/img/judgement.png" },
 ];
 
-const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
-  const [time, setTime] = useState(stageDurations[stages[0].name]);
-  const [stageIndex, setStageIndex] = useState(0);
+const Timer = ({ onSendMessage, playerNumber, onTimerEnd, role, gameStatus }) => {
+  const [time, setTime] = useState(STATUS_DURATION[gameStatus] || STATUS_DURATION[GAME_STATUS.DAY]);
+  const [stageIndex, setStageIndex] = useState(STATUS_INDEX[gameStatus] || 0);
   const [dayCount, setDayCount] = useState(1);
   const [hasModifiedTime, setHasModifiedTime] = useState(false);
+
+  // 게임 상태가 변경될 때마다 타이머 리셋
+  useEffect(() => {
+    const newStageIndex = STATUS_INDEX[gameStatus];
+    if (newStageIndex !== undefined) {
+      setStageIndex(newStageIndex);
+      setTime(STATUS_DURATION[gameStatus]);
+      
+      // 밤이 되면 역할별 메시지 전송
+      if (gameStatus === GAME_STATUS.NIGHT) {
+        handleNightRoleAction();
+      }
+    }
+  }, [gameStatus, role, playerNumber]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setTime((prevTime) => {
-        if (prevTime > 1) {
-          return prevTime - 1;
-        } else {
-          const nextStageIndex = getNextStageIndex(stageIndex, stages.length);
-          setStageIndex(nextStageIndex);
-
-          if (stages[nextStageIndex].name === "낮") {
-            setDayCount((prevDay) => prevDay + 1);
-            setHasModifiedTime(false);
-          }
-
-          // 밤 단계일 때 역할 처리
-          if (stages[nextStageIndex].name === "밤") {
-            handleNightRoleAction();
-          }
-
-          onStageChange(nextStageIndex);
-
-          return stageDurations[stages[nextStageIndex].name];
+        if (prevTime <= 1) {
+          clearInterval(interval);
+          onTimerEnd();
+          return 0;
         }
+        return prevTime - 1;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [stageIndex, onStageChange]);
+  }, [onTimerEnd]);
 
   const handleNightRoleAction = () => {
     switch (role) {
@@ -63,9 +63,13 @@ const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
     }
   };
 
+  const canModifyTime = () => {
+    return gameStatus === GAME_STATUS.DAY && !hasModifiedTime;
+  };
+
   const handleIncreaseTime = () => {
-    if (stages[stageIndex].name === "낮" && canModifyTime(hasModifiedTime)) {
-      setTime((prevTime) => changeTime(prevTime, 10));
+    if (canModifyTime()) {
+      setTime(prevTime => prevTime + 10);
       onSendMessage({
         text: `${playerNumber}번 플레이어가 시간을 증가했습니다.`,
         player: playerNumber,
@@ -76,8 +80,8 @@ const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
   };
 
   const handleDecreaseTime = () => {
-    if (stages[stageIndex].name === "낮" && canModifyTime(hasModifiedTime)) {
-      setTime((prevTime) => changeTime(prevTime, -10));
+    if (canModifyTime()) {
+      setTime(prevTime => Math.max(prevTime - 10, 10));
       onSendMessage({
         text: `${playerNumber}번 플레이어가 시간을 감소했습니다.`,
         player: playerNumber,
@@ -85,6 +89,16 @@ const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
       });
       setHasModifiedTime(true);
     }
+  };
+
+  // 게임 상태에 따른 한글 표시 매핑 추가
+  const stageNames = {
+    [GAME_STATUS.NONE]: "대기",
+    [GAME_STATUS.DAY]: "낮",
+    [GAME_STATUS.NIGHT]: "밤",
+    [GAME_STATUS.DELAY]: "전환",
+    [GAME_STATUS.VOTE]: "투표",
+    [GAME_STATUS.FINALVOTE]: "최후투표"
   };
 
   return (
@@ -99,7 +113,7 @@ const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
             onClick={handleDecreaseTime}
           ></button>
           <span>
-            &nbsp;{`0:${time.toString().padStart(2, "0")}`}&nbsp;&nbsp;
+            &nbsp;{`${Math.floor(time / 60)}:${(time % 60).toString().padStart(2, "0")}`}&nbsp;&nbsp;
           </span>
           <button
             className="button increase-time"
@@ -108,7 +122,7 @@ const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
         </div>
       </div>
       <div className="stage-info">
-        {dayCount}일차 {stages[stageIndex].name}
+        {dayCount}일차 {stageNames[gameStatus]}
       </div>
     </div>
   );

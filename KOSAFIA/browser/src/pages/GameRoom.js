@@ -1,12 +1,13 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import PlayerCard from "../components/PlayerCard";
 import Timer from "../components/Timer";
 import DayIndicator from "../components/DayIndicator";
 import ChatBox from "../components/ChatBox";
 import Popup from "../components/JobExpectationPopUp";
 import JobInfoIcon from "../components/JobInfoIcon";
-import useJobInfo from "../hooks/game/useJobInfo";
+//import useJobInfo from "../hooks/game/useJobInfo"; 소켓 컨텍스트의 players로 정확히 대체됨.
 import { useGameContext } from "../contexts/socket/game/GameSocketContext";
+import { GAME_STATUS, NEXT_STATUS, STATUS_INDEX } from '../constants/GameStatus';
 import "../styles/GameRoom.css";
 
 const GameRoom = () => {
@@ -27,50 +28,15 @@ const GameRoom = () => {
     canVote,
     sendVote,
     sendGameMessage,
-    canChat
+    canChat,
+    isHost,          // 방장 여부 추가
+    updateGameStatus // 게임 상태 업데이트 함수 추가
   } = useGameContext();
-
-  // playerNumbers 상태 유지
-  const [playerNumbers, setPlayerNumbers] = useState([]);
-
-  // useJobInfo 훅 사용 유지
-  const PlayerInfo = useJobInfo(playerNumbers);
-
-  // PlayerInfo 업데이트 부분 수정
-  useEffect(() => {
-    if (players.length > 0) {
-      // playerNumbers 업데이트
-      const numbers = players.map(p => p.playerNumber);
-      setPlayerNumbers(numbers);
-
-      // 서버의 플레이어 정보를 PlayerInfo 형식에 맞게 업데이트
-      players.forEach(serverPlayer => {
-        const localPlayer = PlayerInfo.find(p => p.playerNumber === serverPlayer.playerNumber);
-        if (localPlayer) {
-          // 기존 PlayerInfo 구조 유지하면서 서버 데이터 반영
-          Object.assign(localPlayer, {
-            role: serverPlayer.role || localPlayer.role,
-            isAlive: serverPlayer.isAlive ?? true,
-            isVoteTarget: serverPlayer.isVoteTarget ?? false,
-            username: serverPlayer.username || `Player ${serverPlayer.playerNumber}`
-          });
-        }
-      });
-    }
-  }, [players, PlayerInfo]);
 
   // 게임 상태에 따른 stageIndex 설정
   useEffect(() => {
-    const newStageIndex = (() => {
-      switch(gameStatus) {
-        case 'NIGHT': return 1;
-        case 'DAY': return 0;
-        case 'VOTE': return 2;
-        case 'FINALVOTE': return 3;
-        default: return 0;
-      }
-    })();
-    setStageIndex(newStageIndex);
+    //기존 코드 수정해야함. 자바 이넘과 동일하게 통일일
+    setStageIndex(STATUS_INDEX[gameStatus]);
   }, [gameStatus]);
 
   const sendMessageToChat = (message) => {
@@ -96,46 +62,78 @@ const GameRoom = () => {
     }
     
     // 기존의 팝업 로직 유지
-    const player = PlayerInfo.find(p => p.playerNumber === targetId);
+    const player = players.find(p => p.playerNumber === targetId);
     if (player) {
       const playerName = `Player ${player.playerNumber} (${player.role})`;
       handleOpenPopup(playerName);
     }
   };
 
+  // 타이머 종료 핸들러
+  const handleTimerEnd = useCallback(() => {
+    // 1. 현재 상태를 DELAY로 변경
+    setStageIndex(STATUS_INDEX[GAME_STATUS.DELAY]);
+    
+    // 2. 시스템 메시지 전송
+    sendMessageToChat({
+      content: `${gameStatus} 시간이 종료되었습니다.`,
+      isSystemMessage: true
+    });
+
+    // 3. 방장만 다음 상태로 전환 요청
+    if (isHost) {
+      setTimeout(() => {
+        const nextStatus = NEXT_STATUS[gameStatus];
+        if (nextStatus) {
+          try {
+            updateGameStatus(nextStatus);
+            console.log('게임 상태 변경 요청:', nextStatus);
+          } catch (error) {
+            console.error('게임 상태 변경 실패:', error);
+          }
+        }
+      }, 1000);
+    }
+  }, [gameStatus, isHost, updateGameStatus, sendMessageToChat]);
+
   return (
     <div className={`game-room ${stageIndex === 1 ? "shadow-inset-top" : ""}`}>
       <div className="chat-area">
         <div className="player-area">
           <div className="header">
-            {PlayerInfo.length > 0 && (
+            {players.length > 0 && currentPlayer && (
               <Timer
                 onSendMessage={sendMessageToChat}
                 onStageChange={setStageIndex}
-                playerNumber={currentPlayer?.playerNumber}
-                role={currentPlayer?.role}
+                onTimerEnd={handleTimerEnd}
+                playerNumber={currentPlayer.playerNumber}
+                role={currentPlayer.role}
+                gameStatus={gameStatus}
               />
             )}
             <DayIndicator currentPhase={stageIndex === 1 ? "밤" : "낮"} />
           </div>
           {currentPlayer && <JobInfoIcon role={currentPlayer.role} />}
           <div className="player-cards">
-            {PlayerInfo.map((player, index) => (
-              <PlayerCard
-                key={index}
-                name={`Player ${player.playerNumber}`}
-                index={player.playerNumber - 1}
-                role={player.role}
-                isNight={stageIndex === 1}
-                isSelected={mafiaTarget === player.playerNumber}
-                onClick={() => {
-                  const playerName = `Player ${player.playerNumber} (${player.role})`;
-                  console.log("Opening Popup for:", playerName);
-                  handleOpenPopup(playerName);
-                  handlePlayerSelect(player.playerNumber);
-                }}
-              />
-            ))}
+            {players.length > 0 ? (
+              players.map((player, index) => (
+                <PlayerCard
+                  key={index}
+                  name={`Player ${player.playerNumber}`}
+                  index={player.playerNumber - 1}
+                  role={player.role}
+                  isNight={stageIndex === STATUS_INDEX[GAME_STATUS.NIGHT]}
+                  isSelected={mafiaTarget === player.playerNumber}
+                  onClick={() => {
+                    const playerName = `Player ${player.playerNumber} (${player.role})`;
+                    handleOpenPopup(playerName);
+                    handlePlayerSelect(player.playerNumber);
+                  }}
+                />
+              ))
+            ) : (
+              <div>플레이어 정보를 불러오는 중...</div>
+            )}
           </div>
         </div>
         <ChatBox 
