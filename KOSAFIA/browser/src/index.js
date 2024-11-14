@@ -10,14 +10,14 @@ import TestRoom from "./lobby/TestRoom";
 import TestPlayRoom from "./lobby/TestPlayRoom";
 import { BrowserRouter, Routes, Route } from "react-router-dom"; // React Router 라이브러리에서 필요한 컴포넌트를 불러옵니다.
 
-
-
 // TestLobby에 네비게이션 바 포함한 레이아웃 컴포넌트 //수현
 function TestLobbyWithNavbar() {
   return (
     <>
       <LoginOk /> {/* 항상 상단에 네비게이션 바 표시 */}
-      <TestLobby /> {/* TestLobby 화면 */}
+      <div className="content">
+        <TestLobby /> {/* TestLobby 내용 */}
+      </div>
     </>
   );
 }
