@@ -64,21 +64,6 @@ body {
   opacity: 0.9; /* 이미지 투명도 설정 */
 }
 
-
-
-/* 로그인 버튼 설정 */
-.mb-4.px-5 {
-  margin-top: 10px;
-  background: linear-gradient(to right, #ff416c, #ff4b2b); /* 버튼 그라데이션 */
-  color: #ffffff;
-  border: none;
-  transition: transform 0.3s ease;
-  display: inline-block; /* 버튼을 기본 블록처럼 설정 */
-  text-align: center; /* 텍스트 가운데 정렬 */
-  width: 100%; /* 버튼 너비를 부모 컨테이너 기준으로 80% 설정 */
-  max-width: 400px; /* 버튼의 최대 너비를 400px로 제한 */
-}
-
 /* 부모 컨테이너에서 버튼 정렬 */
 form.w-100 {
   display: flex;
@@ -90,6 +75,12 @@ form.w-100 {
 
 .mb-4.px-5:hover {
   transform: scale(1.05); /* 호버 시 약간 확대되는 효과 */
+}
+/* 클릭 상태 */
+.mb-4.px-5:active {
+  background-color: #cc3520; /* 클릭 시 색상 변경 */
+  box-shadow: none; /* 클릭 시 그림자 제거 */
+  transform: scale(0.98); /* 클릭 시 살짝 줄어드는 효과 */
 }
 
 /* 비밀번호 잊기 링크 간격 조정 */

@@ -53,7 +53,6 @@ function Login() {
         setError("로그인 중 오류가 발생했습니다.");
       }
     }
-    
   };
 
   return (
@@ -118,14 +117,24 @@ function Login() {
 
               {/* 오류 메시지 표시 */}
               {error && <p className="text-danger mb-3">{error}</p>}
-              <MDBBtn
-                color="dark" // 버튼 색상 설정
-                type="submit" // 폼 제출 타입 지정
+              <button
                 className="mb-4 px-5"
-                size="lg"
+                style={{
+                  background: "linear-gradient(to right, #ff416c, #ff4b2b)",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  width: "100%",
+                  maxWidth: "400px",
+                  height: "50px",
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+                onClick={handleLogin}
               >
                 Login
-              </MDBBtn>
+              </button>
               <hr />
             </form>
             {/* Google 로그인 버튼 */}
