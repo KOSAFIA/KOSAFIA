@@ -95,15 +95,6 @@ const Timer = ({ onSendMessage, playerNumber, onTimerEnd, role, gameStatus }) =>
     }
   };
 
-  // 게임 상태에 따른 한글 표시 매핑 추가
-  const stageNames = {
-    [GAME_STATUS.NONE]: "대기",
-    [GAME_STATUS.DAY]: "낮",
-    [GAME_STATUS.NIGHT]: "밤",
-    [GAME_STATUS.DELAY]: "전환",
-    [GAME_STATUS.VOTE]: "투표",
-    [GAME_STATUS.FINALVOTE]: "최후투표"
-  };
 
   return (
     <div className="timer">
