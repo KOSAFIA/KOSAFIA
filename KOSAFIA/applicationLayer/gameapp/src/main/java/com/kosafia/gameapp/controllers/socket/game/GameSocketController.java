@@ -367,8 +367,12 @@ record GameStateMessage(
             Room room = roomRepository.getRoom(roomKey);
             if (room == null) return;
 
+            //밤으로 변경
+            room.setGameStatus(GameStatus.NIGHT);
+            //최종 투표 결과 처리
             Player executedPlayer = room.processFinalVoteResult();
             
+            //클라에 뿌리기
             FinalVoteResultResponse response = new FinalVoteResultResponse(
                 room.getGameStatus().toString(),
                 room.getPlayers(),
@@ -379,7 +383,6 @@ record GameStateMessage(
                     executedPlayer.getUsername() + "님이 처형되었습니다." : 
                     "투표 결과 처형되지 않았습니다."
             );
-
             messagingTemplate.convertAndSend(
                 "/topic/game.finalvote.result." + roomKey,
                 response
