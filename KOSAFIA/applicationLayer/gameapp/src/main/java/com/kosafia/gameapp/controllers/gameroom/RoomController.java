@@ -3,6 +3,7 @@ package com.kosafia.gameapp.controllers.gameroom;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -227,12 +228,23 @@ public class RoomController {
                 return ResponseEntity.badRequest().body("게임을 시작하려면 풀방이어야 해요");
             }
 
-            // 5. 방 상태 변경 : 로직내용은 턴=1 세팅 게임 진행중 상태 세팅
-            room.startGame();
-            log.info("방 {}에서 게임이 시작되었어요!", roomKey);
+            //4. 김남영 테스트용 시작 나중에 날려도 됨.
+            Random random = new Random();
+            room.getPlayers().forEach(player -> {
+                int randomNumber = random.nextInt(1,5);
+                System.out.println(player.getUsername());
+                //플레이어 랜덤으로 직업 지정
+                player.setRole(Role.values()[randomNumber]);
+            });
 
-            // 게임 상태만 변경하고 저장
-            room.setGameStatus(GameStatus.NIGHT);
+            // 5. 방 상태 변경 : 로직내용은 턴=1 세팅 게임 진행중 상태 세팅
+
+            if(room.startGame()){
+                log.info("방 {}에서 게임이 시작되었어요!", roomKey);
+            }
+            else{
+                log.warn("방 {}에서 게임이 이미 진행중이에요!", roomKey);
+            }
             
             log.info("방 {} 게임 시작! 상태: {}", roomKey, room.getGameStatus());
 

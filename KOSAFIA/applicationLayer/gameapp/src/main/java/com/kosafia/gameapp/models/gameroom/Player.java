@@ -1,5 +1,7 @@
 package com.kosafia.gameapp.models.gameroom;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.*;
 
 //김남영 어노테이션 추가
@@ -18,8 +20,10 @@ public class Player {
     private String username; // 유저 닉네임
     private String userEmail; // 유저 이메일
     private Role role; // 역할 Enum (시민, 경찰, 의사, 마피아 등)
+    @JsonProperty("isAlive")
     private boolean isAlive; // 생존 여부
     private Integer target; // 마지막에 선택한 플레이어 번호
+    @JsonProperty("isVoteTarget")
     private boolean isVoteTarget; // 투표 대상 여부
     private Result result;
 

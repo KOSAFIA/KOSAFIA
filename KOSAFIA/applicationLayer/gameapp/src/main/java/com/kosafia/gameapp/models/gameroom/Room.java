@@ -44,6 +44,8 @@ public class Room {
     private Map<Integer, Integer> voteStatus;
     // 투표자별 투표 대상 기록 (voterId -> targetId)
     private Map<Integer, Integer> voterRecords;
+    // 찬반 투표 현황 (playerNumber -> isAgree)
+    private Map<Integer, Boolean> finalVoteStatus;
 
     // private Integer nextPlayerNumber = 1; // 다음에 부여할 번호
     private Random random = new Random();
@@ -64,18 +66,19 @@ public class Room {
 
                 
     //김남영이 추가함 버그나면 김남영 불러
-    this.voteStatus = new HashMap<>();
-    this.voterRecords = new HashMap<>();
-}
-//투표 매서드: 이전에 이미 등록된 투표자의 타겟은 1만큼 감소시키고 다시 현재 투표 반영
-//그러면 최종적으로는 아무도 투표안하면 비어있고
-//투표를 막 바꾸면 총 8개의 키값이 생성되고 그 안에 밸류는 무작위인데 결국 총합은 8이 될것
-public void vote(Integer voterId, Integer targetId) {
-    // 이전 투표가 있다면 해당 타겟의 득표수 감소
-    Integer previousTarget = voterRecords.get(voterId);
-    if (previousTarget != null) {
-        voteStatus.merge(previousTarget, -1, Integer::sum);
+        this.voteStatus = new HashMap<>();
+        this.voterRecords = new HashMap<>();
+        this.finalVoteStatus = new HashMap<>();
     }
+    //투표 매서드: 이전에 이미 등록된 투표자의 타겟은 1만큼 감소시키고 다시 현재 투표 반영
+    //그러면 최종적으로는 아무도 투표안하면 비어있고
+    //투표를 막 바꾸면 총 8개의 키값이 생성되고 그 안에 밸류는 무작위인데 결국 총합은 8이 될것
+    public void vote(Integer voterId, Integer targetId) {
+        // 이전 투표가 있다면 해당 타겟의 득표수 감소
+        Integer previousTarget = voterRecords.get(voterId);
+        if (previousTarget != null) {
+            voteStatus.merge(previousTarget, -1, Integer::sum);
+        }
 
     // 새로운 투표 기록
     voterRecords.put(voterId, targetId);
@@ -138,7 +141,6 @@ public void clearVotes() {
         return null;
     }
 
-    //------김남영 추가------
     public Player getPlayerByPlayerNumber(Integer playerNumber){
         for (Player player : players) {
             if(player.getPlayerNumber() == playerNumber){
@@ -148,8 +150,52 @@ public void clearVotes() {
         return null;
     }
 
+    public int getAgreeVotes(){
+        return (int) finalVoteStatus.values().stream()
+            .filter(vote -> vote)
+            .count();
+    }
 
+    public int getDisagreeVotes(){
+        return (int) finalVoteStatus.values().stream()
+            .filter(vote -> !vote)
+            .count();
+    }   
 
+    public void processFinalVote(Integer playerNumber, boolean isAgree) {
+        Player voter = getPlayerByPlayerNumber(playerNumber);
+        if (voter == null || !voter.isAlive() || voter.isVoteTarget()) {
+            throw new IllegalArgumentException("유효하지 않은 투표자");
+        }
+        finalVoteStatus.put(playerNumber, isAgree);
+    }
+
+    // 최종 투표 초기화
+    public void clearFinalVotes() {
+        finalVoteStatus.clear();
+    }
+
+    public Player processFinalVoteResult() {
+        Player targetPlayer = players.stream()
+            .filter(Player::isVoteTarget)
+            .findFirst()
+            .orElse(null);
+
+        if (targetPlayer != null && getAgreeVotes() > getDisagreeVotes()) {
+            targetPlayer.setAlive(false);
+            targetPlayer.setVoteTarget(false);
+            setGameStatus(GameStatus.NIGHT);
+            return targetPlayer;
+        }
+        
+        if (targetPlayer != null) {
+            targetPlayer.setVoteTarget(false);
+        }
+        setGameStatus(GameStatus.NIGHT);
+        return null;
+    }
+
+    //-----------김남영 추가 끝------------
 
     // 플레이어 추가 메서드
     public boolean addPlayer(String username, String userEmail) {
@@ -218,15 +264,23 @@ public void clearVotes() {
   
 
     // 게임 시작 메서드
-    public void startGame() {
-        if (!isPlaying && players.size() >= 4) { // 최소 4인 이상일 때 시작 가능
+    public boolean startGame() {
+        System.out.println("게임 시작");
+        if (!isPlaying) { 
             this.isPlaying = true;
             this.turn = 1; // 첫 턴 초기화
             this.gameStatus = GameStatus.NIGHT;
             // setGameStatus(gameStatus);
-            log.info("게임 시작 - isPlaying: {}, turn: {}, gameStatus: {}", isPlaying, turn, gameStatus);
+            System.out.println("게임 시작 완료 ");
+            System.out.println(this.toString());
 
+            players.forEach(player -> {
+                player.setAlive(true);
+                System.out.println(player.getUsername() + "의 직업은 " + player.getRole() + "입니다.");
+            });
+            return true;
         }
+        return false;
     }
 
     // 게임 종료 메서드
@@ -258,5 +312,4 @@ public void clearVotes() {
 
         }
     }
-
 }

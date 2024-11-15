@@ -28,6 +28,25 @@ public class GameSocketController {
     @Autowired
     private RoomRepository roomRepository;
 
+
+    @MessageMapping("/game.chat.mafia/{roomKey}")
+    public void handleMafiaChat(
+        @DestinationVariable("roomKey") Integer roomKey, 
+        @Payload ChatMessage message
+    ) {
+        log.info("마피아 채팅 메시지 수신 - 방: {}, 메시지: {}", roomKey, message);
+        handleGameChat(roomKey, message);
+    }
+
+    @MessageMapping("/game.chat/{roomKey}")
+    public void handleNormalChat(
+        @DestinationVariable("roomKey") Integer roomKey, 
+        @Payload ChatMessage message
+    ) {
+        log.info("일반 채팅 메시지 수신 - 방: {}, 메시지: {}", roomKey, message);
+        handleGameChat(roomKey, message);
+    }
+    
     // 채팅 메시지 처리 - @Payload 어노테이션 추가 및 디버그 로그 추가
     @MessageMapping("/game.chat.send/{roomKey}")
     public void handleGameChat(
@@ -146,12 +165,12 @@ record GameStateMessage(
 ){}
 
     @MessageMapping("/game.state.update/{roomKey}")
-    public void broadcastGameState(
+    public void handleGameStateUpdate(
         @DestinationVariable("roomKey") Integer roomKey,
         @Payload GameStateUpdateRequest request
     ) {
         try {
-            log.info("게임 상태 브로드캐스트 시작 - 방: {}, 상태: {}", roomKey, request.gameStatus());
+            log.info("게임 상태 업데이트 요청 - 방: {}, 상태: {}", roomKey, request.gameStatus());
             
             Room room = roomRepository.getRoom(roomKey);
             if (room == null) {
@@ -161,19 +180,17 @@ record GameStateMessage(
             // 상태 업데이트
             room.setGameStatus(GameStatus.valueOf(request.gameStatus()));
             
-            // 응답 생성 및 전송
+            // 브로드캐스트
             GameStateResponse response = new GameStateResponse(
-                room.getGameStatus().toString(),
+                request.gameStatus(),
                 room.getPlayers(),
                 true,
                 "게임 상태가 업데이트되었습니다."
             );
 
-            log.info("게임 상태 브로드캐스트 전송 - 방: {}, 응답: {}", roomKey, response);
             messagingTemplate.convertAndSend("/topic/game.state." + roomKey, response);
-            
         } catch (Exception e) {
-            log.error("게임 상태 브로드캐스트 실패 - 방: " + roomKey, e);
+            log.error("게임 상태 업데이트 실패:", e);
             GameStateResponse errorResponse = new GameStateResponse(
                 null, null, false, 
                 "게임 상태 업데이트 실패: " + e.getMessage()
@@ -293,6 +310,94 @@ record GameStateMessage(
     // 투표 현황 응답 형식
     record VoteStatusResponse(
         Map<Integer, Integer> voteStatus  // { targetId: 투표수 }
+    ) {}
+
+    @MessageMapping("/game.vote.result/{roomKey}")
+    public void handleVoteResult(
+        @DestinationVariable("roomKey") Integer roomKey,
+        @Payload VoteResultRequest request
+    ) {
+        try {
+            Room room = roomRepository.getRoom(roomKey);
+            if (room == null) return;
+
+            // 최다 득표자 찾기
+            Player mostVotedPlayer = room.getMostVotedPlayer();
+            if (mostVotedPlayer != null) {
+                mostVotedPlayer.setVoteTarget(true);
+            }
+            // 투표 결과 브로드캐스트
+            VoteResultResponse response = new VoteResultResponse(
+                mostVotedPlayer,
+                room.getVoteStatus(),
+                true,
+                "투표 결과가 처리되었습니다."
+            );
+
+            messagingTemplate.convertAndSend(
+                "/topic/game.vote.result." + roomKey,
+                response
+            );
+
+            room.clearVotes();
+
+        } catch (Exception e) {
+            log.error("투표 결과 처리 실패:", e);
+        }
+    }
+
+    record VoteResultRequest(
+        Map<Integer, Integer> voteStatus
+    ) {}
+
+    record VoteResultResponse(
+        Player targetPlayer,
+        Map<Integer, Integer> voteResult,
+        boolean success,
+        String message
+    ) {}
+
+
+    // 최종 투표 결과 처리
+    @MessageMapping("/game.finalvote.result/{roomKey}")
+    public void handleFinalVoteResult(
+        @DestinationVariable("roomKey") Integer roomKey
+    ) {
+        try {
+            Room room = roomRepository.getRoom(roomKey);
+            if (room == null) return;
+
+            Player executedPlayer = room.processFinalVoteResult();
+            
+            FinalVoteResultResponse response = new FinalVoteResultResponse(
+                room.getGameStatus().toString(),
+                room.getPlayers(),
+                room.getAgreeVotes(),
+                room.getDisagreeVotes(),
+                executedPlayer != null,
+                executedPlayer != null ? 
+                    executedPlayer.getUsername() + "님이 처형되었습니다." : 
+                    "투표 결과 처형되지 않았습니다."
+            );
+
+            messagingTemplate.convertAndSend(
+                "/topic/game.finalvote.result." + roomKey,
+                response
+            );
+
+        } catch (Exception e) {
+            log.error("최종 투표 결과 처리 실패:", e);
+        }
+    }
+
+    // 최종 투표 결과 응답 형식
+    record FinalVoteResultResponse(
+        String gameStatus,
+        List<Player> players,
+        int agreeVotes,
+        int disagreeVotes,
+        boolean isExecuted,
+        String message
     ) {}
 
 }

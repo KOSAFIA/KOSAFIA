@@ -317,6 +317,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './TestLobby.css';
+import Modal from 'react-modal';
 
 const TestLobby = () => {
   const navigate = useNavigate();
@@ -459,8 +460,8 @@ const handleInputChange = (e) => {
   };
 
   return (
-    <div className='jiyeon'>
-       <div className="room-list-container">
+    <div className="jiyeon">
+            <div className="room-list-container">
       <header className="header">
         <button className="create-room-button" onClick={openModal}>방 만들기</button>
       </header>
