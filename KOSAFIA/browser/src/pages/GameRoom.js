@@ -20,19 +20,19 @@ const GameRoom = () => {
   
   // GameSocketContext에서 필요한 상태들을 가져옴
   const { 
-    roomKey,
-    players,
+    roomKey, //현재 방 키값 INTIGER
+    players, //현재 방에 있는 플레이어들 ArrayList<Player>
     messages,
-    gameStatus,
-    currentPlayer,
-    mafiaTarget,
-    setTarget,
-    canVote,
-    sendVote,
-    sendGameMessage,
-    canChat,
-    isHost,          // 방장 여부 추가
-    updateGameStatus // 게임 상태 업데이트 함수 추가
+    gameStatus,//서버 게임 진행상태 동기화. 변수값의 정체:GAME_STATUS = {NONE: 'NONE',DAY: 'DAY',NIGHT: 'NIGHT',VOTE: 'VOTE',INALVOTE: 'FINALVOTE',DELAY: 'DELAY'};
+    currentPlayer, //현재 플레이어 정보 Player.java 와 동일
+    mafiaTarget, //마피아가 누굴 찍고 있는지 동기화 하는 변수
+    setTarget, //투표할때 누굴 찍었는지 동기화 하는 변수
+    canVote, //투표 가능 여부
+    sendVote, //투표 전송 소켓 함수
+    sendGameMessage, //게임 메시지 전송 소켓 함수
+    canChat, //채팅 가능 여부
+    isHost,          // 방장인지 아닌지
+    updateGameStatus // 게임 상태 소켓 함수
   } = useGameContext();
 
 
