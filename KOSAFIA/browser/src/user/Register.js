@@ -180,14 +180,12 @@ function Register() {
               />
 
               {error && <p className="text-danger mb-3">{error}</p>}
-              <MDBBtn
-                color="dark"
+              <button
                 type="submit"
-                className="mb-4 px-5"
-                size="lg"
+                className="register-btn"
               >
                 회원가입
-              </MDBBtn>
+              </button>
             </form>
             <p className="mt-3 mb-5">
               이미 계정이 있으신가요?{" "}
