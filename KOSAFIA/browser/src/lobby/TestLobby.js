@@ -319,7 +319,7 @@ import { useNavigate } from 'react-router-dom';
 import './TestLobby.css';
 import Modal from 'react-modal';
 
-const RoomList = () => {
+const TestLobby = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -460,8 +460,6 @@ const handleInputChange = (e) => {
   };
 
   return (
-
-
     <div className="jiyeon">
             <div className="room-list-container">
       <header className="header">
@@ -513,7 +511,7 @@ const handleInputChange = (e) => {
             <input 
               type="number" 
               name="maxPlayers" 
-              min="4" 
+              min="1" 
               max="12" 
               value={roomDetails.maxPlayers} 
               onChange={(e) => handleInputChange(e)} 
@@ -566,7 +564,8 @@ const handleInputChange = (e) => {
     </div>
 
     </div>
+   
   );
 };
 
-export default RoomList;
+export default TestLobby;

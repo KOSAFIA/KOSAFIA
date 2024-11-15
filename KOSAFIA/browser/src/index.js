@@ -41,6 +41,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       {/* <Route path="/rooms/:roomKey/gameplay" element={<GameRoom />} /> */}
 
       <Route path="/GameRoom" element={<GameRoom />} />
+
+      <Route path="/TestRoom" element={<TestRoom />} />
+
     </Routes>
   </BrowserRouter>
 );
