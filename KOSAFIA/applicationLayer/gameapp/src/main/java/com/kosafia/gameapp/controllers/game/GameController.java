@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/api/game")
 @Slf4j
-@RequiredArgsConstructor
+// @RequiredArgsConstructor
 public class GameController {
 
     @Autowired

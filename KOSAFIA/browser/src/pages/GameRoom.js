@@ -41,7 +41,7 @@ const GameRoom = () => {
 
   // 게임 상태에 따른 stageIndex 설정
   useEffect(() => {
-    //기존 코드 수정해야함. 자바 이넘과 동일하게 통일일
+    // 나이트:0 딜레이:1 데이:2 투표:3 최후의변론:4
     setStageIndex(STATUS_INDEX[gameStatus]);
   }, [gameStatus]);
 
@@ -59,6 +59,7 @@ const GameRoom = () => {
     setSelectedPlayer(null);
   };
 
+  //하은님 구현
   // 단계가 변경될 때 호출되는 함수
   const handleStageChange = (newStageIndex) => {
     setStageIndex(newStageIndex);
@@ -75,6 +76,24 @@ const GameRoom = () => {
       // handleNightActions(players); // players를 전달
     }
   };
+  //김남영 추가
+  //단계가 변경될 때 호출되는 함수를 재정의 하은님의 코드를 보며 나중에 구현 -> 소켓 함수가 추가된 형태로 감쌀 예정
+  const handleStageChangeKNY = () => {
+    switch(gameStatus){
+      case GAME_STATUS.NIGHT:
+        handleTargetsUpdate(currentPlayer.playerNumber, currentPlayer.target);
+        break;
+      case GAME_STATUS.DELAY:
+        handleNightActions(players);
+        break;
+      case GAME_STATUS.DAY:
+        break;
+      case GAME_STATUS.VOTE:
+        break;
+      case GAME_STATUS.FINALVOTE:
+        break;
+    }
+  }
 
   // 타겟 변경을 처리하는 함수
   const handleTargetChange = (currentPlayerNum, targetPlayerNumber) => {

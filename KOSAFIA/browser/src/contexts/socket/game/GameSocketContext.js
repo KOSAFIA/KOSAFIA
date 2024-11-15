@@ -8,11 +8,11 @@ const WEBSOCKET_URL = 'http://localhost:8080/wstomp';
 const API_BASE_URL = 'http://localhost:8080/api';
 const GAME_STATUS = {
     NONE: 'NONE',
-    DAY: 'DAY',
     NIGHT: 'NIGHT',
+    DELAY: 'DELAY',
+    DAY: 'DAY',
     VOTE: 'VOTE',
-    FINALVOTE: 'FINALVOTE',
-    DELAY: 'DELAY'
+    FINALVOTE: 'FINALVOTE'
 };
 
 const GameSocketContext = createContext();
