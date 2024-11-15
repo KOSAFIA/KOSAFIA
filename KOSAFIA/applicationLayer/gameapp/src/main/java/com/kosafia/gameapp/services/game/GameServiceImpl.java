@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -18,17 +17,12 @@ import com.kosafia.gameapp.models.gameroom.Role;
 @Service
 public class GameServiceImpl implements GameService {
 
-    private Integer mafiaTarget = null; // 마피아가 선택한 타겟
-    private Integer doctorSaveTarget = null; // 의사가 선택한 타겟
-
+    // 8명을 기준으로, 역할을 하드코딩으로 나누어지도록 설정한 상태. 수정 필요
     private static final Role[] ROLES = {
             Role.MAFIA, Role.DOCTOR, Role.POLICE,
             Role.CITIZEN, Role.CITIZEN, Role.CITIZEN,
             Role.CITIZEN, Role.CITIZEN
     };
-
-    private Integer mafiaTargetNumber = null;
-    private Integer doctorSaveTargetNumber = null;
 
     @Override
     public void assignRoles(ArrayList<Player> players) {
@@ -44,46 +38,43 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public boolean mafiaSelectTarget(ArrayList<Player> players, Integer targetNumber) {
-        this.mafiaTarget = targetNumber;
-        return true;
-    }
+    public void handleNightActions(ArrayList<Player> players) {
+        Player doctorTarget = null;
+        Player mafiaTarget = null;
 
-    @Override
-    public boolean doctorSavePlayer(ArrayList<Player> players, Integer targetNumber) {
-        this.doctorSaveTarget = targetNumber;
-        return true;
-    }
+        // 1. 마피아, 경찰, 의사의 행동을 정리
+        for (Player player : players) {
+            if (player.getRole() == Role.MAFIA && player.getTarget() != null) {
+                mafiaTarget = players.get(player.getTarget() - 1);
+            }
 
-    @Override
-    public Role policeCheckRole(ArrayList<Player> players, Integer targetNumber) {
-        Optional<Player> targetPlayer = players.stream()
-                .filter(p -> p.getPlayerNumber().equals(targetNumber))
-                .findFirst();
-        return targetPlayer.map(Player::getRole).orElse(Role.NONE);
-    }
+            if (player.getRole() == Role.DOCTOR && player.getTarget() != null) {
+                doctorTarget = players.get(player.getTarget() - 1);
+            }
 
-    @Override
-    public void nightActionResult(ArrayList<Player> players) {
-        // 결과를 처리할 로직
-        if (mafiaTarget != null) {
-            Optional<Player> mafiaTargetPlayer = players.stream()
-                    .filter(p -> p.getPlayerNumber().equals(mafiaTarget) && p.isAlive())
-                    .findFirst();
-
-            if (mafiaTargetPlayer.isPresent()) {
-                // 의사가 마피아의 타겟을 살린 경우
-                if (doctorSaveTarget != null && mafiaTarget.equals(doctorSaveTarget)) {
-                    System.out.println("의사가 마피아의 타겟을 살렸습니다: " + mafiaTargetPlayer.get().getUsername());
-                } else {
-                    mafiaTargetPlayer.get().setAlive(false);
-                    System.out.println("마피아에 의해 살해되었습니다: " + mafiaTargetPlayer.get().getUsername());
-                }
+            if (player.getRole() == Role.POLICE && player.getTarget() != null) {
+                Player investigatedPlayer = players.get(player.getTarget() - 1);
+                // 경찰은 마피아 여부를 조사하여 메시지로 알려줌
+                boolean isMafia = investigatedPlayer.getRole() == Role.MAFIA;
+                System.out.println(
+                        "경찰 조사 결과: " + investigatedPlayer.getPlayerNumber() + "은 "
+                                + (isMafia ? "마피아입니다." : "마피아가 아닙니다."));
             }
         }
-        // 상태 초기화
-        this.mafiaTarget = null;
-        this.doctorSaveTarget = null;
+
+        // 2. 의사가 마피아의 타겟을 보호하는지 확인
+        if (mafiaTarget != null && doctorTarget != null && mafiaTarget.equals(doctorTarget)) {
+            System.out.println("의사가 마피아의 타겟을 보호했습니다!");
+        } else if (mafiaTarget != null) {
+            // 마피아의 타겟이 보호받지 못했다면 사망 처리
+            mafiaTarget.setAlive(false);
+            System.out.println(mafiaTarget.getPlayerNumber() + "은(는) 마피아에게 살해당했습니다.");
+        }
+
+        // 플레이어의 상태가 제대로 변경되었는지 확인 (디버깅용)
+        for (Player player : players) {
+            System.out.println("업데이트된 플레이어 상태: " + player.getPlayerNumber() + " - alive 여부 : " + player.isAlive());
+        }
     }
 
     // ===============김남영 추가=============

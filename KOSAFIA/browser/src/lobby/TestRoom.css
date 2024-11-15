@@ -1,0 +1,255 @@
+/* 전체 컨테이너 */
+.room-container {
+    display: flex;
+    flex-direction: column;
+    height: 95vh;
+    width: 95vw;
+    background-color: #1c1c1c;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    margin: auto;
+    box-sizing: border-box;
+    border-radius: 10px;
+    overflow: hidden;
+    
+  }
+  
+  /* 상단 바 */
+  .room-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    font-size: 18px;
+    height: 60px;
+    background: linear-gradient(145deg, #2e2e2e, #1a1a1a); /* 금속 느낌을 위한 그라데이션 */
+    box-shadow: inset 0px 4px 6px rgba(0, 0, 0, 0.5), /* 내부 그림자 */
+                0px 2px 4px rgba(0, 0, 0, 0.2); /* 외부 그림자 */
+    border-bottom: 2px solid #444;
+    border-radius: 8px 8px 0 0;
+    position: relative;
+  }
+  
+  /* 제목 위치 */
+  .room-title {
+    position: absolute;
+    top: 50%; /* 세로 중앙 정렬 */
+    left: 36px; /* 왼쪽에서 20px 떨어지도록 설정 */
+    transform: translateY(-50%); /* 세로 중앙에 정확히 배치 */
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffffff6c;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* 텍스트 그림자 */
+  }
+  
+  /* 버튼 그룹 위치 */
+ .room-button-group {
+    position: absolute;
+    top: 50%; /* 세로 중앙 정렬 */
+    right: 36px; /* 오른쪽에서 20px 떨어지도록 설정 */
+    transform: translateY(-50%); /* 세로 중앙에 정확히 배치 */
+    display: flex;
+    gap: 10px; /* 버튼 사이 간격 */
+  }
+
+/* 게임 시작 버튼 */
+.room-button-start {
+  background: linear-gradient(145deg, #970808dd, #890505a4); /* 금속 질감의 그라데이션 */
+  color: #000000d0;
+  border: 2px solid #2a2a2a; /* 테두리 */
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 17px;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4), inset 2px 2px 5px rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+/* 나가기 버튼 */
+.room-button-exit {
+    background: linear-gradient(145deg, #353333, #28262697); /* 금속 질감의 그라데이션 */
+    color: #b11919d0;
+    border: 2px solid #2a2a2a; /* 테두리 */
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 15px;
+    text-transform: uppercase;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4), inset 2px 2px 5px rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+  }
+
+/* .room-button-start:hover, .room-button-exit:hover {
+  background: linear-gradient(145deg, #666, #444);
+  border-color: #888;
+} */
+
+.room-button-start:active, .room-button-exit:active {
+  box-shadow: inset 2px 2px 8px rgba(0, 0, 0, 0.6);
+  transform: scale(0.98);
+}
+  
+  /* 리벳 효과 (양쪽 끝) */
+  .room-header::before,
+  .room-header::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    background-color: #666;
+    border-radius: 50%;
+    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  
+  .room-header::before {
+    left: 10px;
+  }
+  
+  .room-header::after {
+    right: 10px;
+  }
+
+/* 메인 콘텐츠 영역 */
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 채팅 영역 */
+.chat-section {
+  flex: 1.2; /* 채팅 영역 비율 축소 */
+  background-color: #2a2a2a;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.chat-warning {
+  background-color: #990000;
+  padding: 10px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 16px;
+  background-color: #1c1c1c;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.chat-input {
+  display: flex;
+  align-items: center;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #333;
+  color: #fff;
+  margin-right: 10px;
+}
+
+.send-button {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #666;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* 플레이어 리스트 영역 */
+.player-section {
+  flex: 1.8; /* 플레이어 리스트 영역 비율 확장 */
+  background-color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.user-count {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 가로로 4명씩 배치 */
+  gap: 10px;
+  width: 100%;
+}
+
+.player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  background-color: #444;
+  border-radius: 5px;
+   height: 350px; /* 원하는 세로 길이 설정 */
+}
+
+.player-card.empty {
+  background-color: transparent;
+}
+
+/* 번호 표시를 위한 회색 네모 */
+.player-number {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    background-color: transparent;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    font-family: 'Digital', sans-serif;
+  } 
+
+
+/* 물음표 스타일 */
+.player-icon {
+    font-size: 100px; /* 큰 물음표 크기 */
+    font-weight: bold;
+    color: #e0e0e0;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7); /* 입체감 주기 */
+    margin-top: 80px;
+  }
+
+/* 닉네임 스타일 */
+.player-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #333;
+    padding: 5px 15px;
+    border-radius: 15px;
+    margin-top: auto;
+    width: 90%; /* 닉네임 영역 너비 */
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  }

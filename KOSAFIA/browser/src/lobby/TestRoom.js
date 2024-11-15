@@ -1,3 +1,4 @@
+// -----백 구현------
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -74,3 +75,65 @@ function TestRoom() {
 }
 
 export default TestRoom;
+
+
+//-----프론트 구현-----
+// import React from 'react';
+// import './TestRoom.css';
+
+// const TestRoom = () => {
+//     const players = [
+//         { id: 1, name: '지여님다' },
+//         { id: 2, name: '유저2' },
+//         { id: 3, name: '유저3' },
+//         { id: 4, name: '유저4' },
+//         {}, {}, {}, {}, // 빈 플레이어 자리들
+//       ];
+
+//     return (
+//         <div className="room-container">
+//         <div className="room-header">
+//           {/* 왼쪽에 제목 위치 */}
+//           <div className="room-title">59.테스트</div>
+          
+//           {/* 오른쪽에 버튼 그룹 */}
+//           <div className="room-button-group">
+//             <button className="room-button-start">게임 시작</button>
+//             <button className="room-button-exit">나가기</button>
+//           </div>
+//         </div>
+    
+//           <div className="main-content">
+//         {/* 채팅 영역 */}
+//         <div className="chat-section">
+//           <div className="chat-log">
+//             <p>지여님님께서 입장하셨습니다</p>
+//           </div>
+//           <div className="chat-input">
+//             <input type="text" placeholder="메시지를 입력하세요" />
+//             <button className="send-button">▶</button>
+//           </div>
+//         </div>
+    
+//             {/* 오른쪽: 플레이어 리스트 */}
+//              <div className="player-section">
+//           <div className="user-count">{players.filter(player => player.name).length} / 8</div>
+//           <div className="player-grid">
+//             {players.map((player, index) => (
+//               <div className={`player-card ${player.name ? '' : 'empty'}`} key={index}>
+//                 {player.name && (
+//                   <div className="player-number" >{index + 1}</div> /* 번호 표시 */
+//                 )}
+//                 <div className="player-icon">?</div>
+//                 {player.name && <div className="player-name">{player.name}</div>}
+//               </div>
+//             ))}
+//           </div>
+//         </div>
+//       </div>
+//         </div>
+//       );
+//     };
+
+// export default TestRoom;
+
