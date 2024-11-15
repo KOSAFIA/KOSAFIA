@@ -337,7 +337,7 @@ const RoomList = () => {
   const fetchRooms = async () => {
     try {
       const response = await axios.get('http://localhost:8080/api/rooms/all');
-      console.log("방 목록 조회 성공 - 응답 데이터:", response.data);
+      // console.log("방 목록 조회 성공 - 응답 데이터:", response.data);
 
        // 서버 응답이 배열인지 확인하고, 배열이 아니면 객체의 값을 배열로 변환
        const roomsArray = Array.isArray(response.data) ? response.data : Object.values(response.data);

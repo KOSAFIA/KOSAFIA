@@ -9,6 +9,7 @@ const stages = [
   { name: "최후의변론", image: "/img/discussion.png" },
   { name: "사형투표", image: "/img/judgement.png" },
   { name: "밤", image: "/img/night.png" },
+  { name: "test", image: "/img/day.png" },  // 로딩용 임시 
 ];
 
 const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
@@ -47,20 +48,27 @@ const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
   }, [stageIndex, onStageChange]);
 
   const handleNightRoleAction = () => {
+    const nightActionData = {
+      playerNumber,
+      role,
+    };
+
+    // 확인용 text 넣기
     switch (role) {
       case "MAFIA":
-        onSendMessage({ text: `플레이어 ${playerNumber} (마피아)가 타겟을 선택합니다.` });
+        nightActionData.text = `마피아 ${playerNumber}번이 타겟을 선택 중입니다.`;
         break;
       case "DOCTOR":
-        onSendMessage({ text: `플레이어 ${playerNumber} (의사)가 치료할 타겟을 선택합니다.` });
+        nightActionData.text = `의사 ${playerNumber}번이 치료할 타겟을 선택 중입니다.`;
         break;
       case "POLICE":
-        onSendMessage({ text: `플레이어 ${playerNumber} (경찰)가 조사할 타겟을 선택합니다.` });
+        nightActionData.text = `경찰 ${playerNumber}번이 조사할 타겟을 선택 중입니다.`;
         break;
       default:
-        onSendMessage({ text: `밤이 되었습니다. 플레이어 ${playerNumber}의 역할은 시민입니다.` });
-        break;
+        nightActionData.text = `시민 ${playerNumber}번이 역할을 수행하지 않습니다.`;
     }
+
+    onSendMessage(nightActionData);
   };
 
   const handleIncreaseTime = () => {

@@ -85,8 +85,8 @@ function LoginOk() {
         const isOAuth = userData.provider === "google";
         setIsOAuthUser(isOAuth);
 
-        console.log("사용자 데이터 로드 성공:", userData);
-        console.log("OAuth 사용자 여부:", isOAuth);
+        // console.log("사용자 데이터 로드 성공:", userData);
+        // console.log("OAuth 사용자 여부:", isOAuth);
       } catch (error) {
         console.error("사용자 데이터를 가져오는데 실패했어요:", error);
         navigate("/custom-login"); // 오류 발생 시 로그인 페이지로 이동
@@ -139,7 +139,7 @@ function LoginOk() {
 
         if (response.status === 200) {
           const data = response.data; // 응답 데이터
-          console.log("받은 사용자 데이터:", data);
+          // console.log("받은 사용자 데이터:", data);
 
           // 사용자 상태 업데이트
           setUsername(data.username);
@@ -148,7 +148,7 @@ function LoginOk() {
           // OAuth 사용자 여부 판단 및 설정
           const isOAuth = data.provider === "google";
           setIsOAuthUser(isOAuth);
-          console.log("OAuth 사용자 여부:", isOAuth);
+          // console.log("OAuth 사용자 여부:", isOAuth);
         }
       } catch (error) {
         console.error("사용자 정보 로드 오류:", error);

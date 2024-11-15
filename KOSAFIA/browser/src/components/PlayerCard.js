@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import JobInteraction from "./JobInteraction";
 import "../styles/components/PlayerCard.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -14,49 +15,56 @@ const PlayerCard = ({
   name,
   index,
   role,
-  isSelected,
   isNight,
-  onTargetSelect,
+  currentPlayerRole,
+  currentPlayerNum,
+  onTargetChange, // 타겟 선택 업데이트 함수
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [avatar, setAvatar] = useState("/img/default-avatar.png"); // 기본 아바타
+  const [isRoleMemoOpen, setIsRoleMemoOpen] = useState(false);
+  const [isInteractionOpen, setIsInteractionOpen] = useState(false);
+  const [avatar, setAvatar] = useState("/img/default-avatar.png");
+  const [target, setTarget] = useState(null);
 
+  // 역할에 따른 아바타 설정
   useEffect(() => {
-    // 첫 번째 플레이어만 해당 역할에 맞는 아바타를 설정
     if (role && index === 0) {
-      const selectedRole = roles.find((r) => r.name === role); // 역할 이름에 맞는 이미지 찾기
-      if (selectedRole) {
-        setAvatar(selectedRole.image); // 이미지 설정
-      }
+      const selectedRole = roles.find((r) => r.name === role);
+      if (selectedRole) setAvatar(selectedRole.image);
     } else {
-      setAvatar("/img/default-avatar.png"); // 기본 아바타 설정
+      setAvatar("/img/default-avatar.png");
     }
-  }, [role, index]); // 역할이나 index가 변경될 때마다 실행
+  }, [role, index]);
 
-  // const handleCardClick = () => {
-  //   // 시민이 아닌 경우만 타겟을 선택할 수 있음 (아마 여기가 문제여서 생기는 일)
-  //   if (isNight && role !== "CITIZEN" && role !== "NONE") {
-  //     onTargetSelect(index + 1); // 타겟 선택
-  //   }
-  // };
+  // 밤이 되면 자동으로 JobInteraction 팝업 열기
+  useEffect(() => {
+    if (isNight && currentPlayerRole !== "CITIZEN") {
+      setIsInteractionOpen(true);
+    }
 
-  const handlePopupOpen = () => {
-    setIsOpen(true); // 팝업을 열도록 설정
+    if (!isNight) {
+      setIsInteractionOpen(false);
+    }
+  }, [isNight, currentPlayerRole]);
+
+  // 역할 메모 창 열기
+  const handleRoleMemoOpen = () => setIsRoleMemoOpen(true);
+
+  // 타겟 선택
+  const handleTargetSelect = (targetPlayerNumber) => {
+    setTarget(targetPlayerNumber);
+    onTargetChange(currentPlayerNum, targetPlayerNumber); // 타겟 선택 즉시 부모 컴포넌트로 업데이트
   };
 
   const handleClose = () => {
-    setIsOpen(false);
-  };
-
-  const handleRoleSelect = (selectedRole) => {
-    setAvatar(selectedRole.image); // 선택한 역할의 이미지를 avatar에 설정
+    setIsRoleMemoOpen(false);
+    setIsInteractionOpen(false);
   };
 
   return (
     <div>
       <div
-        className={`player-card ${isSelected ? "selected" : ""}`}
-        onClick={handlePopupOpen} 
+        className="player-card"
+        onClick={handleRoleMemoOpen}
         data-index={index + 1}
       >
         <div
@@ -66,7 +74,8 @@ const PlayerCard = ({
         <div className="player-name">{name}</div>
       </div>
 
-      {isOpen && (
+      {/* 역할 메모 팝업 */}
+      {isRoleMemoOpen && (
         <div className="popup">
           <div className="popup-content">
             <h2>{name}의 역할 메모</h2>
@@ -75,7 +84,7 @@ const PlayerCard = ({
                 <div
                   key={i}
                   className="role-option"
-                  onClick={() => handleRoleSelect(role)}
+                  onClick={() => setAvatar(role.image)}
                   style={{
                     backgroundImage: `url(${role.image})`,
                     backgroundSize: "cover",
@@ -92,6 +101,26 @@ const PlayerCard = ({
                   className="btn-close"
                   aria-label="Close"
                   onClick={handleClose}
+                ></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 역할 수행 팝업 */}
+      {isInteractionOpen && (
+        <div className="popup">
+          <div className="popup-content">
+            <h2> 타겟 선택</h2>
+            <JobInteraction onSelect={handleTargetSelect} />
+            <div className="button-wrapper">
+              <div className="circle">
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Close"
+                  onClick={() => setIsInteractionOpen(false)}
                 ></button>
               </div>
             </div>

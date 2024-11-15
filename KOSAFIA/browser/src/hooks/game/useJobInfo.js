@@ -19,6 +19,7 @@ const useJobInfo = (playerNumbers) => {
           const playerJobs = players.map((player) => ({
             playerNumber: player.playerNumber,
             username: player.username,
+            target : player.target,
             role: player.role,
           }));
           setJobs(playerJobs);
