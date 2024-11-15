@@ -224,6 +224,8 @@ public void clearVotes() {
             this.turn = 1; // 첫 턴 초기화
             this.gameStatus = GameStatus.NIGHT;
             // setGameStatus(gameStatus);
+            log.info("게임 시작 - isPlaying: {}, turn: {}, gameStatus: {}", isPlaying, turn, gameStatus);
+
         }
     }
 
