@@ -1,12 +1,12 @@
 // 시간 지정
 export const stageDurations = {
-  NONE: 5,
-  DAY: 60,
-  NIGHT: 60,
-  DELAY: 5,
-  VOTE: 60,
-  FINALVOTE: 30
-};
+    낮: 10,
+    밤: 1000000,
+    마피아투표: 10,
+    최후의변론: 10,
+    사형투표: 10,
+    test : 5,
+  };
   
   // 주어진 단계 인덱스를 기준으로 다음 단계를 가져옴
   export const getNextStageIndex = (currentIndex, totalStages) => {
