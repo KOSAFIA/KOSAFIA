@@ -23,8 +23,7 @@ import com.kosafia.gameapp.models.gameroom.Role;
 import com.kosafia.gameapp.models.gameroom.Room;
 import com.kosafia.gameapp.models.user.UserData;
 import com.kosafia.gameapp.repositories.gameroom.RoomRepository;
-import com.kosafia.gameapp.services.room.RoomJoinService;
-import com.kosafia.gameapp.services.room.RoomService;
+import com.kosafia.gameapp.services.gameroom.RoomService;
 import com.kosafia.gameapp.services.user.UserService;
 
 import jakarta.servlet.http.HttpSession;
