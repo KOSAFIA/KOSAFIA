@@ -9,6 +9,7 @@ import JobInfoIcon from "../components/JobInfoIcon";
 import handleTargetsUpdate from "../hooks/game/HandleTargetsUpdate";
 import handleNightActions from "../hooks/game/HandleNightAction";
 import "../styles/GameRoom.css";
+import { useGameContext } from "../contexts/socket/game/GameSocketContext";
 
 const GameRoom = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -34,11 +35,6 @@ const GameRoom = () => {
     updateGameStatus // 게임 상태 업데이트 함수 추가
   } = useGameContext();
 
-  // 게임 상태에 따른 stageIndex 설정
-  useEffect(() => {
-    //기존 코드 수정해야함. 자바 이넘과 동일하게 통일일
-    setStageIndex(STATUS_INDEX[gameStatus]);
-  }, [gameStatus]);
 
   const sendMessageToChat = (message) => {
     chatBoxRef.current?.receiveMessage(message);

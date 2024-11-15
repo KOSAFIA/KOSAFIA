@@ -12,40 +12,40 @@ const stages = [
   { name: "test", image: "/img/day.png" },  // 로딩용 임시 
 ];
 
-const Timer = ({ onSendMessage, playerNumber, onTimerEnd, role, gameStatus }) => {
-  const [time, setTime] = useState(STATUS_DURATION[gameStatus] || STATUS_DURATION[GAME_STATUS.DAY]);
-  const [stageIndex, setStageIndex] = useState(STATUS_INDEX[gameStatus] || 0);
+const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
+  const [time, setTime] = useState(stageDurations[stages[0].name]);
+  const [stageIndex, setStageIndex] = useState(0);
   const [dayCount, setDayCount] = useState(1);
   const [hasModifiedTime, setHasModifiedTime] = useState(false);
-
-  // 게임 상태가 변경될 때마다 타이머 리셋
-  useEffect(() => {
-    const newStageIndex = STATUS_INDEX[gameStatus];
-    if (newStageIndex !== undefined) {
-      setStageIndex(newStageIndex);
-      setTime(STATUS_DURATION[gameStatus]);
-      
-      // 밤이 되면 역할별 메시지 전송
-      if (gameStatus === GAME_STATUS.NIGHT) {
-        handleNightRoleAction();
-      }
-    }
-  }, [gameStatus, role, playerNumber]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setTime((prevTime) => {
-        if (prevTime <= 1) {
-          clearInterval(interval);
-          onTimerEnd();
-          return 0;
+        if (prevTime > 1) {
+          return prevTime - 1;
+        } else {
+          const nextStageIndex = getNextStageIndex(stageIndex, stages.length);
+          setStageIndex(nextStageIndex);
+
+          if (stages[nextStageIndex].name === "낮") {
+            setDayCount((prevDay) => prevDay + 1);
+            setHasModifiedTime(false);
+          }
+
+          // 밤 단계일 때 역할 처리
+          if (stages[nextStageIndex].name === "밤") {
+            handleNightRoleAction();
+          }
+
+          onStageChange(nextStageIndex);
+
+          return stageDurations[stages[nextStageIndex].name];
         }
-        return prevTime - 1;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [onTimerEnd]);
+  }, [stageIndex, onStageChange]);
 
   const handleNightRoleAction = () => {
     const nightActionData = {
@@ -72,8 +72,8 @@ const Timer = ({ onSendMessage, playerNumber, onTimerEnd, role, gameStatus }) =>
   };
 
   const handleIncreaseTime = () => {
-    if (canModifyTime()) {
-      setTime(prevTime => prevTime + 10);
+    if (stages[stageIndex].name === "낮" && canModifyTime(hasModifiedTime)) {
+      setTime((prevTime) => changeTime(prevTime, 10));
       onSendMessage({
         text: `${playerNumber}번 플레이어가 시간을 증가했습니다.`,
         player: playerNumber,
@@ -84,8 +84,8 @@ const Timer = ({ onSendMessage, playerNumber, onTimerEnd, role, gameStatus }) =>
   };
 
   const handleDecreaseTime = () => {
-    if (canModifyTime()) {
-      setTime(prevTime => Math.max(prevTime - 10, 10));
+    if (stages[stageIndex].name === "낮" && canModifyTime(hasModifiedTime)) {
+      setTime((prevTime) => changeTime(prevTime, -10));
       onSendMessage({
         text: `${playerNumber}번 플레이어가 시간을 감소했습니다.`,
         player: playerNumber,
@@ -94,7 +94,6 @@ const Timer = ({ onSendMessage, playerNumber, onTimerEnd, role, gameStatus }) =>
       setHasModifiedTime(true);
     }
   };
-
 
   return (
     <div className="timer">
@@ -108,7 +107,7 @@ const Timer = ({ onSendMessage, playerNumber, onTimerEnd, role, gameStatus }) =>
             onClick={handleDecreaseTime}
           ></button>
           <span>
-            &nbsp;{`${Math.floor(time / 60)}:${(time % 60).toString().padStart(2, "0")}`}&nbsp;&nbsp;
+            &nbsp;{`0:${time.toString().padStart(2, "0")}`}&nbsp;&nbsp;
           </span>
           <button
             className="button increase-time"
@@ -117,7 +116,7 @@ const Timer = ({ onSendMessage, playerNumber, onTimerEnd, role, gameStatus }) =>
         </div>
       </div>
       <div className="stage-info">
-        {dayCount}일차 {stageNames[gameStatus]}
+        {dayCount}일차 {stages[stageIndex].name}
       </div>
     </div>
   );
