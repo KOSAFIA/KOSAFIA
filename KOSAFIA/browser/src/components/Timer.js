@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { STATUS_DURATION, GAME_STATUS, STATUS_INDEX } from "../constants/GameStatus";
+import { stageDurations, getNextStageIndex } from "../utils/TimerUtils";
+import { changeTime, canModifyTime } from "../utils/TimeControlUtils";
 import "../styles/components/Timer.css";
 
 const stages = [
-  { name: "NONE", image: "/img/discussion.png" },
-  { name: "DAY", image: "/img/day.png" },
-  { name: "NIGHT", image: "/img/night.png" },
-  { name: "DELAY", image: "/img/discussion.png" },
-  { name: "VOTE", image: "/img/vote.png" },
-  { name: "FINALVOTE", image: "/img/judgement.png" },
+  { name: "낮", image: "/img/day.png" },
+  { name: "마피아투표", image: "/img/vote.png" },
+  { name: "최후의변론", image: "/img/discussion.png" },
+  { name: "사형투표", image: "/img/judgement.png" },
+  { name: "밤", image: "/img/night.png" },
+  { name: "test", image: "/img/day.png" },  // 로딩용 임시 
 ];
 
 const Timer = ({ onSendMessage, playerNumber, onTimerEnd, role, gameStatus }) => {
@@ -47,24 +48,27 @@ const Timer = ({ onSendMessage, playerNumber, onTimerEnd, role, gameStatus }) =>
   }, [onTimerEnd]);
 
   const handleNightRoleAction = () => {
+    const nightActionData = {
+      playerNumber,
+      role,
+    };
+
+    // 확인용 text 넣기
     switch (role) {
       case "MAFIA":
-        onSendMessage({ text: `플레이어 ${playerNumber} (마피아)가 타겟을 선택합니다.` });
+        nightActionData.text = `마피아 ${playerNumber}번이 타겟을 선택 중입니다.`;
         break;
       case "DOCTOR":
-        onSendMessage({ text: `플레이어 ${playerNumber} (의사)가 치료할 타겟을 선택합니다.` });
+        nightActionData.text = `의사 ${playerNumber}번이 치료할 타겟을 선택 중입니다.`;
         break;
       case "POLICE":
-        onSendMessage({ text: `플레이어 ${playerNumber} (경찰)가 조사할 타겟을 선택합니다.` });
+        nightActionData.text = `경찰 ${playerNumber}번이 조사할 타겟을 선택 중입니다.`;
         break;
       default:
-        onSendMessage({ text: `밤이 되었습니다. 플레이어 ${playerNumber}의 역할은 시민입니다.` });
-        break;
+        nightActionData.text = `시민 ${playerNumber}번이 역할을 수행하지 않습니다.`;
     }
-  };
 
-  const canModifyTime = () => {
-    return gameStatus === GAME_STATUS.DAY && !hasModifiedTime;
+    onSendMessage(nightActionData);
   };
 
   const handleIncreaseTime = () => {

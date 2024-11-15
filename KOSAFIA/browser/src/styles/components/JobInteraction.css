@@ -1,0 +1,36 @@
+.role-selection-two {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap; /* 가로 공간이 넘칠 경우 자동으로 줄 바꿈 */
+  justify-content: center; /* 버튼을 중앙에 배치 */
+  gap: 15px; /* 버튼들 사이에 간격을 추가 */
+  max-height: 150px; /* 역할 선택 영역의 최대 높이를 설정 */
+  overflow-y: auto; /* 세로로 넘치는 경우 스크롤을 추가 */
+}
+
+.player-button {
+  width: 120px; /* 버튼 크기 고정 (너비 조정 가능) */
+  padding: 15px; /* 버튼의 패딩 */
+  background-color: #815989;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s;
+}
+
+.player-button:hover {
+  background-color: #a83e4c;
+}
+
+.player-button:active {
+  background-color: #87557b;
+  transform: scale(0.98); /* 클릭 시 버튼 축소 효과 */
+}
+
+.player-button:focus {
+  outline: none;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.7);
+}

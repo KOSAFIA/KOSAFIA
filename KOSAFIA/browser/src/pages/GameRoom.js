@@ -5,9 +5,9 @@ import DayIndicator from "../components/DayIndicator";
 import ChatBox from "../components/ChatBox";
 import Popup from "../components/JobExpectationPopUp";
 import JobInfoIcon from "../components/JobInfoIcon";
-//import useJobInfo from "../hooks/game/useJobInfo"; 소켓 컨텍스트의 players로 정확히 대체됨.
-import { useGameContext } from "../contexts/socket/game/GameSocketContext";
-import { GAME_STATUS, NEXT_STATUS, STATUS_INDEX } from '../constants/GameStatus';
+// import useJobInfo from "../hooks/game/useJobInfo";
+import handleTargetsUpdate from "../hooks/game/HandleTargetsUpdate";
+import handleNightActions from "../hooks/game/HandleNightAction";
 import "../styles/GameRoom.css";
 
 const GameRoom = () => {
@@ -15,6 +15,7 @@ const GameRoom = () => {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [stageIndex, setStageIndex] = useState(0);
   const chatBoxRef = useRef();
+  const [targetSelection, setTargetSelection] = useState({}); // 각 플레이어가 선택한 타겟을 저장
   
   // GameSocketContext에서 필요한 상태들을 가져옴
   const { 
@@ -53,48 +54,30 @@ const GameRoom = () => {
     setSelectedPlayer(null);
   };
 
-  // 플레이어 선택 핸들러 수정
-  const handlePlayerSelect = (targetId) => {
-    if (gameStatus === 'NIGHT' && currentPlayer?.role === 'MAFIA') {
-      setTarget(targetId);
-    } else if (gameStatus === 'VOTE' && canVote()) {
-      sendVote(targetId);
-    }
-    
-    // 기존의 팝업 로직 유지
-    const player = players.find(p => p.playerNumber === targetId);
-    if (player) {
-      const playerName = `Player ${player.playerNumber} (${player.role})`;
-      handleOpenPopup(playerName);
+  // 단계가 변경될 때 호출되는 함수
+  const handleStageChange = (newStageIndex) => {
+    setStageIndex(newStageIndex);
+
+    // 밤 단계(4)가 끝나고 test 단계(5)로 변경될 때 타겟 업데이트 실행
+    if (newStageIndex === 5) {
+      // 모든 플레이어의 타겟 정보를 서버로 전송
+      Object.entries(targetSelection).forEach(([playerNum, target]) => {
+        handleTargetsUpdate(playerNum, target);
+      });
+
+      // 서버에 요청을 보내서 밤 단계의 행동을 처리
+      handleNightActions(players); // players를 전달
     }
   };
 
-  // 타이머 종료 핸들러
-  const handleTimerEnd = useCallback(() => {
-    // 1. 현재 상태를 DELAY로 변경
-    setStageIndex(STATUS_INDEX[GAME_STATUS.DELAY]);
-    
-    // 2. 시스템 메시지 전송
-    sendMessageToChat({
-      content: `${gameStatus} 시간이 종료되었습니다.`,
-      isSystemMessage: true
-    });
-
-    // 3. 방장만 다음 상태로 전환 요청
-    if (isHost) {
-      setTimeout(() => {
-        const nextStatus = NEXT_STATUS[gameStatus];
-        if (nextStatus) {
-          try {
-            updateGameStatus(nextStatus);
-            console.log('게임 상태 변경 요청:', nextStatus);
-          } catch (error) {
-            console.error('게임 상태 변경 실패:', error);
-          }
-        }
-      }, 1000);
-    }
-  }, [gameStatus, isHost, updateGameStatus, sendMessageToChat]);
+  // 타겟 변경을 처리하는 함수
+  const handleTargetChange = (playerNumber, targetPlayerNumber) => {
+    setTargetSelection((prev) => ({
+      ...prev,
+      [playerNumber]: targetPlayerNumber,
+    }));
+    // 타겟 정보는 밤 단계가 끝난 후 한 번에 서버로 전송하므로 여기서는 서버로 전송하지 않음
+  };
 
   return (
     <div className={`game-room ${stageIndex === 1 ? "shadow-inset-top" : ""}`}>
@@ -103,12 +86,10 @@ const GameRoom = () => {
           <div className="header">
             {players.length > 0 && currentPlayer && (
               <Timer
+                onStageChange={handleStageChange}
                 onSendMessage={sendMessageToChat}
-                onStageChange={setStageIndex}
-                onTimerEnd={handleTimerEnd}
                 playerNumber={currentPlayer.playerNumber}
                 role={currentPlayer.role}
-                gameStatus={gameStatus}
               />
             )}
             <DayIndicator currentPhase={stageIndex === 1 ? "밤" : "낮"} />
@@ -118,16 +99,16 @@ const GameRoom = () => {
             {players.length > 0 ? (
               players.map((player, index) => (
                 <PlayerCard
-                  key={index}
+                  key={player.playerNumber}
                   name={`Player ${player.playerNumber}`}
                   index={player.playerNumber - 1}
                   role={player.role}
-                  isNight={stageIndex === STATUS_INDEX[GAME_STATUS.NIGHT]}
-                  isSelected={mafiaTarget === player.playerNumber}
+                  isNight={stageIndex === 4}
+                  currentPlayerNum={currentPlayer.playerNumber}
+                  onTargetChange={handleTargetChange}
                   onClick={() => {
                     const playerName = `Player ${player.playerNumber} (${player.role})`;
                     handleOpenPopup(playerName);
-                    handlePlayerSelect(player.playerNumber);
                   }}
                 />
               ))
