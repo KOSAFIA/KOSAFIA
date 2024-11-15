@@ -25,11 +25,6 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   const BASE_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate(); // 로그인 화면으로 이동하기 위해 navigate 설정
 
-  // 서버 URL 환경 변수
-  // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
-  // const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
-  //const BASE_URL = process.env.REACT_APP_API_URL || "https://ba09-115-90-99-121.ngrok-free.app";
-
   // 사용자 정보를 서버에서 가져오는 함수
   useEffect(() => {
     console.log("마이페이지 컴포넌트 렌더링: OAuth 사용자 여부:", isOAuthUser);
@@ -43,7 +38,6 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
     const fetchUserProfile = async () => {
       try {
         const response = await fetch(
-          //  "http://localhost:8080/api/user/profile"
 
           `${BASE_URL}/api/user/profile`,
           {
@@ -84,8 +78,6 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   const handleUsernameSave = async () => {
     try {
       const response = await fetch(
-        // "http://localhost:8080/api/user/update-username",
-
         `${BASE_URL}/api/user/update-username`,
 
         {
@@ -120,10 +112,7 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
 
     try {
       const response = await fetch(
-        // "http://localhost:8080/api/user/update-password",
-
         `${BASE_URL}/api/user/update-password`,
-
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -151,10 +140,7 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   // 회원탈퇴 처리 함수
   const handleAccountDeletion = async () => {
     try {
-      // const endpoint = "http://localhost:8080/api/user/delete";
-
       const endpoint = `${BASE_URL}/api/user/delete`;
-
       const response = await fetch(endpoint, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
@@ -178,36 +164,7 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
       setMessage("회원탈퇴 중 오류가 발생했습니다.");
     }
   };
-  // // OAuth 사용자를 위한 회원탈퇴 처리 함수
-  // const handleOAuthAccountDeletion = async () => {
-  //   if (confirmDeletionInput !== "탈퇴 원합니다") {
-  //     setMessage("탈퇴 문구가 일치하지 않습니다. 다시 입력해주세요.");
-  //     return;
-  //   }
-
-  //   try {
-  //     const response = await fetch(
-  //       "http://localhost:8080/api/user/delete-oauth",
-  //       {
-  //         method: "PUT",
-  //         headers: { "Content-Type": "application/json" },
-  //         credentials: "include", // 쿠키 등 인증 정보를 포함하여 서버에 요청
-  //         body: JSON.stringify({ status: 0 }), // OAuth 사용자의 status를 0으로 변경하여 탈퇴 처리
-  //       }
-  //     );
-
-  //     if (response.ok) {
-  //       setMessage("회원탈퇴가 성공적으로 완료되었습니다.");
-  //       setIsOAuthDeleteModalOpen(false); // 회원탈퇴 모달 닫기
-  //       setIsSuccessPopupOpen(true); // 성공 팝업 열기
-  //     } else {
-  //       setMessage("회원탈퇴에 실패했습니다. 다시 시도해주세요.");
-  //     }
-  //   } catch (error) {
-  //     console.error("회원탈퇴 오류:", error);
-  //     setMessage("회원탈퇴 중 오류가 발생했습니다.");
-  //   }
-  // };
+ 
 
   // 비밀번호 변경 모달 열기
   const openPasswordModal = () => {
@@ -300,22 +257,6 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
           회원탈퇴
         </button>
       </div>
-      {/* /////////////// OAuth 사용자 회원탈퇴 요청
-      버튼//////////////////////////////
-      <div>
-        <button type="button" onClick={openOAuthDeleteModal}>
-          {" "}
-          OAuth 사용자 회원탈퇴
-        </button>
-      </div> */}
-      {/*  <div>
-        <button type="button" onClick={closeDeleteModal}>
-          {" "}
-          취소
-        </button>
-      </div>
-
-      */}
 
       {/* 비밀번호 변경 모달 */}
       <Modal
