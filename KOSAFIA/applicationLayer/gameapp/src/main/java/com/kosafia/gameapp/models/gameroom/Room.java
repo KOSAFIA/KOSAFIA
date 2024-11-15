@@ -224,13 +224,6 @@ public void clearVotes() {
 
     // 플레이어 제거 메서드
     public boolean removePlayer(Player player) {
-        // int index = players.indexOf(player); // 나가는 플레이어의 인덱스 확인
-        // if (index == -1) {
-        //     System.out.println("플레이어를 찾을 수 없습니다.");
-        //     return false;
-        // }
-
-       
 
         // 플레이어를 직접 제거
         boolean removed = players.remove(player);
@@ -252,10 +245,6 @@ public void clearVotes() {
             players.get(i).setPlayerNumber(i + 1); // 새 번호를 1부터 다시 부여
         }
 
-        // // 뒤에 있는 플레이어들의 번호를 앞으로 당김
-        // for (int i = index; i < players.size(); i++) {
-        //     players.get(i).setPlayerNumber(i + 1); // playerNumber를 i + 1로 업데이트
-        // }
         return true;
     }
 
