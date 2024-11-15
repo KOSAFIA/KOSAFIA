@@ -53,27 +53,7 @@ function Login() {
         setError("로그인 중 오류가 발생했습니다.");
       }
     }
-    //   if (response.ok) {
-    //     console.log("로그인 성공");
-    //     console.log("응답 상태 코드:", response.status);
-    //     //김남영 수정: 클라이언트에서 UserData를 반환하지 않으면 클라이언트는 평생모름
-    //     const userData = await response.json();
-    //     // 사용자 정보를 sessionStorage에 저장
-    //     sessionStorage.setItem("userData", JSON.stringify(userData)); // 세션 저장
-    //     console.log(
-    //       "User information saved to sessionStorage: 응답데이터: ",
-    //       userData
-    //     );
-    //     // navigate("/TestLobby"); // 로그인 성공 시 LoginOk 페이지로 리디렉션 /TestLobby
-    //     navigate("/LoginOk"); // 로그인 성공 시 LoginOk 페이지로 리디렉션 /TestLobby
-    //   } else {
-    //     const errorData = await response.text(); // 오류 메시지를 서버에서 받아옴
-    //     setError(errorData || "로그인 실패. 다시 시도하세요."); // 오류 메시지 상태 업데이트
-    //   }
-    // } catch (error) {
-    //   console.error("로그인 오류:", error); // 콘솔에 오류 메시지 출력
-    //   setError("로그인 중 오류가 발생했습니다."); // 오류 메시지를 사용자에게 표시
-    // }
+    
   };
 
   return (
