@@ -72,6 +72,10 @@ const PlayerCard = ({
           style={{ backgroundImage: `url(${avatar})` }}
         />
         <div className="player-name">{name}</div>
+
+        {/* 김남영 추가 투표용 라디오 버튼*/}
+        <div className="player-card-radio-container">
+        </div>
       </div>
 
       {/* 역할 메모 팝업 */}
