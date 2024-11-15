@@ -38,6 +38,7 @@ const PlayerCard = ({
   // 밤이 되면 자동으로 JobInteraction 팝업 열기
   useEffect(() => {
     if (isNight && currentPlayerRole !== "CITIZEN") {
+      console.log("Night라네요");
       setIsInteractionOpen(true);
     }
 
@@ -51,6 +52,7 @@ const PlayerCard = ({
 
   // 타겟 선택
   const handleTargetSelect = (targetPlayerNumber) => {
+    console.log("handleTargetSelect 실행");
     setTarget(targetPlayerNumber);
     onTargetChange(currentPlayerNum, targetPlayerNumber); // 타겟 선택 즉시 부모 컴포넌트로 업데이트
   };

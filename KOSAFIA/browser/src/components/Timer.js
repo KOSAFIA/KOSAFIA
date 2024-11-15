@@ -4,12 +4,11 @@ import { changeTime, canModifyTime } from "../utils/TimeControlUtils";
 import "../styles/components/Timer.css";
 
 const stages = [
-  { name: "낮", image: "/img/day.png" },
-  { name: "마피아투표", image: "/img/vote.png" },
-  { name: "최후의변론", image: "/img/discussion.png" },
-  { name: "사형투표", image: "/img/judgement.png" },
-  { name: "밤", image: "/img/night.png" },
-  { name: "test", image: "/img/day.png" },  // 로딩용 임시 
+  { name: "NIGHT", image: "/img/night.png" },
+  { name: "DELAY", image: "/img/day.png" },  // 로딩용 임시 
+  { name: "DAY", image: "/img/day.png" },
+  { name: "VOTE", image: "/img/vote.png" },
+  { name: "FINALVOTE", image: "/img/discussion.png" },
 ];
 
 const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
@@ -72,7 +71,7 @@ const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
   };
 
   const handleIncreaseTime = () => {
-    if (stages[stageIndex].name === "낮" && canModifyTime(hasModifiedTime)) {
+    if (stages[stageIndex].name === "DAY" && canModifyTime(hasModifiedTime)) {
       setTime((prevTime) => changeTime(prevTime, 10));
       onSendMessage({
         text: `${playerNumber}번 플레이어가 시간을 증가했습니다.`,
@@ -84,7 +83,7 @@ const Timer = ({ onSendMessage, playerNumber, onStageChange, role }) => {
   };
 
   const handleDecreaseTime = () => {
-    if (stages[stageIndex].name === "낮" && canModifyTime(hasModifiedTime)) {
+    if (stages[stageIndex].name === "DAY" && canModifyTime(hasModifiedTime)) {
       setTime((prevTime) => changeTime(prevTime, -10));
       onSendMessage({
         text: `${playerNumber}번 플레이어가 시간을 감소했습니다.`,
