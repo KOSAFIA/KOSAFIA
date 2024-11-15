@@ -1,10 +1,8 @@
 package com.kosafia.gameapp.controllers.game;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,83 +38,29 @@ public class GameController {
     private GameService gameService;
 
     // 인스턴스 변수로 players 리스트 선언
-    private ArrayList<Player> players = new ArrayList<>();
+    // private ArrayList<Player> players = new ArrayList<>();
 
     @Autowired
     private RoomRepository roomRepository;
 
-    // 임시로...제발ㄻㄹㅇ....
-    @GetMapping("/players")
-    public ResponseEntity<List<Player>> getPlayers() {
-        return ResponseEntity.ok(players); // players는 게임 내 플레이어 목록
-    }
-
-    // 역할을 할당하는 메소드
-    @PostMapping("/assignRoles")
-    public void assignRoles(@RequestBody ArrayList<Player> players) {
-        gameService.assignRoles(players);
-    }
-
-    @GetMapping("/getRoles")
-    public ArrayList<Player> getRoles(@RequestParam List<Integer> playerNumber) {
-        // 하드코딩된 플레이어 목록 생성 -> 후에 수정 가능
-        players = new ArrayList<>(); // 기존 players 인스턴스 변수 초기화
-        players.add(new Player(1, "Player1", "player1@example.com"));
-        players.add(new Player(2, "Player2", "player2@example.com"));
-        players.add(new Player(3, "Player3", "player3@example.com"));
-        players.add(new Player(4, "Player4", "player4@example.com"));
-        players.add(new Player(5, "Player5", "player5@example.com"));
-        players.add(new Player(6, "Player6", "player6@example.com"));
-        players.add(new Player(7, "Player7", "player7@example.com"));
-        players.add(new Player(8, "Player8", "player8@example.com"));
-
-        // 역할을 할당하는 로직 호출
-        gameService.assignRoles(players);
-
-        // 요청된 playerNumber 리스트에 따라 필터링
-        ArrayList<Player> filteredPlayers = new ArrayList<>();
-        for (Player player : players) {
-            if (playerNumber.contains(player.getPlayerNumber())) {
-                filteredPlayers.add(player);
-            }
-        }
-        return filteredPlayers;
-    }
-
     @PostMapping("/update-targets-at-night")
-    public ResponseEntity<Object> updatePlayerTargetsAtNight(@RequestBody List<Map<String, Object>> requestDataList) {
+    public ResponseEntity<Object> updatePlayerTargetAtNight(@RequestBody Map<String, Object> requestData,
+            HttpSession session) {
         try {
-            // 플레이어 목록을 추적하기 위한 로컬 변수
-            List<Player> updatedPlayers = new ArrayList<>();
+            log.info("update-target-at-night 실행됨");
+            Integer playerNumber = (Integer) requestData.get("playerNumber");
+            Integer target = (Integer) requestData.get("target");
 
-            // 요청 받은 타겟 데이터 처리
-            for (Map<String, Object> requestData : requestDataList) {
-                Integer playerNumber = (Integer) requestData.get("playerNumber");
-                Integer target = (Integer) requestData.get("target");
-
-                if (playerNumber == null || target == null) {
-                    return ResponseEntity.badRequest().body("playerNumber 또는 target 값이 누락되었습니다.");
-                }
-
-                // 플레이어를 찾기
-                for (Player player : players) {
-                    if (player.getPlayerNumber().equals(playerNumber)) {
-                        player.setTarget(target);
-                        updatedPlayers.add(player); // 업데이트된 플레이어를 리스트에 추가
-                        break; // 해당 플레이어를 찾았으면 루프를 종료
-                    }
-                }
-
-                // 타겟 업데이트 로그
-                System.out.println("Player " + playerNumber + "의 타겟이 " + target + "으로 설정되었습니다.");
+            if (playerNumber == null || target == null) {
+                return ResponseEntity.badRequest().body("playerNumber 또는 target 값이 누락되었습니다.");
             }
+            Player player = roomRepository.getRoom((Integer) session.getAttribute("roomKey"))
+                    .getPlayerByPlayerNumber(playerNumber);
+            player.setTarget(target);
 
-            // 게임 상태 처리
-            gameService.handleNightActions(players);
-
-            // 업데이트된 플레이어 목록을 응답으로 반환
-            return ResponseEntity.ok(updatedPlayers); // 업데이트된 플레이어 목록을 반환
-
+            // 업데이트 로그
+            System.out.println("Player " + playerNumber + "의 타겟이 " + target + "으로 설정되었습니다.");
+            return ResponseEntity.ok(player);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류 발생");
@@ -124,30 +68,32 @@ public class GameController {
     }
 
     // 밤 단계 행동 처리 API
-    @PostMapping("/handle-night-actions")
-    public ResponseEntity<Object> handleNightActions(@RequestBody Map<String, Object> requestBody) {
-        try {
-            ArrayList<Player> players = (ArrayList<Player>) requestBody.get("players");
+    // @PostMapping("/handle-night-actions")
+    // public ResponseEntity<Object> handleNightActions(@RequestBody Map<String,
+    // Object> requestBody) {
+    // try {
+    // ArrayList<Player> players = (ArrayList<Player>) requestBody.get("players");
 
-            // 게임 서비스의 handleNightActions 메서드 호출
-            gameService.handleNightActions(players);
+    // // 게임 서비스의 handleNightActions 메서드 호출
+    // gameService.handleNightActions(players);
 
-            // 플레이어 상태 정보를 담은 리스트 생성
-            List<Map<String, Object>> playerStatusList = new ArrayList<>();
-            for (Player player : players) {
-                Map<String, Object> playerStatus = new HashMap<>();
-                playerStatus.put("playerNumber", player.getPlayerNumber());
-                playerStatus.put("alive", player.isAlive());
-                playerStatusList.add(playerStatus);
-            }
+    // // 플레이어 상태 정보를 담은 리스트 생성
+    // List<Map<String, Object>> playerStatusList = new ArrayList<>();
+    // for (Player player : players) {
+    // Map<String, Object> playerStatus = new HashMap<>();
+    // playerStatus.put("playerNumber", player.getPlayerNumber());
+    // playerStatus.put("alive", player.isAlive());
+    // playerStatusList.add(playerStatus);
+    // }
 
-            // 플레이어 상태 리스트를 응답으로 반환
-            return ResponseEntity.ok(playerStatusList);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류 발생");
-        }
-    }
+    // // 플레이어 상태 리스트를 응답으로 반환
+    // return ResponseEntity.ok(playerStatusList);
+    // } catch (Exception e) {
+    // e.printStackTrace();
+    // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류
+    // 발생");
+    // }
+    // }
 
     // -----------------김남영 추가 시작 리스트-----------------
     // 1. 방장 지정
@@ -234,10 +180,10 @@ public class GameController {
             Integer playerNumber = (Integer) request.get("playerNumber");
             Boolean isAlive = (Boolean) request.get("isAlive");
             String role = (String) request.get("role");
-            
-            log.info("플레이어 상태 변경 요청 - 방: {}, 플레이어: {}, 생존: {}, 역할: {}", 
-                roomKey, playerNumber, isAlive, role);
-            
+
+            log.info("플레이어 상태 변경 요청 - 방: {}, 플레이어: {}, 생존: {}, 역할: {}",
+                    roomKey, playerNumber, isAlive, role);
+
             Room room = roomRepository.getRoom(roomKey);
             if (room == null) {
                 return ResponseEntity.badRequest().body("방을 찾을 수 없습니다: " + roomKey);
@@ -304,7 +250,8 @@ public class GameController {
     }
 
     @PostMapping("/finalvote/{roomKey}")
-    public ResponseEntity<?> handleFinalVote(@PathVariable("roomKey") Integer roomKey, @RequestBody FinalVoteRequest request) {
+    public ResponseEntity<?> handleFinalVote(@PathVariable("roomKey") Integer roomKey,
+            @RequestBody FinalVoteRequest request) {
         try {
             Room room = roomRepository.getRoom(request.roomKey());
             if (room == null) {

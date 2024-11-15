@@ -40,7 +40,6 @@ function TestPlayRoom() {
 
     return (
         <div style={{ padding: '20px'}}>
-            <h1>게임 진행 창 - 방 {roomKey}</h1>
             {isSocketReady && (
                 <GameSocketProvider roomKey={parseInt(roomKey)}>
                     <GameRoom />
