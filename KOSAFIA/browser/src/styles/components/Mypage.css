@@ -27,7 +27,6 @@
   position: relative;
   animation: fadeInScale 0.5s ease-out; /* 등장 애니메이션 추가 */
   text-align: center; /* 텍스트 중앙 정렬 */
-  
 }
 
 /* Mypage 제목 스타일 */
@@ -38,6 +37,52 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 텍스트 그림자 효과 */
 }
 
+.username-text {
+  width: 200px!important; /* 텍스트박스의 너비를 200px로 설정 */
+  height: 40px!important; /* 높이 설정 */
+  font-size: 14px; /* 글자 크기 */
+
+  box-sizing: border-box; /* 전체 박스 크기를 포함 */
+}
+
+.username-text:focus {
+  border-color: #0c0c03!important; /* 포커스 시 테두리 색상 */
+  box-shadow: 0 0 5px rgba(171, 169, 38, 0.7)!important; /* 포커스 시 그림자 효과 */
+  outline: none; /* 포커스 시 기본 테두리 제거 */
+}
+
+/* 버튼 컨테이너 스타일 (버튼을 나란히 배치) */
+.username-button-container {
+  display: flex!important;
+  justify-content: flex-end!important; /* 버튼들을 중앙 정렬 */
+  gap: 10px!important; /* 버튼 간격 */
+ 
+}
+
+
+
+.username-save-button:hover {
+  background-color: #14317998!important; /* 호버 시 색상 */
+}
+
+
+.username-edit-button,
+.username-save-button,
+.username-cancel-button {
+  padding: 5px 10px!important;
+  background: linear-gradient(to right, #0f1d6b96, #070e33a3)!important; /* 저장 버튼 스타일 */
+  color: rgb(209, 204, 204)!important;
+  border: none!important;
+  border-radius: 8px!important;
+  cursor: pointer!important;
+  margin: 0!important; /* 추가적인 마진 제거 */
+}
+
+
+
+
+
+
 /* Mypage 입력 필드 */
 .mypage-modal input {
   width: 100%;
@@ -46,7 +91,7 @@
   border: 2px solid rgba(223, 221, 221, 0.333); /* 부드러운 테두리 */
   border-radius: 8px; /* 모서리 둥글게 설정 */
   font-size: 1rem;
-  background-color: #bdb6b6!important; /* 입력 필드 배경색 흰색으로 설정 */
+  background-color: #bdb6b6 !important; /* 입력 필드 배경색 흰색으로 설정 */
   color: #333333 !important; /* 텍스트 색상 어두운 회색 */
   box-sizing: border-box;
   transition: all 0.3s ease-in-out; /* 부드러운 변화 효과 */
@@ -76,12 +121,11 @@
   cursor: pointer;
   margin-top: 15px;
   transition: transform 0.2s ease, box-shadow 0.3s ease; /* 부드러운 애니메이션 효과 */
-  box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3); /* 그림자 효과 */
+  
 }
 
 .mypage-modal button:hover {
   transform: translateY(-3px); /* 버튼이 살짝 올라가는 효과 */
-  box-shadow: 0 6px 20px rgba(106, 17, 203, 0.5); /* 호버 시 그림자 강조 */
   background: linear-gradient(145deg, #654e82, #5e275a); /* 버튼 배경 변경 */
 }
 
@@ -120,7 +164,7 @@
   backdrop-filter: blur(10px); /* 배경 블러 효과 */
 }
 
-.password-delete-modal-overlay{
+.password-delete-modal-overlay {
   position: fixed; /* 화면 고정 */
   top: 0;
   left: 0;
@@ -133,7 +177,6 @@
   z-index: 3000; /* 가장 높은 z-index */
   backdrop-filter: blur(10px); /* 배경 블러 효과 */
 }
-
 
 /* 비밀번호 변경 모달 */
 .mypage-password-modal {
@@ -170,7 +213,7 @@
   border: 2px solid rgba(223, 221, 221, 0.333); /* 부드러운 테두리 */
   border-radius: 8px; /* 모서리 둥글게 설정 */
   font-size: 1rem;
-  background-color: #bdb6b6!important; /* 입력 필드 배경색 흰색으로 설정 */
+  background-color: #bdb6b6 !important; /* 입력 필드 배경색 흰색으로 설정 */
   color: #333333 !important; /* 텍스트 색상 어두운 회색 */
   box-sizing: border-box;
   transition: all 0.3s ease-in-out; /* 부드러운 변화 효과 */
@@ -184,7 +227,7 @@
   border: 2px solid rgba(223, 221, 221, 0.333); /* 부드러운 테두리 */
   border-radius: 8px; /* 모서리 둥글게 설정 */
   font-size: 1rem;
-  background-color: #d5b0b0!important; /* 입력 필드 배경색 흰색으로 설정 */
+  background-color: #d5b0b0 !important; /* 입력 필드 배경색 흰색으로 설정 */
   color: #333333 !important; /* 텍스트 색상 어두운 회색 */
   box-sizing: border-box;
   transition: all 0.3s ease-in-out; /* 부드러운 변화 효과 */
@@ -205,7 +248,6 @@
   cursor: pointer;
   margin-top: 15px;
   transition: transform 0.2s ease, box-shadow 0.3s ease; /* 부드러운 애니메이션 효과 */
-  
 }
 
 .mypage-password-modal button:hover {
@@ -235,6 +277,43 @@
   transform: translateY(-3px); /* 버튼이 살짝 올라가는 효과 */
   box-shadow: 0 6px 20px rgba(106, 17, 203, 0.5); /* 호버 시 그림자 강조 */
   background: linear-gradient(145deg, #654e82, #5e275a); /* 버튼 배경 변경 */
+}
+
+
+
+/* 버튼 컨테이너 스타일 */
+.mypage-password-action-button-container {
+  display: flex;
+  justify-content: center; /* 버튼들을 좌우로 배치 */
+  gap: 10px; /* 버튼 간격 */
+  margin-top: 10px; /* 위쪽 간격 */
+}
+
+/* 버튼 스타일 */
+.mypage-password-action-button {
+  padding: 10px 20px; /* 내부 여백 */
+  background: linear-gradient(145deg, #46415c, #273b5d); /* 버튼 배경 */
+  color: rgb(181, 183, 185); /* 텍스트 색상 */
+  border: none;
+  border-radius: 25px; /* 둥근 모서리 */
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease; /* 애니메이션 효과 */
+}
+
+/* 버튼 호버 효과 */
+.mypage-password-action-button:hover {
+  transform: translateY(-3px); /* 버튼 살짝 올라감 */
+  box-shadow: 0 6px 15px rgba(106, 17, 203, 0.5); /* 호버 시 그림자 */
+  background: linear-gradient(145deg, #654e82, #5e275a); /* 배경 변경 */
+}
+
+.all-close-button {
+  display: flex;
+  justify-content: end; /* 버튼들을 좌우로 배치 */
+  gap: 1px; /* 버튼 간격 */
+  margin-top: 1px; /* 위쪽 간격 */
 }
 
 /* 성공 팝업 */
