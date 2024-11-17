@@ -9,7 +9,7 @@ import com.kosafia.gameapp.models.gameroom.Player;
 public interface GameService {
 
     // 역할 상호작용 결과
-    // void handleNightActions(Player player);
+    void handleNightActions(List<Player> players, Integer roomKey);
 
     // ===============김남영 추가=============
     public void broadcastGameStatus(Integer roomKey, GameStatus gameStatus, List<Player> players);

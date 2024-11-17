@@ -65,16 +65,22 @@ const GameRoom = () => {
     setStageIndex(newStageIndex);
 
     // 밤 단계(4)가 끝나고 test 단계(5)로 변경될 때 타겟 업데이트 실행
-    if (newStageIndex === gameStatus.test) {
-      // 플레이어의 타겟 정보를 서버로 전송
+    // if (newStageIndex === gameStatus.test) {
+    // 현재 플레이어의 타겟 정보를 상태에서 가져옴
+    const targetPlayerNumber = targetSelection[currentPlayer.playerNumber];
 
-      console.log("cureentPlayer.playerNumber : " + currentPlayer.playerNumber);
-      console.log("currentPlayer.target : " + currentPlayer.target);
-      handleTargetsUpdate(currentPlayer.playerNumber, currentPlayer.target);
+    console.log("currentPlayer.playerNumber:", currentPlayer.playerNumber);
+    console.log("Target selected:", targetPlayerNumber);
 
-      // 서버에 요청을 보내서 밤 단계의 행동을 처리
-      // handleNightActions(players); // players를 전달
+    // 서버로 해당 플레이어의 타겟 정보를 전송
+    if (targetPlayerNumber !== undefined) {
+      handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
     }
+
+    // 서버에 요청을 보내서 밤 단계의 행동을 처리
+
+    //임의 하드코딩. 후에 roomKey로 수정필요
+    handleNightActions(1); 
   };
   //김남영 추가
   //단계가 변경될 때 호출되는 함수를 재정의 하은님의 코드를 보며 나중에 구현 -> 소켓 함수가 추가된 형태로 감쌀 예정
@@ -98,11 +104,13 @@ const GameRoom = () => {
   // 타겟 변경을 처리하는 함수
   const handleTargetChange = (currentPlayerNum, targetPlayerNumber) => {
     console.log("handleTargetChange 함수 실행");
+
+    //타겟을 상태에 저장.
     setTargetSelection((prev) => ({
       ...prev,
       [currentPlayerNum]: targetPlayerNumber,
     }));
-    // 타겟 정보는 밤 단계가 끝난 후 한 번에 서버로 전송하므로 여기서는 서버로 전송하지 않음
+    // 타겟 정보는 밤 단계가 끝난 후 한 번에 서버로 전송하므로 상태만 저장함.
   };
 
   // 플레이어 선택 핸들러 수정

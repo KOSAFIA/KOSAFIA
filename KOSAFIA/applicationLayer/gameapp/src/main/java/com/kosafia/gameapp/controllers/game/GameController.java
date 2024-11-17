@@ -68,32 +68,28 @@ public class GameController {
     }
 
     // 밤 단계 행동 처리 API
-    // @PostMapping("/handle-night-actions")
-    // public ResponseEntity<Object> handleNightActions(@RequestBody Map<String,
-    // Object> requestBody) {
-    // try {
-    // ArrayList<Player> players = (ArrayList<Player>) requestBody.get("players");
+    @PostMapping("/handle-night-actions")
+    public ResponseEntity<Object> handleNightActions(@RequestBody Map<String, Object> requestBody) {
+        try {
+            Integer roomKey;
+            try {
+                roomKey = Integer.parseInt(requestBody.get("roomKey").toString());
+            } catch (NumberFormatException e) {
+                System.out.println("roomKey 변환 오류: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("roomKey 변환 오류");
+            }
+            List<Player> players = roomRepository.getRoom(roomKey).getPlayers();
 
-    // // 게임 서비스의 handleNightActions 메서드 호출
-    // gameService.handleNightActions(players);
+            // 게임 서비스의 handleNightActions 메서드 호출
+            gameService.handleNightActions(players, roomKey);
 
-    // // 플레이어 상태 정보를 담은 리스트 생성
-    // List<Map<String, Object>> playerStatusList = new ArrayList<>();
-    // for (Player player : players) {
-    // Map<String, Object> playerStatus = new HashMap<>();
-    // playerStatus.put("playerNumber", player.getPlayerNumber());
-    // playerStatus.put("alive", player.isAlive());
-    // playerStatusList.add(playerStatus);
-    // }
-
-    // // 플레이어 상태 리스트를 응답으로 반환
-    // return ResponseEntity.ok(playerStatusList);
-    // } catch (Exception e) {
-    // e.printStackTrace();
-    // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류
-    // 발생");
-    // }
-    // }
+            // 플레이어 상태 리스트를 응답으로 반환
+            return ResponseEntity.ok(players);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류발생");
+        }
+    }
 
     // -----------------김남영 추가 시작 리스트-----------------
     // 1. 방장 지정
