@@ -133,11 +133,17 @@
 }
 
 .room-chat-warning {
-  background-color: #990000;
-  padding: 10px;
+  display: inline-block; /* 글씨 크기에 맞게 박스를 줄이기 위해 inline-block 사용 */
+  color: #ff0808;
+  background-color: #000000a5;
+  padding: 5px 10px; /* 좌우로 조금 더 padding을 추가 */
+
+  padding:7px;
+  border-radius: 5px;
   margin-bottom: 20px;
   font-size: 14px;
-  text-align: center;
+  text-align: center; /* 텍스트를 가로 중앙 정렬 */
+
 }
 
 .room-chat-log {
@@ -148,6 +154,7 @@
   padding: 10px;
   margin-bottom: 10px;
   border-radius: 5px;
+  word-break: break-word; /* 긴 단어가 잘리거나 넘칠 때 줄바꿈 처리 */
 }
 
 .room-chat-input {

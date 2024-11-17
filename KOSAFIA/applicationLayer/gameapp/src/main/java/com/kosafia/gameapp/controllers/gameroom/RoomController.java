@@ -256,9 +256,32 @@ public class RoomController {
 
     // 게임 종료 엔드포인트
     @PostMapping("/{roomKey}/end")
-    public ResponseEntity<String> endGame(@PathVariable("roomKey") Integer roomKey) {
+    public ResponseEntity<?> endGame(@PathVariable("roomKey") Integer roomKey, HttpSession session) {
+
+        // 세션에서 현재 플레이어 정보 가져오기
+        Player currentPlayer = (Player) session.getAttribute("player");
+        if (currentPlayer == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("플레이어 정보가 없습니다.");
+        }
+
+       
+        // 방 정보 가져오기
+        Room room = roomService.getRoomById(roomKey);
+        if (room == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("방을 찾을 수 없습니다.");
+        }
+
+        // 방 상태 초기화
         roomService.endGame(roomKey);
-        return ResponseEntity.ok("게임이 종료되었습니다.");
+        // return ResponseEntity.ok("게임이 종료 및 방 상태 초기화");
+
+        // 초기화된 방 정보 반환
+        log.info("방 상태 초기화 및 반환. roomKey: {}", roomKey);
+        return ResponseEntity.ok(Map.of(
+            "message", "게임 종료",
+            "players", room.getPlayers(), // 초기화된 플레이어 목록
+            "gameStatus", room.getGameStatus() // 게임 상태
+        ));
     }
 
     // 방 삭제 엔드포인트
