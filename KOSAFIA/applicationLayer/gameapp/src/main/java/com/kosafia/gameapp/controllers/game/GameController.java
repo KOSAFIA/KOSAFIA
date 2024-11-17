@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
@@ -42,6 +43,7 @@ public class GameController {
 
     @Autowired
     private RoomRepository roomRepository;
+
 
     @PostMapping("/update-targets-at-night")
     public ResponseEntity<Object> updatePlayerTargetAtNight(@RequestBody Map<String, Object> requestData,
@@ -75,21 +77,28 @@ public class GameController {
             try {
                 roomKey = Integer.parseInt(requestBody.get("roomKey").toString());
             } catch (NumberFormatException e) {
-                System.out.println("roomKey 변환 오류: " + e.getMessage());
+                log.error("roomKey 변환 오류: {}", e.getMessage());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("roomKey 변환 오류");
             }
-            List<Player> players = roomRepository.getRoom(roomKey).getPlayers();
+
+            Room room = roomRepository.getRoom(roomKey);
+            if (room == null) {
+                return ResponseEntity.badRequest().body("방을 찾을 수 없습니다.");
+            }
 
             // 게임 서비스의 handleNightActions 메서드 호출
-            gameService.handleNightActions(players, roomKey);
+            gameService.handleNightActions(room.getPlayers(), roomKey);
 
             // 플레이어 상태 리스트를 응답으로 반환
-            return ResponseEntity.ok(players);
+            return ResponseEntity.ok(room.getPlayers());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("밤 행동 처리 중 오류 발생", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류발생");
         }
     }
+
+    // PlayersUpdateResponse 레코드 추가
+    record PlayersUpdateResponse(List<Player> players) {}
 
     // -----------------김남영 추가 시작 리스트-----------------
     // 1. 방장 지정

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { GameSocketProvider } from '../contexts/socket/game/GameSocketContext';
+import { GameSocketProvider, useGameContext } from '../contexts/socket/game/GameSocketContext';
 import GameRoom from '../pages/GameRoom';
 
 function TestPlayRoom() {

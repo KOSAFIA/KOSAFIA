@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class Room {
 
 
-    private final Integer roomKey; // PK와 로비에 보이는 키 (String 형식)
+    private final Integer roomKey; // PK와 로비에 보이는 키 인티저 형식이야 바보야 멍청아 똥아 아 이거 쥐피티 멍청이
     private String roomName; // 방제 //입력받음
     private List<Player> players; // 플레이어 목록
     private String hostName; // 방장 이름
@@ -50,7 +50,50 @@ public class Room {
     // private Integer nextPlayerNumber = 1; // 다음에 부여할 번호
     private Random random = new Random();
 
-    
+    private int currentTime;  // 현재 타이머 시간 (초 단위)
+    private final Map<GameStatus, Integer> defaultTimes = Map.of(
+        GameStatus.NIGHT, 60,     // 밤 60초
+        GameStatus.DELAY, 10,     // 딜레이 10초
+        GameStatus.DAY, 120,      // 낮 120초
+        GameStatus.VOTE, 60,      // 투표 60초
+        GameStatus.FINALVOTE, 30  // 최후 변론 30초
+    );
+
+    // 게임 상태 변경 시 타이머 자동 초기화를 위해 setGameStatus 수정
+    public void setGameStatus(GameStatus newStatus) {
+        if (this.gameStatus != newStatus) {
+            this.gameStatus = newStatus;
+            // 상태 변경 시 해당 상태의 기본 시간으로 초기화
+            this.currentTime = defaultTimes.getOrDefault(newStatus, 0);
+            
+            // 밤상태 진입시 일차 증가겠지 똘빡아 주석보고 반성해
+            if (newStatus == GameStatus.NIGHT && 
+                (this.gameStatus == GameStatus.FINALVOTE || this.gameStatus == GameStatus.VOTE)) {
+                this.turn++;
+            }
+        }
+    }
+
+    // 시간 수정 메서드 (유효성 검사 포함)
+    public boolean modifyTime(int playerNumber, int adjustment) {
+        // 1. 플레이어 유효성 검사
+        Player player = getPlayerByPlayerNumber(playerNumber);
+        if (player == null || !player.isAlive()) {
+            return false;
+        }
+
+        // 2. 게임 상태 검사 (DAY 상태에서만 가능)
+        if (gameStatus != GameStatus.DAY) {
+            return false;
+        }
+
+        // 3. 시간 조절
+        int newTime = currentTime + adjustment;
+        setCurrentTime(newTime);
+        return true;
+    }
+
+
 
     public Room(Integer roomKey, String roomName, int maxPlayers, String password, boolean isPrivate) {
         this.roomKey = roomKey;
@@ -69,6 +112,7 @@ public class Room {
         this.voteStatus = new HashMap<>();
         this.voterRecords = new HashMap<>();
         this.finalVoteStatus = new HashMap<>();
+        this.currentTime = defaultTimes.get(GameStatus.NIGHT);
     }
     //투표 매서드: 이전에 이미 등록된 투표자의 타겟은 1만큼 감소시키고 다시 현재 투표 반영
     //그러면 최종적으로는 아무도 투표안하면 비어있고
@@ -274,6 +318,8 @@ public void clearVotes() {
             System.out.println("게임 시작 완료 ");
             System.out.println(this.toString());
 
+            this.currentTime = defaultTimes.get(GameStatus.NIGHT); // 게임은 밤부터 시작
+
             players.forEach(player -> {
                 player.setAlive(true);
                 System.out.println(player.getUsername() + "의 직업은 " + player.getRole() + "입니다.");
@@ -288,7 +334,7 @@ public void clearVotes() {
         this.isPlaying = false;
         this.turn = 0;
         this.gameStatus = GameStatus.NONE;
-
+        this.currentTime = 0;
     }
 
     ///////////////////////////

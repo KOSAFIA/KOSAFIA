@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Controller
@@ -28,6 +29,8 @@ public class GameSocketController {
     @Autowired
     private RoomRepository roomRepository;
 
+    // 각 방의 타이머를 관리할 Thread Map
+    private final Map<Integer, Thread> roomTimers = new ConcurrentHashMap<>();
 
     @MessageMapping("/game.chat.mafia/{roomKey}")
     public void handleMafiaChat(
@@ -55,14 +58,14 @@ public class GameSocketController {
     ) {
         log.info("게임 채팅 메시지 수신 - 방: {}, 메시지: {}", roomKey, message);
         try {
-            // 메시지 유효성 검사
-            if (message == null || message.username() == null || message.content() == null) {
-                log.error("잘못된 채팅 메시지 형식: {}", message);
+            Room room = roomRepository.getRoom(roomKey);
+            if (room == null) {
+                log.error("방을 찾을 수 없음: {}", roomKey);
                 return;
             }
 
-            // 밤에는 마피아 채팅만 허용하고, 마피아끼리만 볼 수 있게 처리
-            if ("NIGHT".equals(message.gameStatus())) {
+            // 밤에는 마피아 채팅만 허용
+            if (room.getGameStatus() == GameStatus.NIGHT) {
                 if ("MAFIA".equals(message.role())) {
                     log.info("마피아 채팅 전송 - 방: {}", roomKey);
                     messagingTemplate.convertAndSend(
@@ -71,14 +74,13 @@ public class GameSocketController {
                     );
                 }
             } else {
+                // 낮이나 투표 시간에는 모든 채팅 허용
                 log.info("일반 채팅 전송 - 방: {}", roomKey);
                 messagingTemplate.convertAndSend(
                     "/topic/game.chat." + roomKey, 
                     message
                 );
             }
-
-            log.info("채팅 메시지 전송 완료 - 방: {}, 사용자: {}", roomKey, message.username());
         } catch (Exception e) {
             log.error("채팅 메시지 처리 중 오류 발생:", e);
         }
@@ -148,7 +150,9 @@ record ChatMessage(
     String content,
     String gameStatus,
     String role,
-    Integer roomKey
+    Integer roomKey,
+    Integer playerNumber,
+    boolean isSystemMessage
 ){}
 
 // 마피아 타겟 메시지 형식 마피아가 암살 시도 할때 어떤 형태로 메시지를 보내는지
@@ -164,43 +168,168 @@ record GameStateMessage(
     List<Player> players
 ){}
 
+// 게임 시작 처리
+@MessageMapping("/game.start/{roomKey}")
+public void handleGameStart(@DestinationVariable("roomKey") Integer roomKey) {
+    log.info("게임 시작 요청 - 방: {}", roomKey);
+    
+    try {
+        Room room = roomRepository.getRoom(roomKey);
+        if (room == null) return;
+
+        // 게임 상태를 NIGHT로 설정하고 타이머 시작
+        room.setGameStatus(GameStatus.NIGHT);
+        room.setCurrentTime(getDefaultTime(GameStatus.NIGHT));
+        room.setTurn(1); // 1일차부터 시작
+        
+        // 상태 변경 알림
+        messagingTemplate.convertAndSend("/topic/game.state." + roomKey, 
+            new GameStateResponse(
+                GameStatus.NIGHT.toString(),
+                room.getPlayers(),
+                getDefaultTime(GameStatus.NIGHT),
+                room.getTurn(),
+                true,
+                "게임이 시작되었습니다. " + GameStatus.NIGHT.toString() + " 시간입니다."
+            )
+        );
+        
+        // 타이머 시작
+        startRoomTimer(roomKey);
+
+    } catch (Exception e) {
+        log.error("게임 시작 처리 중 오류:", e);
+    }
+}
+    // 타이머 시작 메서드
+    private void startRoomTimer(Integer roomKey) {
+        stopRoomTimer(roomKey);  // 기존 타이머 중지
+
+        Thread timerThread = new Thread(() -> {
+            try {
+                Room room = roomRepository.getRoom(roomKey);
+                if (room == null) return;
+
+                log.info("타이머 시작 - 방: {}, 초기시간: {}", roomKey, room.getCurrentTime());
+
+                while (room != null && room.getCurrentTime() > 0) {
+                    // TimerResponse 객체로 전송
+                    TimerResponse response = new TimerResponse(
+                        room.getCurrentTime(),
+                        room.getGameStatus().toString(),
+                        true,
+                        "시간 업데이트"
+                    );
+                    
+                    messagingTemplate.convertAndSend(
+                        "/topic/game.timer." + roomKey, 
+                        response
+                    );
+
+                    Thread.sleep(1000);
+                    room.setCurrentTime(room.getCurrentTime() - 1);
+                }
+
+                // 타이머 종료 시 0 전송
+                TimerResponse endResponse = new TimerResponse(
+                    0,
+                    room.getGameStatus().toString(),
+                    true,
+                    "타이머 종료"
+                );
+                messagingTemplate.convertAndSend("/topic/game.timer." + roomKey, endResponse);
+
+            } catch (InterruptedException e) {
+                log.info("타이머 중단됨 - 방: {}", roomKey);
+            }
+        });
+
+        timerThread.start();
+        roomTimers.put(roomKey, timerThread);
+    }
+
+    // 타이머 중지 메서드
+    private void stopRoomTimer(Integer roomKey) {
+        Thread timer = roomTimers.remove(roomKey);
+        if (timer != null) {
+            timer.interrupt();
+        }
+    }
+
+    // 다음 상태 가져오기
+    private GameStatus getNextStatus(GameStatus current) {
+        return switch (current) {
+            case NIGHT -> GameStatus.DELAY;
+            case DELAY -> GameStatus.DAY;
+            case DAY -> GameStatus.VOTE;
+            case VOTE -> GameStatus.FINALVOTE;
+            case FINALVOTE -> GameStatus.NIGHT;
+            default -> null;
+        };
+    }
+
+    // 각 상태별 기본 시간
+    private int getDefaultTime(GameStatus status) {
+        return switch (status) {
+            case NIGHT -> 30;    // 30초
+            case DELAY -> 5;     // 5초
+            case DAY -> 60;      // 60초
+            case VOTE -> 30;     // 30초
+            case FINALVOTE -> 15;// 15초
+            default -> 0;
+        };
+    }
+
+    // 게임 상태 업데이트 메서드
     @MessageMapping("/game.state.update/{roomKey}")
     public void handleGameStateUpdate(
         @DestinationVariable("roomKey") Integer roomKey,
         @Payload GameStateUpdateRequest request
     ) {
+        log.info("게임 상태 업데이트 요청 - 방: {}, 상태: {}", roomKey, request.gameStatus());
+        
         try {
-            log.info("게임 상태 업데이트 요청 - 방: {}, 상태: {}", roomKey, request.gameStatus());
-            
             Room room = roomRepository.getRoom(roomKey);
-            if (room == null) {
-                throw new RuntimeException("방을 찾을 수 없습니다: " + roomKey);
-            }
+            if (room == null) return;
 
-            // 상태 업데이트
-            room.setGameStatus(GameStatus.valueOf(request.gameStatus()));
+            GameStatus newStatus = GameStatus.valueOf(request.gameStatus());
+            room.setGameStatus(newStatus);
             
-            // 브로드캐스트
-            GameStateResponse response = new GameStateResponse(
-                request.gameStatus(),
-                room.getPlayers(),
-                true,
-                "게임 상태가 업데이트되었습니다."
+            // 새로운 상태에 맞는 초기 시간 설정
+            int initialTime = 30; // 기본값
+            switch (newStatus) {
+                case NIGHT -> initialTime = 30;
+                case DELAY -> initialTime = 10;
+                case DAY -> initialTime = 60;
+                case VOTE -> initialTime = 30;
+                case FINALVOTE -> initialTime = 15;
+                default -> initialTime = 0;
+            }
+            room.setCurrentTime(initialTime);
+            
+            // 상태 변경 알림
+            messagingTemplate.convertAndSend("/topic/game.state." + roomKey, 
+                new GameStateResponse(
+                    newStatus.toString(),
+                    room.getPlayers(),
+                    initialTime,
+                    room.getTurn(),
+                    true,
+                    newStatus.toString() + " 시간이 시작되었습니다."
+                )
             );
-
-            messagingTemplate.convertAndSend("/topic/game.state." + roomKey, response);
+            
+            // 타이머 시작 (NONE 상태가 아닐 때)
+            if (newStatus != GameStatus.NONE) {
+                startRoomTimer(roomKey);
+            }
         } catch (Exception e) {
-            log.error("게임 상태 업데이트 실패:", e);
-            GameStateResponse errorResponse = new GameStateResponse(
-                null, null, false, 
-                "게임 상태 업데이트 실패: " + e.getMessage()
-            );
-            messagingTemplate.convertAndSend("/topic/game.state." + roomKey, errorResponse);
+            log.error("게임 상태 업데이트 중 오류:", e);
         }
     }
 
     // 게임 상태 업데이트 요청 객체
-    record GameStateUpdateRequest(String gameStatus) {}
+    record GameStateUpdateRequest(String gameStatus, Player player) {}
 
     // 플레이어 상태 업데이트 브로드캐스트
     @MessageMapping("/game.players.update/{roomKey}")
@@ -265,6 +394,8 @@ record GameStateMessage(
     record GameStateResponse(
         String gameStatus,
         List<Player> players,
+        Integer currentTime,   // 타이머 정보 추가
+        Integer turn,      // 일차 정보 추가
         boolean success,
         String message
     ) {}
@@ -403,4 +534,125 @@ record GameStateMessage(
         String message
     ) {}
 
+    // 타이머 관련 메시지 처리
+    @MessageMapping("/game.timer.modify/{roomKey}")
+    public void handleTimerModification(
+        @DestinationVariable("roomKey") Integer roomKey,
+        @Payload TimerModifyRequest request
+    ) {
+        try {
+            log.info("타이머 수정 요청 - 방: {}, 플레이어: {}, 조정시간: {}", 
+                roomKey, request.playerNumber(), request.adjustment());
+
+            Room room = roomRepository.getRoom(roomKey);
+            if (room == null) {
+                throw new RuntimeException("방을 찾을 수 없습니다: " + roomKey);
+            }
+
+            // 플레이어 확인
+            Player player = room.getPlayerByPlayerNumber(request.playerNumber());
+            if (player == null || !player.isAlive()) {
+                throw new RuntimeException("유효하지 않은 플레이어입니다.");
+            }
+
+            // 현재 시간 가져오기 및 수정
+            int currentTime = room.getCurrentTime();
+            int newTime = currentTime + request.adjustment();
+            
+            // 시간은 0 미만이 될 수 없음
+            newTime = Math.max(0, newTime);
+            room.setCurrentTime(newTime);
+
+            // 수정된 시간 브로드캐스트
+            TimerResponse response = new TimerResponse(
+                newTime,
+                room.getGameStatus().toString(),
+                true,
+                String.format("Player %d가 시간을 %d초 %s하였습니다.", 
+                    request.playerNumber(),
+                    Math.abs(request.adjustment()),
+                    request.adjustment() > 0 ? "증가" : "감소"
+                )
+            );
+
+            messagingTemplate.convertAndSend("/topic/game.timer." + roomKey, response);
+            
+        } catch (Exception e) {
+            log.error("타이머 수정 실패:", e);
+            TimerResponse errorResponse = new TimerResponse(
+                null,
+                null,
+                false,
+                "타이머 수정 실패: " + e.getMessage()
+            );
+            messagingTemplate.convertAndSend("/topic/game.timer." + roomKey, errorResponse);
+        }
+    }
+
+    // 타이머 수정 요청 객체
+    record TimerModifyRequest(
+        Integer playerNumber,  // 시간을 수정하려는 플레이어 번호
+        Integer adjustment    // 조정할 시간 (초 단위, +15 또는 -15)
+    ) {}
+
+    // 타이머 응답 객체
+    record TimerResponse(
+        Integer time,         // 현재 시간 (초 단위)
+        String gameStatus,    // 현재 게임 상태
+        boolean success,      // 성공 여부
+        String message       // 메시지
+    ) {}
+
+@MessageMapping("/game.players.join/{roomKey}")
+public void handlePlayerJoin(
+    @DestinationVariable("roomKey") Integer roomKey,
+    @Payload Player playerData
+) {
+    log.info("플레이어 입장 - 방: {}, 플레이어: {}", roomKey, playerData);
+    
+    try {
+        Room room = roomRepository.getRoom(roomKey);
+        if (room == null) {
+            log.error("방을 찾을 수 없음: {}", roomKey);
+            return;
+        }
+
+        // 방장인 경우 게임 타이머 시작
+        if (playerData.getUsername().equals(room.getHostName())) {
+            log.info("방장 입장 - 게임 초기화 시작");
+            
+            // 초기 상태 설정
+            room.setGameStatus(GameStatus.NIGHT);
+            room.setCurrentTime(getDefaultTime(GameStatus.NIGHT));
+            room.setTurn(1); // 1일차로 설정
+
+            // 상태 전송
+            messagingTemplate.convertAndSend(
+                "/topic/game.state." + roomKey, 
+                new GameStateResponse(
+                    GameStatus.NIGHT.toString(),
+                    room.getPlayers(),
+                    room.getCurrentTime(),
+                    room.getTurn(),
+                    true,
+                    "게임이 시작되었습니다. NIGHT 시간입니다."
+                )
+            );
+            
+            // 타이머 시작
+            startRoomTimer(roomKey);
+        }
+
+        // 입장한 플레이어 정보 브로드캐스트
+        messagingTemplate.convertAndSend(
+            "/topic/game.players." + roomKey, 
+            room.getPlayers()
+        );
+
+    } catch (Exception e) {
+        log.error("플레이어 입장 처리 중 오류:", e);
+    }
 }
+}
+
+

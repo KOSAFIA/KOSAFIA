@@ -7,13 +7,22 @@ import Popup from "../components/JobExpectationPopUp";
 import JobInfoIcon from "../components/JobInfoIcon";
 import handleTargetsUpdate from "../hooks/game/HandleTargetsUpdate";
 import handleNightActions from "../hooks/game/HandleNightAction";
-import { useGameContext } from "../contexts/socket/game/GameSocketContext";
+import { useGameContext } from '../contexts/socket/game/GameSocketContext';
 import {
   GAME_STATUS,
   NEXT_STATUS,
   STATUS_INDEX,
 } from "../constants/GameStatus";
 import "../styles/GameRoom.css";
+
+// 상단에 stages 상수 추가
+const stages = [
+  { name: "NIGHT", image: "/img/night.png" },
+  { name: "DELAY", image: "/img/day.png" },
+  { name: "DAY", image: "/img/day.png" },
+  { name: "VOTE", image: "/img/vote.png" },
+  { name: "FINALVOTE", image: "/img/discussion.png" },
+];
 
 const GameRoom = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -37,12 +46,26 @@ const GameRoom = () => {
     canChat, //채팅 가능 여부
     isHost, // 방장 여부 추가
     updateGameStatus, // 게임 상태 업데이트 함수 추가
+    gameTime,         // 서버에서 받은 시간
+    dayCount,         // 현재 일차
+    sendSystemMessage, // 시스템 메시지 전송 함수
+    modifyGameTime,
   } = useGameContext();
+
+  // 시간 조절한 플레이어 목록 관리 (새로운 게임 시작 시 초기화 필요)
+  const [timeModifiedPlayers, setTimeModifiedPlayers] = useState(new Set());
 
   // 게임 상태에 따른 stageIndex 설정
   useEffect(() => {
     // 나이트:0 딜레이:1 데이:2 투표:3 최후의변론:4
     setStageIndex(STATUS_INDEX[gameStatus]);
+  }, [gameStatus]);
+
+  // 게임 상태가 변경될 때 timeModifiedPlayers 초기화
+  useEffect(() => {
+    if (gameStatus === 'NIGHT') {
+      setTimeModifiedPlayers(new Set());
+    }
   }, [gameStatus]);
 
   const sendMessageToChat = (message) => {
@@ -60,46 +83,42 @@ const GameRoom = () => {
   };
 
   //하은님 구현
-  // 단계가 변경될 때 호출되는 함수
-  const handleStageChange = (newStageIndex) => {
+  const handleStageChange = async (newStageIndex) => {
     setStageIndex(newStageIndex);
 
-    // 밤 단계(4)가 끝나고 test 단계(5)로 변경될 때 타겟 업데이트 실행
-    // if (newStageIndex === gameStatus.test) {
-    // 현재 플레이어의 타겟 정보를 상태에서 가져옴
-    const targetPlayerNumber = targetSelection[currentPlayer.playerNumber];
+    if (gameStatus === GAME_STATUS.NIGHT) {
+        const targetPlayerNumber = targetSelection[currentPlayer.playerNumber];
 
-    console.log("currentPlayer.playerNumber:", currentPlayer.playerNumber);
-    console.log("Target selected:", targetPlayerNumber);
+        // 1. 먼저 타겟 정보 전송
+        if (targetPlayerNumber !== undefined) {
+            await handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
+        }
 
-    // 서버로 해당 플레이어의 타겟 정보를 전송
-    if (targetPlayerNumber !== undefined) {
-      handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
+        // 2. 밤 액션 처리
+        await handleNightActions(roomKey); 
+
+        // 3. 모든 처리가 완료된 후에만 상태 업데이트
+        if (isHost) {
+            updateGameStatus(NEXT_STATUS[gameStatus]);
+        }
     }
+};
 
-    // 서버에 요청을 보내서 밤 단계의 행동을 처리
+  // 밤 이벤트 처리를 위한 새로운 함수
+const handleNightEvent = async () => {
+  // 1. 스테이지 인덱스 업데이트
+  setStageIndex(1);
 
-    //임의 하드코딩. 후에 roomKey로 수정필요
-    handleNightActions(1); 
-  };
-  //김남영 추가
-  //단계가 변경될 때 호출되는 함수를 재정의 하은님의 코드를 보며 나중에 구현 -> 소켓 함수가 추가된 형태로 감쌀 예정
-  const handleStageChangeKNY = () => {
-    switch(gameStatus){
-      case GAME_STATUS.NIGHT:
-        handleTargetsUpdate(currentPlayer.playerNumber, currentPlayer.target);
-        break;
-      case GAME_STATUS.DELAY:
-        handleNightActions(players);
-        break;
-      case GAME_STATUS.DAY:
-        break;
-      case GAME_STATUS.VOTE:
-        break;
-      case GAME_STATUS.FINALVOTE:
-        break;
-    }
+  // 2. 타겟 정보 처리 (모든 플레이어)
+  const targetPlayerNumber = targetSelection[currentPlayer.playerNumber];
+  
+  if (targetPlayerNumber !== undefined) {
+      await handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
   }
+
+  // 3. 밤 행동 처리 (모든 플레이어)
+  await handleNightActions(1);
+};
 
   // 타겟 변경을 처리하는 함수
   const handleTargetChange = (currentPlayerNum, targetPlayerNumber) => {
@@ -129,38 +148,59 @@ const GameRoom = () => {
     }
   };
 
-  // 타이머 종료 핸들러
-  const handleTimerEnd = useCallback(() => {
-    // // 1. 현재 상태를 DELAY로 변경
-    // setStageIndex(STATUS_INDEX[GAME_STATUS.DELAY]);
+  // 시간 조절 가능 여부 체크
+  const canModifyTime = useCallback(() => {
+    return gameStatus === "DAY" && 
+           currentPlayer?.isAlive && 
+           !timeModifiedPlayers.has(currentPlayer?.playerNumber);
+  }, [gameStatus, currentPlayer, timeModifiedPlayers]);
 
-    // // 2. 시스템 메시지 전송
-    // sendMessageToChat({
-    //   content: `${gameStatus} 시간이 종료되었습니다.`,
-    //   isSystemMessage: true,
-    // });
+  // 시스템 메시지 전송을 위한 통합 핸들러
+  const sendGameSystemMessage = useCallback((message) => {
+    sendSystemMessage(message);
+    // 채팅창에도 시스템 메시지 표시
+    sendMessageToChat({
+      text: message,
+      isSystemMessage: true
+    });
+  }, [sendSystemMessage]);
 
-    // 3. 방장만 다음 상태로 전환 요청
-    if (isHost) {
-      switch(gameStatus) {
-          case "NIGHT":
-              // 1. 밤 행동 결과 처리 요청
-              handleNightActions();
-              // 2. DELAY 상태로 전환 요청
-              updateGameStatus("DELAY");
-              break;
-          case "DELAY":
-              // DAY 상태로 전환 요청
-              updateGameStatus("DAY");
-              break;
-          case "DAY":
-              // VOTE 상태로 전환 요청
-              updateGameStatus("VOTE");
-              break;
-          // ... 기타 상태 처리
-      }
+  // 게임 상태 변경 시 시스템 메시지 전송
+  useEffect(() => {
+    if (gameStatus && stages[stageIndex]) {
+      sendGameSystemMessage(`${stages[stageIndex].name} 시간이 시작되었습니다.`);
     }
-  }, [gameStatus, isHost, updateGameStatus, sendMessageToChat]);
+  }, [gameStatus, stageIndex, sendGameSystemMessage]);
+
+  // 시간 조절 핸들러 수정
+  const handleModifyTime = useCallback((adjustment) => {
+    if (canModifyTime()) {
+      modifyGameTime(adjustment);
+      // 시간 조절한 플레이어 추가
+      setTimeModifiedPlayers(prev => new Set([...prev, currentPlayer.playerNumber]));
+      
+      // 시간 조절 시스템 메시지
+      sendGameSystemMessage(
+        `Player ${currentPlayer.playerNumber}님이 시간을 ${Math.abs(adjustment)}초 ${adjustment > 0 ? '증가' : '감소'}시켰습니다.`
+      );
+    }
+  }, [canModifyTime, modifyGameTime, currentPlayer, sendGameSystemMessage]);
+
+// handleTimerEnd에서는 handleStageChange 호출하도록 수정
+const handleTimerEnd = useCallback(async () => {
+  if (gameStatus === GAME_STATUS.NIGHT) {
+      if (isHost) {
+          sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
+      }
+      // handleStageChange를 통해 모든 처리를 일관되게 진행
+      await handleStageChange(1);
+  } else {
+      if (isHost) {
+          sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
+          updateGameStatus(NEXT_STATUS[gameStatus]);
+      }
+  }
+}, [isHost, gameStatus, stageIndex, updateGameStatus, sendGameSystemMessage]);
 
   return (
     <div className={`game-room ${stageIndex === 1 ? "shadow-inset-top" : ""}`}>
@@ -169,13 +209,12 @@ const GameRoom = () => {
           <div className="header">
             {players.length > 0 && currentPlayer && (
               <Timer
-                onStageChange={handleStageChange}
-                onSendMessage={sendMessageToChat}
-                // onStageChange={setStageIndex}
-                onTimerEnd={handleTimerEnd}
-                playerNumber={currentPlayer.playerNumber}
-                role={currentPlayer.role}
+                time={gameTime}
                 gameStatus={gameStatus}
+                dayCount={dayCount}
+                onTimerEnd={handleTimerEnd}
+                onModifyTime={handleModifyTime}
+                canModifyTime={canModifyTime()}
               />
             )}
             <DayIndicator currentPhase={stageIndex === 1 ? "NIGHT" : "DAY"} />

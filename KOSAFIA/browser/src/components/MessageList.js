@@ -17,6 +17,13 @@ const mafiaColors = [
 ];
 
 const MessageList = ({ messages, currentPlayer, currentRole }) => {
+  // 디버깅용 로그
+  console.log('MessageList props:', {
+    messages,
+    currentPlayer,
+    currentRole
+  });
+
   // 마피아 메시지별 고유 색상 할당
   const mafiaColorMap = React.useMemo(() => {
     const colorMap = new Map();
@@ -59,53 +66,55 @@ const MessageList = ({ messages, currentPlayer, currentRole }) => {
   return (
     <div className="message-list">
       {messages.map((msg, index) => {
-        const isOwnMessage = msg.player === currentPlayer;
-        const playerImage = getPlayerImage(msg.player, isOwnMessage, msg);
-        const mafiaOverlay = getMafiaOverlay(msg, isOwnMessage);
+        // 시스템 메시지 처리
+        if (msg.isSystemMessage) {
+          return (
+            <div key={index} className="system-message">
+              <div className="message-box system">
+                <span className="message-text">{msg.content}</span>
+              </div>
+            </div>
+          );
+        }
 
-        const messageClassName = msg.isTimeModifiedMessage
-          ? "time-modified-message"
-          : `message ${isOwnMessage ? "own-message" : "other-message"}`;
+        // 메시지 소유자 판단 수정
+        const isOwnMessage = msg.playerNumber === currentPlayer.playerNumber;
+        
+        // 디버깅용 로그
+        console.log('Message check:', {
+          messagePlayerNumber: msg.playerNumber,
+          currentPlayerNumber: currentPlayer.playerNumber,
+          isOwnMessage: isOwnMessage,
+          messageContent: msg.content
+        });
 
         return (
-          <div key={index} className={messageClassName}>
-            {msg.isTimeModifiedMessage ? (
-              <div className="message-box">
-                <span className="message-text">{msg.text}</span>
-              </div>
-            ) : (
+          <div key={index} className={`message ${isOwnMessage ? "own-message" : "other-message"}`}>
+            {isOwnMessage ? (
+              // 내 메시지 (오른쪽 정렬)
               <>
-                {isOwnMessage ? (
-                  <>
-                    <div className="message-icon-container">
-                      <div
-                        className="message-icon"
-                        style={{ backgroundImage: `url(${playerImage})` }}
-                      >
-                        {mafiaOverlay && <div style={mafiaOverlay} />}
-                        <span className="player-name">나</span>
-                      </div>
-                    </div>
-                    <div className="message-box">
-                      <span className="message-text">{msg.text}</span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="message-box">
-                      <span className="message-text">{msg.text}</span>
-                    </div>
-                    <div className="message-icon-container">
-                      <div
-                        className="message-icon"
-                        style={{ backgroundImage: `url(${playerImage})` }}
-                      >
-                        {mafiaOverlay && <div style={mafiaOverlay} />}
-                        <span className="player-name">{msg.player}</span>
-                      </div>
-                    </div>
-                  </>
-                )}
+                <div className="message-box">
+                  <span className="message-text">{msg.content}</span>
+                </div>
+                <div className="message-icon-container">
+                  <div className="message-icon" style={{ backgroundImage: `url(${getPlayerImage(msg.playerNumber, true, msg)})` }}>
+                    {getMafiaOverlay(msg, true)}
+                    <span className="player-name">나</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              // 상대방 메시지 (왼쪽 정렬)
+              <>
+                <div className="message-icon-container">
+                  <div className="message-icon" style={{ backgroundImage: `url(${getPlayerImage(msg.playerNumber, false, msg)})` }}>
+                    {getMafiaOverlay(msg, false)}
+                    <span className="player-name">{`Player ${msg.playerNumber}`}</span>
+                  </div>
+                </div>
+                <div className="message-box">
+                  <span className="message-text">{msg.content}</span>
+                </div>
               </>
             )}
           </div>
