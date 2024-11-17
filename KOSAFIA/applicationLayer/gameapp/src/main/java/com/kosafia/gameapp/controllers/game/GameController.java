@@ -37,9 +37,6 @@ public class GameController {
     @Autowired
     private GameService gameService;
 
-    // 인스턴스 변수로 players 리스트 선언
-    // private ArrayList<Player> players = new ArrayList<>();
-
     @Autowired
     private RoomRepository roomRepository;
 
@@ -71,6 +68,7 @@ public class GameController {
     @PostMapping("/handle-night-actions")
     public ResponseEntity<Object> handleNightActions(@RequestBody Map<String, Object> requestBody) {
         try {
+            log.info("handle-night-actions 실행됨");
             Integer roomKey;
             try {
                 roomKey = Integer.parseInt(requestBody.get("roomKey").toString());

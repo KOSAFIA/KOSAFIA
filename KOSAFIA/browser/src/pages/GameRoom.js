@@ -8,6 +8,8 @@ import JobInfoIcon from "../components/JobInfoIcon";
 import handleTargetsUpdate from "../hooks/game/HandleTargetsUpdate";
 import handleNightActions from "../hooks/game/HandleNightAction";
 import { useGameContext } from "../contexts/socket/game/GameSocketContext";
+import FirstJobExplainpopUp from "../components/FirstJobExplainPopup";
+
 import {
   GAME_STATUS,
   NEXT_STATUS,
@@ -16,6 +18,7 @@ import {
 import "../styles/GameRoom.css";
 
 const GameRoom = () => {
+  const [showFirstJobExplainPopup, setFirstJobExplainPopup] = useState(true);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [stageIndex, setStageIndex] = useState(0);
@@ -45,6 +48,16 @@ const GameRoom = () => {
     setStageIndex(STATUS_INDEX[gameStatus]);
   }, [gameStatus]);
 
+  // 처음 직업설명 팝업창 열기
+  const handleOpenFirstJobExplainPopup = () => {
+    setFirstJobExplainPopup(true);
+  };
+
+  // 처음 직업설명 팝업창 닫기
+  const handleCloseFirstJobExplainPopup = () => {
+    setFirstJobExplainPopup(false);
+  };
+
   const sendMessageToChat = (message) => {
     chatBoxRef.current?.receiveMessage(message);
   };
@@ -63,7 +76,7 @@ const GameRoom = () => {
   const handleStageChange = (newStageIndex) => {
     setStageIndex(newStageIndex);
 
-    // 밤 단계(4)가 끝나고 test 단계(5)로 변경될 때 타겟 업데이트 실행
+    // 밤 단계(0)가 끝나고 delay 단계(1)로 변경될 때 타겟 업데이트 실행
     // if (newStageIndex === gameStatus.test) {
     // 현재 플레이어의 타겟 정보를 상태에서 가져옴
     const targetPlayerNumber = targetSelection[currentPlayer.playerNumber];
@@ -76,10 +89,11 @@ const GameRoom = () => {
       handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
     }
 
-    // 서버에 요청을 보내서 밤 단계의 행동을 처리
+    // 서버에 요청을 보내서 players의 타겟 통합시키기
+
 
     //임의 하드코딩. 후에 roomKey로 수정필요
-    handleNightActions(1); 
+    handleNightActions(1);
   };
 
   // 타겟 변경을 처리하는 함수
@@ -139,6 +153,12 @@ const GameRoom = () => {
 
   return (
     <div className={`game-room ${stageIndex === 1 ? "shadow-inset-top" : ""}`}>
+      {currentPlayer && showFirstJobExplainPopup && (
+        <FirstJobExplainpopUp
+          currentPlayerRole={currentPlayer.role}
+          onClose={handleCloseFirstJobExplainPopup}
+        />
+      )}
       <div className="chat-area">
         <div className="player-area">
           <div className="header">
@@ -168,6 +188,7 @@ const GameRoom = () => {
                   currentPlayerRole={currentPlayer.role}
                   currentPlayerNum={currentPlayer.playerNumber}
                   onTargetChange={handleTargetChange}
+                  isAlive={currentPlayer.isAlive}
                   onClick={() => {
                     const playerName = `Player ${player.playerNumber} (${player.role})`;
                     handleOpenPopup(playerName);

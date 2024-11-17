@@ -2,9 +2,9 @@ import React from "react";
 import "../styles/components/MessageList.css";
 
 const roles = [
-  { name: "MAFIA", image: "/img/mafia.jpeg" },
-  { name: "DOCTOR", image: "/img/doctor.jpeg" },
-  { name: "POLICE", image: "/img/police.jpeg" },
+  { name: "MAFIA", image: "/img/mafia.png" },
+  { name: "DOCTOR", image: "/img/doctor.png" },
+  { name: "POLICE", image: "/img/police.png" },
   { name: "CITIZEN", image: "/img/citizen.png" },
 ];
 
