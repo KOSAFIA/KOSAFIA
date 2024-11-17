@@ -123,28 +123,34 @@ const GameRoom = () => {
 
   // 타이머 종료 핸들러
   const handleTimerEnd = useCallback(() => {
-    // 1. 현재 상태를 DELAY로 변경
-    setStageIndex(STATUS_INDEX[GAME_STATUS.DELAY]);
+    // // 1. 현재 상태를 DELAY로 변경
+    // setStageIndex(STATUS_INDEX[GAME_STATUS.DELAY]);
 
-    // 2. 시스템 메시지 전송
-    sendMessageToChat({
-      content: `${gameStatus} 시간이 종료되었습니다.`,
-      isSystemMessage: true,
-    });
+    // // 2. 시스템 메시지 전송
+    // sendMessageToChat({
+    //   content: `${gameStatus} 시간이 종료되었습니다.`,
+    //   isSystemMessage: true,
+    // });
 
     // 3. 방장만 다음 상태로 전환 요청
     if (isHost) {
-      setTimeout(() => {
-        const nextStatus = NEXT_STATUS[gameStatus];
-        if (nextStatus) {
-          try {
-            updateGameStatus(nextStatus);
-            console.log("게임 상태 변경 요청:", nextStatus);
-          } catch (error) {
-            console.error("게임 상태 변경 실패:", error);
-          }
-        }
-      }, 1000);
+      switch(gameStatus) {
+          case "NIGHT":
+              // 1. 밤 행동 결과 처리 요청
+              handleNightActions();
+              // 2. DELAY 상태로 전환 요청
+              updateGameStatus("DELAY");
+              break;
+          case "DELAY":
+              // DAY 상태로 전환 요청
+              updateGameStatus("DAY");
+              break;
+          case "DAY":
+              // VOTE 상태로 전환 요청
+              updateGameStatus("VOTE");
+              break;
+          // ... 기타 상태 처리
+      }
     }
   }, [gameStatus, isHost, updateGameStatus, sendMessageToChat]);
 

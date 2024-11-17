@@ -33,3 +33,32 @@ export const STATUS_INDEX = {
     [GAME_STATUS.VOTE]: 3,
     [GAME_STATUS.FINALVOTE]: 4
 }; 
+
+export const GAME_PHASES = {
+    [GAME_STATUS.NIGHT]: { 
+      name: "밤", 
+      duration: 60, 
+      image: "/img/night.png" 
+    },
+    [GAME_STATUS.DELAY]: { 
+      name: "전환", 
+      duration: 3, 
+      image: "/img/discussion.png" 
+    },
+    [GAME_STATUS.DAY]: { 
+      name: "낮", 
+      duration: 120, 
+      image: "/img/day.png" 
+    },
+    [GAME_STATUS.VOTE]: { 
+      name: "투표", 
+      duration: 30, 
+      image: "/img/vote.png" 
+    },
+    [GAME_STATUS.FINALVOTE]: { 
+      name: "최후투표", 
+      duration: 15, 
+      image: "/img/discussion.png" 
+    }
+  };
+  
