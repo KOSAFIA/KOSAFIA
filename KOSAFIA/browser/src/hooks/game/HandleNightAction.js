@@ -1,11 +1,15 @@
-const handleNightActions = async (players) => {
+const handleNightActions = async (roomKey) => {
+
+  console.log("roomKey 는 : " + roomKey);
+
+  
   try {
     const response = await fetch("/api/game/handle-night-actions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ players: players }), // players는 서버에서 처리할 플레이어 목록
+      body: JSON.stringify({ "roomKey": roomKey }), 
     });
 
     if (!response.ok) {

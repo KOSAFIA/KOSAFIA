@@ -1,31 +1,23 @@
-const handleTargetsUpdate = (playerNum, target) => {
-  console.log(`${playerNum}가 ${target}를 선택했습니다.`);
-  updatePlayerTargetsAtNight(playerNum, target);
-};
-
-const updatePlayerTargetsAtNight = async (playerNum, target) => {
+// 타겟 업데이트 함수
+const handleTargetsUpdate = async (playerNumber, target) => {
   try {
-    const requestBody = JSON.stringify([
-      {
-        playerNumber: Number(playerNum),
-        target: target,
-      },
-    ]);
-    console.log("Sending request body:", requestBody);
     const response = await fetch("/api/game/update-targets-at-night", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: requestBody,
+      body: JSON.stringify({
+        playerNumber: playerNumber,
+        target: target,
+      }), // 개별 Player의 데이터 전송
     });
 
     if (!response.ok) {
-      throw new Error("서버와의 통신에 실패했습니다.");
+      throw new Error("타겟 업데이트 실패");
     }
 
     const result = await response.json();
-    console.log("타겟 업데이트 성공:", result);
+    console.log(`Player ${playerNumber}의 타겟 업데이트 완료:`, result);
   } catch (error) {
     console.error("타겟 업데이트 실패:", error);
   }

@@ -18,9 +18,9 @@ const ChatBox = forwardRef(({
   useImperativeHandle(ref, () => ({
     receiveMessage: (message) => {
       const formattedMessage = {
-        text: message.content,
-        player: message.username,
-        isTimeModifiedMessage: message.isSystemMessage,
+        text: typeof message === 'string' ? message : message.text || message.content,
+        player: message.username || 'System',
+        isSystemMessage: message.isSystemMessage,
         isMafiaChat: message.isMafiaChat
       };
       setLocalMessages(prev => [...prev, formattedMessage]);
@@ -45,12 +45,15 @@ const ChatBox = forwardRef(({
     if (!messages) return [];
     
     return messages.map(msg => ({
-      text: msg.content,
-      player: msg.username || msg.role || 'Unknown',
-      isTimeModifiedMessage: msg.isSystemMessage,
+      text: msg.content || msg.text,
+      player: msg.isSystemMessage ? 'System' : (msg.username || msg.role || 'Unknown'),
+      isSystemMessage: msg.isSystemMessage,
       isMafiaChat: msg.isMafiaChat
     })).filter(msg => {
-      // 밤 시간에 마피아가 아닌 플레이어는 채팅을 볼 수 없음
+      // 시스템 메시지는 항상 표시
+      if (msg.isSystemMessage) return true;
+      
+      // 기존 필터 로직 유지
       if (stageIndex === 1) {
         if (currentPlayer?.role !== 'MAFIA') {
           return false;

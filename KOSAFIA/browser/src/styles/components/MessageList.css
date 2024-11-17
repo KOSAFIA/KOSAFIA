@@ -64,3 +64,17 @@
   display: block;
   text-align: center;
 }
+
+.system-message {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.message-box.system {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-style: italic;
+  color: #666;
+}
