@@ -7,7 +7,9 @@ import Popup from "../components/JobExpectationPopUp";
 import JobInfoIcon from "../components/JobInfoIcon";
 import handleTargetsUpdate from "../hooks/game/HandleTargetsUpdate";
 import handleNightActions from "../hooks/game/HandleNightAction";
-import { useGameContext } from '../contexts/socket/game/GameSocketContext';
+import { useGameContext } from "../contexts/socket/game/GameSocketContext";
+import FirstJobExplainpopUp from "../components/FirstJobExplainPopup";
+
 import {
   GAME_STATUS,
   NEXT_STATUS,
@@ -25,6 +27,7 @@ const stages = [
 ];
 
 const GameRoom = () => {
+  const [showFirstJobExplainPopup, setFirstJobExplainPopup] = useState(true);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [stageIndex, setStageIndex] = useState(0);
@@ -67,6 +70,16 @@ const GameRoom = () => {
       setTimeModifiedPlayers(new Set());
     }
   }, [gameStatus]);
+
+  // 처음 직업설명 팝업창 열기
+  const handleOpenFirstJobExplainPopup = () => {
+    setFirstJobExplainPopup(true);
+  };
+
+  // 처음 직업설명 팝업창 닫기
+  const handleCloseFirstJobExplainPopup = () => {
+    setFirstJobExplainPopup(false);
+  };
 
   const sendMessageToChat = (message) => {
     chatBoxRef.current?.receiveMessage(message);
@@ -204,6 +217,12 @@ const handleTimerEnd = useCallback(async () => {
 
   return (
     <div className={`game-room ${stageIndex === 1 ? "shadow-inset-top" : ""}`}>
+      {currentPlayer && showFirstJobExplainPopup && (
+        <FirstJobExplainpopUp
+          currentPlayerRole={currentPlayer.role}
+          onClose={handleCloseFirstJobExplainPopup}
+        />
+      )}
       <div className="chat-area">
         <div className="player-area">
           <div className="header">
@@ -232,6 +251,7 @@ const handleTimerEnd = useCallback(async () => {
                   currentPlayerRole={currentPlayer.role}
                   currentPlayerNum={currentPlayer.playerNumber}
                   onTargetChange={handleTargetChange}
+                  isAlive={currentPlayer.isAlive}
                   onClick={() => {
                     const playerName = `Player ${player.playerNumber} (${player.role})`;
                     handleOpenPopup(playerName);

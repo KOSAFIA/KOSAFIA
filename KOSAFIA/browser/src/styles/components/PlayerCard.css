@@ -1,60 +1,65 @@
 .player-cards {
-    display: flex;  /* Flexbox를 사용하여 가로 방향으로 배치 */
-    flex-wrap: wrap;  /* 자식 요소가 넘칠 경우 다음 줄로 이동하도록 설정 */
-    gap: 70px;  /* 요소 간의 간격 */    
-    padding: 10px; 
-    width: 100%;  
-    padding-left : 50px;
+  display: flex; /* Flexbox를 사용하여 가로 방향으로 배치 */
+  flex-wrap: wrap; /* 자식 요소가 넘칠 경우 다음 줄로 이동하도록 설정 */
+  gap: 70px; /* 요소 간의 간격 */
+  padding: 10px;
+  width: 100%;
+  padding-left: 50px;
 }
 
 .player-card {
-    width: 200px; 
-    height: 400px;
-    display: flex;
-    flex-direction: column;
-    border: 3px solid;
-    border-color: #3b3b3b;
-    background: linear-gradient(45deg, #272727, #1f1f1f);
-    align-items: center; 
-    justify-content: center; 
-    border-radius: 8px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-    text-align: center; 
-    cursor: pointer;
-    position: relative; /* ::before 위치 설정을 위해 relative 추가 */
+  width: 200px;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  border: 3px solid;
+  border-color: #3b3b3b;
+  background: linear-gradient(45deg, #272727, #1f1f1f);
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  cursor: pointer;
+  position: relative; /* ::before 위치 설정을 위해 relative 추가 */
+}
+
+.player-card-dead {
+  filter: grayscale(100%); /* 흑백 처리 */
+  opacity: 0.5; /* 투명도 조절 */
+  cursor: not-allowed; /* 클릭 불가한 아이콘 */
 }
 
 /* 순서 표시용 정사각형 스타일 */
 .player-card::before {
-    content: attr(data-index); /* data-index 속성을 통해 순서 표시 */
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    width: 60px;
-    height: 60px;
-    background-color: #616161;
-    color: white;
-    font-size: 25px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px; /* 모서리 둥글게 설정 */
+  content: attr(data-index); /* data-index 속성을 통해 순서 표시 */
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 60px;
+  height: 60px;
+  background-color: #616161;
+  color: white;
+  font-size: 25px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px; /* 모서리 둥글게 설정 */
 }
 
-
 .player-avatar {
-    width:120px;
-    height: 120px;
-    background-color: #e0e0e0;
-    border-radius: 50%;
-    margin-bottom: 5px;
-    background-size: contain;  /* 이미지 비율 유지하며 div에 맞춤 */
-    background-position: center; /* 중앙에 위치하도록 설정 */
-    background-repeat: no-repeat; /* 이미지 반복 방지 */
+  width: 120px;
+  height: 120px;
+  background-color: #e0e0e0;
+  border-radius: 50%;
+  margin-bottom: 5px;
+  background-size: contain; /* 이미지 비율 유지하며 div에 맞춤 */
+  background-position: center; /* 중앙에 위치하도록 설정 */
+  background-repeat: no-repeat; /* 이미지 반복 방지 */
 }
 
 .player-name {
-    font-size: 25px;
-    font-weight: bold;
+  font-size: 25px;
+  font-weight: bold;
 }
