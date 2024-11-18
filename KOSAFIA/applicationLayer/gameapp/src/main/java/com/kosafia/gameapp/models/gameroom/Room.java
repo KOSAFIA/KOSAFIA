@@ -9,6 +9,8 @@ import java.util.Queue;
 import java.util.Random;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kosafia.gameapp.controllers.socket.game.GameSocketController;
+
 import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
@@ -59,6 +61,8 @@ public class Room {
         GameStatus.VOTE, 60,      // 투표 60초
         GameStatus.FINALVOTE, 30  // 최후 변론 30초
     );
+
+    private Timer gameTimer;
 
     // 게임 상태 변경 시 타이머 자동 초기화를 위해 setGameStatus 수정
     public void setGameStatus(GameStatus newStatus) {
@@ -318,6 +322,27 @@ public class Room {
         }
         return false;
     }
+    //아 타이머 미치겠네 ㅠㅠ
+    public void startGame(GameSocketController socketController) {
+        this.gameStatus = GameStatus.NIGHT;
+        this.currentTime = Timer.getDefaultTime(GameStatus.NIGHT);
+        this.turn = 1;
+        this.isPlaying = true;
+        
+        if (gameTimer != null) {
+            gameTimer.stop();
+        }
+        gameTimer = new Timer(this, socketController);
+        gameTimer.start();
+    }
+    public void stopGame() {
+        if (gameTimer != null) {
+            gameTimer.stop();
+            gameTimer = null;
+        }
+        this.isPlaying = false;
+    }
+
 
     // 게임 종료 메서드
     public void endGame() {

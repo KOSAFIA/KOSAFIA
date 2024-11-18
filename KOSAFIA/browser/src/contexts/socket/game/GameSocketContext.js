@@ -1,604 +1,472 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
-} from "react";
-import SockJS from "sockjs-client";
-import { Client } from "@stomp/stompjs"; // eslint-disable-line
-import axios from "axios";
-import { useRouteLoaderData } from "react-router-dom";
+/* eslint-disable import/no-unresolved */
+import { createContext, useContext, useCallback, useEffect, useRef, useState } from 'react';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import axios from 'axios';
+import { GAME_STATUS } from '../../../constants/GameStatus';
+import { CONFIG, API_BASE_URL, WEBSOCKET_URL } from '../../../config/Config';
 
-const WEBSOCKET_URL = "http://localhost:8080/wstomp";
-const API_BASE_URL = "http://localhost:8080/api";
-const GAME_STATUS = {
-    NONE: 'NONE',
-    NIGHT: 'NIGHT',
-    DELAY: 'DELAY',
-    DAY: 'DAY',
-    VOTE: 'VOTE',
-    FINALVOTE: 'FINALVOTE'
-};
-
-export const GameSocketContext = createContext();
+const GameSocketContext = createContext(null);
 
 export const GameSocketProvider = ({ roomKey, children }) => {
-    const [messages, setMessages] = useState([]);
-    const [players, setPlayers] = useState([]);
-    const [isConnected, setIsConnected] = useState(false);
-    const [gameStatus, setGameStatus] = useState(GAME_STATUS.NIGHT);
-    const [currentPlayer, setCurrentPlayer] = useState(null);
-    const [mafiaTarget, setMafiaTarget] = useState(null);
-    const [voteStatus, setVoteStatus] = useState({});
-    const [isHost, setIsHost] = useState(false);
-    const [finalVotes, setFinalVotes] = useState({
-        agree: 0,
-        disagree: 0
-    });
-    const [gameTime, setGameTime] = useState(30);
-    const [dayCount, setDayCount] = useState(1);
-    
   const clientRef = useRef(null);
+  const [currentPlayer, setCurrentPlayer] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isHost, setIsHost] = useState(false);
+  const [players, setPlayers] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [gameStatus, setGameStatus] = useState(null);
+  const [gameTime, setGameTime] = useState(0);
+  const [dayCount, setDayCount] = useState(1);
+  const [mafiaTarget, setMafiaTarget] = useState(null);
+  const [voteStatus, setVoteStatus] = useState({});
+  const [finalVotes, setFinalVotes] = useState({});
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const updateCurrentPlayer = useCallback(
-    (updatedPlayers) => {
-      if (!currentPlayer) {
-        console.warn("현재 플레이어가 설정되지 않았습니다");
-        return;
-      }
+  // publishMessage를 먼저 선언
+  const publishMessage = useCallback((type, payload = {}) => {
+    if (!clientRef.current) return;
+    clientRef.current.publish({
+      destination: `/fromapp/${type}/${roomKey}`,
+      body: JSON.stringify(payload)
+    });
+  }, [roomKey]);
 
-      console.log("현재 플레이어 업데이트 시도:", {
-        currentNumber: currentPlayer.playerNumber,
-        updatedPlayers,
+  // 그 다음이 게임 액션 함수들
+  const gameActions = {
+    startGame: useCallback(() => {
+      if (!isHost) return;
+      publishMessage(CONFIG.SOCKET_PUBLISH.GAME_START);
+    }, [isHost]),
+
+    setTarget: useCallback((targetId) => {
+      if (!clientRef.current || currentPlayer?.role !== "MAFIA") return;
+      publishMessage(CONFIG.SOCKET_PUBLISH.MAFIA_TARGET, { 
+        mafiaId: currentPlayer.playerNumber, 
+        targetId 
       });
+    }, [currentPlayer]),
 
-      const updated = updatedPlayers.find(
-        (p) => p.playerNumber === currentPlayer.playerNumber
-      );
-      if (updated) {
-        console.log("현재 플레이어 업데이트 성공:", updated);
-        setCurrentPlayer(updated);
-      } else {
-        console.warn(
-          "현재 플레이어를 찾을 수 없음:",
-          currentPlayer.playerNumber
-        );
-      }
-    },
-    [currentPlayer]
-  );
+    sendVote: useCallback((targetId) => {
+      if (!clientRef.current || !currentPlayer) return;
+      publishMessage(CONFIG.SOCKET_PUBLISH.VOTE, { 
+        voterId: currentPlayer.playerNumber, 
+        targetId 
+      });
+    }, [currentPlayer]),
 
-  // 게임 사운드 부분
-  useEffect(() => {
-    if (!isConnected || !clientRef.current || !roomKey) return;
+    processVoteResult: useCallback(() => {
+      if (!isHost) throw new Error("방장만 투표 결과를 처리할 수 있습니다.");
+      publishMessage(CONFIG.SOCKET_PUBLISH.VOTE_RESULT);
+    }, [isHost]),
 
-    const soundSubscription = clientRef.current.subscribe(
-      `/topic/game.sound.${roomKey}`,
-      (message) => {
-        const { sound } = JSON.parse(message.body);
+    processFinalVoteResult: useCallback(() => {
+      if (!isHost) throw new Error("방장만 최종 투표 결과를 처리할 수 있습니다.");
+      publishMessage(CONFIG.SOCKET_PUBLISH.FINAL_VOTE_RESULT);
+    }, [isHost]),
 
-        // 소리 재생
-        if (sound === "heal") {
-          new Audio("/sound/heal.mp3").play();
-          console.log("치료 소리 재생");
-        } else if (sound === "gun") {
-          new Audio("/sound/gun.mp3").play();
-          console.log("비명 소리 재생");
-        } 
-      }
-    );
+    processNightResult: useCallback(() => {
+      if (!isHost) throw new Error("방장만 밤 결과를 처리할 수 있습니다.");
+      publishMessage(CONFIG.SOCKET_PUBLISH.NIGHT_RESULT);
+    }, [isHost])
+  };  
 
-    return () => soundSubscription.unsubscribe();
-  }, [isConnected, roomKey]);
-
-  useEffect(() => {
-    if (!roomKey) {
-      console.error("roomKey가 없습니다!");
-      return;
+  const handleGameStart = useCallback((message) => {
+    console.log("게임 시작 메시지 수신:", message);
+    try {
+        const response = JSON.parse(message.body);
+        if (!response.success) {
+            console.error("게임 시작 실패:", response.message);
+            return;
+        }
+        setIsPlaying(true);
+        setGameStatus(response.gameStatus);
+        
+        // 타이머 초기화 및 시작
+        publishMessage(CONFIG.SOCKET_PUBLISH.GAME_TIMER);
+        
+        console.log("게임 시작 완료 및 타이머 시작");
+    } catch (error) {
+        console.error("게임 시작 메시지 처리 실패:", error);
     }
+}, [publishMessage]);
 
+const startGame = useCallback(() => {
+  if (!isHost || !clientRef.current) return;
+  console.log("게임 시작 요청");
+  publishMessage(CONFIG.SOCKET_PUBLISH.GAME_START);
+}, [isHost, publishMessage]);
+
+
+  // 소켓 연결 및 초기화
+  useEffect(() => {
+    if (!roomKey) return;
     let isInitialized = false;
 
     const initializeClient = async () => {
       try {
         if (isInitialized) return;
-
+        
         const playerData = JSON.parse(sessionStorage.getItem("player"));
         if (!playerData) {
-          console.error("플레이어 정보를 찾을 수 없습니다!");
-          return;
+          throw new Error("플레이어 데이터를 찾을 수 없습니다");
         }
-
-        console.log("게임 소켓 연결 초기화 시작...", playerData);
-        isInitialized = true;
 
         const client = new Client({
           webSocketFactory: () => new SockJS(WEBSOCKET_URL),
-          reconnectDelay: 5000,
-          heartbeatIncoming: 4000,
-          heartbeatOutgoing: 4000,
+          reconnectDelay: CONFIG.RECONNECT_DELAY,
+          heartbeatIncoming: CONFIG.HEARTBEAT_INCOMING,
+          heartbeatOutgoing: CONFIG.HEARTBEAT_OUTGOING,
+          maxRetries: 10,
           onConnect: async () => {
-            console.log("인게임 웹소켓 연결 성공:", roomKey);
-
-            setCurrentPlayer(playerData);
-            console.log("현재 플레이어 설정:", playerData);
-
+            console.log("소켓 연결 성공");
             setIsConnected(true);
-
             try {
-              const hostResponse = await axios.post(
-                `${API_BASE_URL}/game/host/${roomKey}`,
-                { username: playerData.username },
-                {
-                  withCredentials: true,
-                  headers: { "Content-Type": "application/json" },
-                }
-              );
-              setIsHost(hostResponse.data);
-              console.log("방장 여부:", hostResponse.data);
-
-              const playersResponse = await axios.get(
-                `${API_BASE_URL}/game/players/${roomKey}`,
-                { withCredentials: true }
-              );
-              setPlayers(playersResponse.data);
-              console.log("초기 플레이어 리스트:", playersResponse.data);
-
-              client.publish({
-                destination: `/fromapp/game.players.join/${roomKey}`,
-                body: JSON.stringify(playerData),
-              });
+              await initializeGameData(playerData);
+              isInitialized = true;
+              console.log("초기화 완료, 구독 준비됨");
             } catch (error) {
-              console.error("초기화 중 오류 발생:", error);
+              console.error("게임 데이터 초기화 중 오류:", error);
+              setIsConnected(false);
+              isInitialized = false;
             }
           },
-          onDisconnect: () => {
-            console.log("인게임 웹소켓 연결 해제:", roomKey);
+          onStompError: (frame) => {
+            console.error("STOMP 에러:", frame);
             setIsConnected(false);
             isInitialized = false;
-          },
+          }
         });
+
+        if (typeof client.watchConnection === 'function') {
+          client.watchConnection((connected) => {
+            if (!connected) {
+              setIsConnected(false);
+              console.log("서버와의 연결이 끊어졌습니다. 재연결을 시도합니다.");
+            }
+          });
+        }
 
         clientRef.current = client;
         await client.activate();
+        
       } catch (error) {
-        console.error("게임 소켓 초기화 실패:", error);
+        console.error("소켓 초기화 실패:", error);
+        setIsConnected(false);
         isInitialized = false;
       }
     };
 
-    const timer = setTimeout(() => {
-      initializeClient();
-    }, 1000);
-
+    const timer = setTimeout(initializeClient, 1000);
+    
     return () => {
       clearTimeout(timer);
-      if (clientRef.current?.active) {
-        console.log("게임 소켓 연결 정리 중...");
+      if (clientRef.current) {
         clientRef.current.deactivate();
       }
       isInitialized = false;
     };
   }, [roomKey]);
 
+  // 구독 설정
   useEffect(() => {
-    if (!isConnected || !clientRef.current || !roomKey || !currentPlayer) {
-      console.log("구독 설정을 위한 조건이 충족되지 않음:", {
-        isConnected,
-        hasClient: !!clientRef.current,
-        roomKey,
-        currentPlayer,
-      });
-      return;
-    }
+    if (!isConnected || !clientRef.current || !roomKey || !currentPlayer) return;
 
-    console.log("구독 설정 시작...", {
-      playerNumber: currentPlayer.playerNumber,
-      role: currentPlayer.role,
-    });
+    const subscriptions = [
+      clientRef.current.subscribe(`/topic/game.timer.${roomKey}`, handleTimerUpdate),
+      clientRef.current.subscribe(`/topic/game.chat.${roomKey}`, handleChatMessage),
+      clientRef.current.subscribe(`/topic/game.state.${roomKey}`, handleGameState),
+      clientRef.current.subscribe(`/topic/game.vote.${roomKey}`, handleVoteUpdate),
+      clientRef.current.subscribe(`/topic/game.players.${roomKey}`, handlePlayersUpdate),
+      clientRef.current.subscribe(`/topic/game.sound.${roomKey}`, handleSoundEffect),
+      clientRef.current.subscribe(`/topic/game.mafia.target.${roomKey}`, handleMafiaTarget),
+      clientRef.current.subscribe(`/topic/game.start.${roomKey}`, handleGameStart),
+      clientRef.current.subscribe(`/topic/game.night.result.${roomKey}`, handleNightResult),
+      clientRef.current.subscribe(`/topic/game.vote.result.${roomKey}`, handleVoteResult),
+      clientRef.current.subscribe(`/topic/game.finalvote.result.${roomKey}`, handleFinalVoteResult),
+      clientRef.current.subscribe(`/topic/game.players.update.${roomKey}`, handlePlayerUpdate)
+    ];
 
-    const subscriptions = [];
-
-    try {
-        // 1. 타이머 구독
-        subscriptions.push(
-            clientRef.current.subscribe(`/topic/game.timer.${roomKey}`, (message) => {
-                const response = JSON.parse(message.body);
-                if (response.success) {
-                    console.log('타이머 업데이트:', response.time);
-                    setGameTime(response.time);
-                } else {
-                    console.error('타이머 업데이트 실패:', response.message);
-                }
-            })
-        );
-        
-
-            // 2. 일반 채팅 구독
-            subscriptions.push(
-                clientRef.current.subscribe(`/topic/game.chat.${roomKey}`, (socketMsg) => {
-                    const chatMessage = JSON.parse(socketMsg.body);
-                    console.log('채팅 메시지 수신:', chatMessage);
-                    setMessages(prev => [...prev, chatMessage]);
-                })
-            );
-
-            // 3. 마피아 채팅 구독 (마피아인 경우만)
-            if (currentPlayer.role === 'MAFIA') {
-                console.log('마피아 채팅 구독 설정');
-                subscriptions.push(
-                    clientRef.current.subscribe(`/topic/game.chat.mafia.${roomKey}`, (socketMsg) => {
-                        const chatMessage = JSON.parse(socketMsg.body);
-                        console.log('마피아 채팅 수신:', chatMessage);
-                        setMessages(prev => [...prev, { ...chatMessage, isMafiaChat: true }]);
-                    })
-                );
-            }
-
-            // 4. 게임 상태 구독
-            subscriptions.push(
-                clientRef.current.subscribe(`/topic/game.state.${roomKey}`, (socketMsg) => {
-                    const { 
-                        gameStatus, 
-                        players, 
-                        currentTime, 
-                        turn: dayCount, 
-                        success, 
-                        message: systemMessage 
-                    } = JSON.parse(socketMsg.body);     
-                    if (success) {
-                        setGameStatus(gameStatus);
-                        setPlayers(players);
-                        setGameTime(currentTime);
-                        setDayCount(dayCount);
-                        
-                        // 시스템 메시지가 있다면 추가
-                        if (systemMessage) {
-                            setMessages(prev => [...prev, {
-                                text: systemMessage,
-                                isSystemMessage: true
-                            }]);
-                        }
-                    }
-                })
-            );
-
-            // 5. 플레이어 상태 구독
-            subscriptions.push(
-                clientRef.current.subscribe(`/topic/game.players.${roomKey}`, (socketMsg) => {
-                    const updatedPlayers = JSON.parse(socketMsg.body);
-                    console.log('플레이어 상태 업데이트:', updatedPlayers);
-                    setPlayers(updatedPlayers);
-                    
-                    // 현재 플레이어 정보도 업데이트
-                    const updatedCurrentPlayer = updatedPlayers.find(
-                        p => p.playerNumber === currentPlayer?.playerNumber
-                    );
-                    if (updatedCurrentPlayer) {
-                        console.log('현재 플레이어 상태 업데이트:', updatedCurrentPlayer);
-                        setCurrentPlayer(updatedCurrentPlayer);
-                    }
-                })
-            );
-
-            // 6. 마피아 타겟 구독
-            if (currentPlayer?.role === 'MAFIA') {
-                subscriptions.push(
-                    clientRef.current.subscribe(`/topic/game.mafia.target.${roomKey}`, (socketMsg) => {
-                        const targetMessage = JSON.parse(socketMsg.body);
-                        setMafiaTarget(targetMessage.targetId);
-                    })
-                );
-            }
-
-      // 투표 현황 응답 형식
-
-
-            // 7. 투표 상태 구독
-            subscriptions.push(
-                clientRef.current.subscribe(`/topic/game.vote.${roomKey}`, (socketMsg) => {
-                    const voteData = JSON.parse(socketMsg.body);
-                    console.log('투표 상태 수신:', voteData); // 디버깅용
-
-            if (voteData && voteData.voteStatus) {
-              console.log("투표 상태 업데이트:", voteData.voteStatus);
-              setVoteStatus(voteData.voteStatus);
-            } else {
-              console.log("직접 투표 상태 업데이트:", voteData);
-              setVoteStatus(voteData);
-            }
-          }
-        )
+    if (currentPlayer.role === 'MAFIA') {
+      subscriptions.push(
+        clientRef.current.subscribe(`/topic/game.chat.mafia.${roomKey}`, handleMafiaChat)
       );
-
-            // 8. 투표 결과 구독
-            subscriptions.push(
-                clientRef.current.subscribe(`/topic/game.vote.result.${roomKey}`, (socketMsg) => {
-                    const result = JSON.parse(socketMsg.body);
-                    console.log('투표 결과 수신:', result);
-                    
-                    if (result.success) {
-                        setPlayers(prevPlayers => 
-                            prevPlayers.map(player => 
-                                player.playerNumber === result.targetPlayer?.playerNumber
-                                    ? { ...player, isVoteTarget: true }
-                                    : player
-                            )
-                        );
-                        setVoteStatus(result.finalVoteStatus);
-                    }
-                })
-            );
-
-            // 9. 찬반 투표 구독
-            subscriptions.push(
-                clientRef.current.subscribe(`/topic/game.finalvote.${roomKey}`, (socketMsg) => {
-                    const voteData = JSON.parse(socketMsg.body);
-                    setFinalVotes(voteData);
-                })
-            );
-
-            // 10. 최종 투표 결과 구독
-            subscriptions.push(
-                clientRef.current.subscribe(`/topic/game.finalvote.result.${roomKey}`, (socketMsg) => {
-                    const result = JSON.parse(socketMsg.body);
-                    if (result.gameStatus) {
-                        setGameStatus(result.gameStatus);
-                    }
-                    if (result.players) {
-                        setPlayers(result.players);
-                        updateCurrentPlayer(result.players);
-                    }
-                    if(result.message) {
-                        console.log('최종 투표 결과 메시지:', result.message);
-                    }
-                })
-            );
-
-            // 시스템 메시지 구독 -> 채팅창에 등록해야겠지
-            subscriptions.push(
-                clientRef.current.subscribe(`/topic/game.system.${roomKey}`, (socketMsg) => {
-                    const systemMsg = JSON.parse(socketMsg.body);
-                    setMessages(prev => [...prev, {
-                        ...systemMsg,
-                        isSystemMessage: true
-                    }]);
-                })
-            );
-
-            return () => {
-                console.log('구독 정리 중...');
-                subscriptions.forEach(sub => sub?.unsubscribe());
-            };
-        } catch (error) {
-            console.error('구독 설정 중 오류:', error);
-        }
-    }, [isConnected, roomKey]);
-
-    const sendGameMessage = useCallback((message, isMafiaChat = false) => {
-        if (!clientRef.current || !currentPlayer) {
-            console.error('메시지를 보낼 수 없습니다: 연결 또는 플레이어 정보 없음');
-            return;
-        }
-
-      const destination = isMafiaChat
-        ? `/fromapp/game.chat.mafia/${roomKey}`
-        : `/fromapp/game.chat/${roomKey}`;
-
-        try {
-            clientRef.current.publish({
-                destination,
-                body: JSON.stringify({
-                    username: currentPlayer.username,
-                    content: message,
-                    gameStatus: gameStatus,
-                    role: currentPlayer.role,
-                    roomKey: roomKey,
-                    playerNumber: currentPlayer.playerNumber,
-                    isSystemMessage: false
-                })
-            });
-        } catch (error) {
-            console.error('메시지 전송 실패:', error);
-        }
-    }, [roomKey, currentPlayer, gameStatus]);
-
-  const setTarget = useCallback(
-    (targetId) => {
-      if (!clientRef.current || currentPlayer?.role !== "MAFIA") return;
-
-      clientRef.current.publish({
-        destination: `/fromapp/game.mafia.target/${roomKey}`,
-        body: JSON.stringify({
-          mafiaId: currentPlayer.playerNumber,
-          targetId,
-        }),
-      });
-    },
-    [roomKey, currentPlayer]
-  );
-
-  const sendVote = useCallback(
-    (targetId) => {
-      if (!clientRef.current || !currentPlayer) return;
-
-      clientRef.current.publish({
-        destination: `/fromapp/game.vote/${roomKey}`,
-        body: JSON.stringify({
-          voterId: currentPlayer.playerNumber,
-          targetId,
-        }),
-      });
-    },
-    [roomKey, currentPlayer]
-  );
-
-  const processVoteResult = useCallback(async () => {
-    if (!isHost) {
-      throw new Error("방장만 투표 결과를 처리할 수 있습니다.");
     }
 
+    return () => subscriptions.forEach(sub => sub.unsubscribe());
+  }, [isConnected, roomKey, currentPlayer]);
+
+  // 메시지 전송 함수들
+  const sendGameMessage = useCallback((message, isMafiaChat = false) => {
+    if (!clientRef.current || !currentPlayer) return;
+    
+    const destination = isMafiaChat ? 
+      `/fromapp/game.chat.mafia/${roomKey}` : 
+      `/fromapp/game.chat/${roomKey}`;
+
+    clientRef.current.publish({
+      destination,
+      body: JSON.stringify({
+        username: currentPlayer.username,
+        content: message,
+        gameStatus,
+        role: currentPlayer.role,
+        roomKey,
+        playerNumber: currentPlayer.playerNumber,
+        type: isMafiaChat ? 'MAFIA' : 'NORMAL',
+        soundUrl: null,
+        imageUrl: null
+      })
+    });
+  }, [roomKey, currentPlayer, gameStatus]);
+
+  // 시스템 메시지 전송
+  const sendSystemMessage = useCallback((content) => {
+    if (!clientRef.current) return;
+    
+    clientRef.current.publish({
+      destination: `/fromapp/game.chat/${roomKey}`,
+      body: JSON.stringify({
+        username: 'System',
+        content,
+        gameStatus,
+        role: 'SYSTEM',
+        roomKey,
+        playerNumber: 0,
+        type: 'SYSTEM',
+        soundUrl: null,
+        imageUrl: null
+      })
+    });
+  }, [roomKey, gameStatus]);
+
+  // 이벤트 메시지 전송 (투표, 사망 등의 게임 이벤트)
+  const sendEventMessage = useCallback((content, eventType) => {
+    if (!clientRef.current) return;
+    
+    clientRef.current.publish({
+      destination: `/fromapp/game.chat/${roomKey}`,
+      body: JSON.stringify({
+        username: 'System',
+        content,
+        gameStatus,
+        role: 'SYSTEM',
+        roomKey,
+        playerNumber: 0,
+        type: eventType,  // 'VOTE_EVENT', 'DEATH_EVENT' 등
+        soundUrl: null,
+        imageUrl: null
+      })
+    });
+  }, [roomKey, gameStatus]);
+
+
+
+  // 게임 데이터 초기화
+  const initializeGameData = async (playerData) => {
     try {
-      clientRef.current?.publish({
-        destination: `/fromapp/game.vote.result/${roomKey}`,
-        body: JSON.stringify({ voteStatus }),
+      console.log("게임 데이터 초기화 시작:", { playerData, roomKey });
+      
+      // 1. 현재 플레이어 설정
+      setCurrentPlayer(playerData);
+      
+      // 2. 방 정보 가져오기
+      const response = await axios.get(`${API_BASE_URL}/api/rooms/${roomKey}`);
+      const roomData = response.data;
+      console.log("방 정보 로드됨:", roomData);
+      
+      // 3. 기본 데이터 설정 - username으로 호스트 체크
+      setIsHost(playerData.username === roomData.hostName);
+      setPlayers(roomData.players);
+      setGameStatus(roomData.gameStatus);
+      setGameTime(roomData.currentTime);
+      setDayCount(roomData.dayCount);
+      
+      console.log("게임 데이터 초기화 완료", {
+        isHost: playerData.username === roomData.hostName,
+        currentPlayer: playerData,
+        players: roomData.players,
+        gameStatus: roomData.gameStatus
       });
-      return { success: true };
+
     } catch (error) {
-      return { success: false, error };
-    }
-  }, [roomKey, isHost, voteStatus]);
-
-  const sendFinalVote = useCallback(
-    async (isAgree) => {
-      try {
-        await axios.post(
-          `${API_BASE_URL}/game/finalvote/${roomKey}`,
-          {
-            roomKey: parseInt(roomKey),
-            playerNumber: currentPlayer.playerNumber,
-            isAgree,
-          },
-          { withCredentials: true }
-        );
-      } catch (error) {
-        throw error;
-      }
-    },
-    [roomKey, currentPlayer]
-  );
-
-  const requestFinalVoteResult = useCallback(() => {
-    if (!isHost || !clientRef.current) {
-      throw new Error("방장만 최종 투표 결과를 요청할 수 있습니다.");
-    }
-
-    try {
-      clientRef.current.publish({
-        destination: `/fromapp/game.finalvote.result/${roomKey}`,
-      });
-    } catch (error) {
+      console.error("게임 데이터 초기화 실패:", error);
       throw error;
     }
-  }, [roomKey, isHost]);
+  };
 
-    const updateGameStatus = useCallback((newStatus) => {
-        if (!clientRef.current || !currentPlayer || !isHost) {
-            console.error('게임 상태를 변경할 수 없습니다: 권한이 없거나 연결되지 않음');
-            return;
-        }
+  // 메시지 핸들러들
+  const handleChatMessage = useCallback((message) => {
+    try {
+      const chatMessage = JSON.parse(message.body);
+      // 메시지 중복 체크
+      setMessages(prev => {
+        const isDuplicate = prev.some(msg => 
+          msg.content === chatMessage.content && 
+          msg.playerNumber === chatMessage.playerNumber &&
+          msg.timestamp === chatMessage.timestamp
+        );
+        if (isDuplicate) return prev;
+        return [...prev, chatMessage];
+      });
+    } catch (error) {
+      console.error("채팅 메시지 처리 실패:", error);
+    }
+  }, []);
 
-        try {
-            clientRef.current.publish({
-                destination: `/fromapp/game.state.update/${roomKey}`,
-                body: JSON.stringify({ gameStatus: newStatus, player: currentPlayer })
-            });
-        } catch (error) {
-            console.error('게임 상태 업데이트 실패:', error);
-        }
-    }, [roomKey, currentPlayer, isHost]);
+  const handleMafiaChat = useCallback((message) => {
+    const chatMessage = JSON.parse(message.body);
+    setMessages(prev => [...prev, { ...chatMessage, isMafiaChat: true }]);
+  }, []);
 
-    const canChat = useCallback(() => {
-        if (!currentPlayer) return false;
-        
-        // 낮에는 모든 살아있는 플레이어가 채팅 가능
-        if (gameStatus === GAME_STATUS.DAY) {
-            return currentPlayer.isAlive;
-        }
-        
-        // 밤에는 마피아만 채팅 가능
-        if (gameStatus === GAME_STATUS.NIGHT) {
-            return currentPlayer.isAlive && currentPlayer.role === 'MAFIA';
-        }
-        
-        // 투표 시간에는 모든 살아있는 플레이어가 채팅 가능
-        if (gameStatus === GAME_STATUS.VOTE || gameStatus === GAME_STATUS.FINALVOTE) {
-            return currentPlayer.isAlive;
-        }
+// handleTimerUpdate 수정
+const handleTimerUpdate = useCallback((message) => {
+  if (!message.body) return;
+  
+  try {
+      const response = JSON.parse(message.body);
+      if (!response.success) {
+          console.error("타이머 업데이트 실패:", response.message);
+          return;
+      }
 
-    return false;
-  }, [currentPlayer, gameStatus]);
+      console.log("타이머 업데이트:", response);
+      setGameTime(response.currentTime);
+      if (response.gameStatus) {
+          setGameStatus(response.gameStatus);
+      }
+  } catch (error) {
+      console.error("타이머 업데이트 처리 실패:", error);
+  }
+}, []);
+
+  const handleGameState = useCallback((message) => {
+    console.log("게임 상태 업데이트 수신:", message);
+    const { gameStatus: newStatus, dayCount: newDay } = JSON.parse(message.body);
+    setGameStatus(newStatus);
+    if (newDay) setDayCount(newDay);
+  }, []);
+
+  const handleVoteUpdate = useCallback((message) => {
+    const { voteStatus: newVotes, isFinalVote } = JSON.parse(message.body);
+    if (isFinalVote) {
+      setFinalVotes(newVotes);
+    } else {
+      setVoteStatus(newVotes);
+    }
+  }, []);
+
+  const handlePlayersUpdate = useCallback((message) => {
+    const updatedPlayers = JSON.parse(message.body);
+    setPlayers(updatedPlayers);
+  }, []);
+
+  const handleSoundEffect = useCallback((message) => {
+    const soundEffect = JSON.parse(message.body);
+    // Handle sound effect update logic here
+  }, []);
+
+  const handleMafiaTarget = useCallback((message) => {
+    const { mafiaId, targetId } = JSON.parse(message.body);
+    setMafiaTarget(targetId);
+  }, []);
+
+  const handleNightResult = useCallback((message) => {
+    console.log("밤 결과 수신:", message);
+    // Handle night result logic here
+  }, []);
+
+  const handleVoteResult = useCallback((message) => {
+    console.log("투표 결과 수신:", message);
+    // Handle vote result logic here
+  }, []);
+
+  const handleFinalVoteResult = useCallback((message) => {
+    console.log("최종 투표 결과 수신:", message);
+    // Handle final vote result logic here
+  }, []);
+
+  const handlePlayerUpdate = useCallback((message) => {
+    console.log("플레이어 업데이트 수신:", message);
+    // Handle player update logic here
+  }, []);
+
+  const createSystemMessage = useCallback((content) => ({
+    content,
+    playerNumber: 0,
+    username: "System",
+    role: "SYSTEM",
+    type: "SYSTEM",
+    gameStatus: gameStatus,
+    roomKey: roomKey,
+    soundUrl: null,
+    imageUrl: null
+  }), [gameStatus, roomKey]);
 
   const canVote = useCallback(() => {
-    return currentPlayer?.isAlive && gameStatus === GAME_STATUS.VOTE;
+    return gameStatus === GAME_STATUS.VOTE && currentPlayer?.isAlive;
+  }, [gameStatus, currentPlayer]);
+
+  const canChat = useCallback(() => {
+    if (!currentPlayer?.isAlive) return false;
+    if (gameStatus === GAME_STATUS.NIGHT) {
+      return currentPlayer.role === 'MAFIA';
+    }
+    return true;
   }, [currentPlayer, gameStatus]);
 
-    const canFinalVote = useCallback(() => {
-        if (!currentPlayer?.isAlive || gameStatus !== GAME_STATUS.FINALVOTE) {
-            return false;
-        }
-        return !currentPlayer.isVoteTarget;
-    }, [currentPlayer, gameStatus]);
 
-    const sendSystemMessage = useCallback((text) => {
-        if (clientRef.current) {
-            clientRef.current.publish({
-                destination: `/fromapp/game.system.${roomKey}`,
-                body: JSON.stringify({
-                    username: 'System',
-                    content: text,
-                    gameStatus: gameStatus,
-                    role: 'SYSTEM',
-                    roomKey: roomKey,
-                    playerNumber: 0,
-                    isSystemMessage: true
-                })
-            });
-        }
-    }, [roomKey, gameStatus]);
+  useEffect(() => {
+    if (!clientRef.current || !roomKey || !isPlaying) return;
 
-    // 시간 조절 함수
-    const modifyGameTime = useCallback((adjustment) => {
-        if (clientRef.current && currentPlayer) {
-            clientRef.current.publish({
-                destination: `/fromapp/game.timer.modify/${roomKey}`,
-                body: JSON.stringify({
-                    playerNumber: currentPlayer.playerNumber,
-                    adjustment: adjustment
-                })
-            });
-        }
-    }, [roomKey, currentPlayer]);
+    // 타이머 구독
+    const timerSubscription = clientRef.current.subscribe(
+      `/topic/game.timer.${roomKey}`,
+      handleTimerUpdate
+    );
 
-    const value = {
-        messages,
-        players,
-        gameStatus,
-        currentPlayer,
-        mafiaTarget,
-        voteStatus,
-        finalVotes,
-        isConnected,
-        isHost,
-        sendGameMessage,
-        setTarget,
-        sendVote,
-        processVoteResult,
-        sendFinalVote,
-        requestFinalVoteResult,
-        updateGameStatus,
-        canChat,
-        canVote,
-        canFinalVote,
-        gameTime,
-        dayCount,
-        sendSystemMessage,
-        modifyGameTime,
+    // 게임이 시작되면 타이머 시작 요청
+    if (isPlaying) {
+      publishMessage(CONFIG.SOCKET_PUBLISH.GAME_TIMER);
+    }
+
+    return () => {
+      timerSubscription?.unsubscribe();
     };
+  }, [roomKey, isPlaying, clientRef.current]);
 
-  return (
-    <GameSocketContext.Provider value={value}>
-      {children}
-    </GameSocketContext.Provider>
-  );
+  const value = {
+    messages, 
+    players, 
+    gameStatus, 
+    currentPlayer, 
+    mafiaTarget,
+    voteStatus, 
+    finalVotes, 
+    isConnected, 
+    isHost, 
+    gameTime, 
+    dayCount,
+    ...gameActions,
+    sendGameMessage,
+    canVote,
+    canChat,
+    sendSystemMessage,
+    modifyGameTime: useCallback((adjustment) => 
+      publishMessage(CONFIG.SOCKET_PUBLISH.TIMER_MODIFY, { 
+        playerNumber: currentPlayer?.playerNumber, 
+        adjustment 
+      })
+    , [currentPlayer, publishMessage]),
+    startGame,
+    setGameTime,
+  };
+
+  return <GameSocketContext.Provider value={value}>{children}</GameSocketContext.Provider>;
 };
 
 export const useGameContext = () => {
   const context = useContext(GameSocketContext);
-  if (!context) {
-    throw new Error("GameSocketProvider 내부에서만 사용할 수 있습니다");
-  }
+  if (!context) throw new Error("GameSocketProvider 내부에서만 사용할 수 있습니다");
   return context;
 };

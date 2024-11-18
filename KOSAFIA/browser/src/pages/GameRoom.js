@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import PlayerCard from "../components/PlayerCard";
 import Timer from "../components/Timer";
 import DayIndicator from "../components/DayIndicator";
@@ -27,14 +27,16 @@ const stages = [
 ];
 
 const GameRoom = () => {
+  // 1. 모든 state 선언
   const [showFirstJobExplainPopup, setFirstJobExplainPopup] = useState(true);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [stageIndex, setStageIndex] = useState(0);
-  const [targetSelection, setTargetSelection] = useState({}); // 각 플레이어가 선택한 타겟을 저장
+  const [targetSelection, setTargetSelection] = useState({});
+  const [timeModifiedPlayers, setTimeModifiedPlayers] = useState(new Set());
   const chatBoxRef = useRef();
 
-  // GameSocketContext에서 필요한 상태들을 가져옴
+  // 2. Context에서 값 가져오기
   const { 
     roomKey, //현재 방 키값 INTIGER
     players, //현재 방에 있는 플레이어들 ArrayList<Player>
@@ -53,168 +55,163 @@ const GameRoom = () => {
     dayCount,         // 현재 일차
     sendSystemMessage, // 시스템 메시지 전송 함수
     modifyGameTime,
+    voteStatus, // 투표 현황 추가
+    processVoteResult, // 투표 결과 처리 함수 추가
+    startGame,
   } = useGameContext();
 
-  // 시간 조절한 플레이어 목록 관리 (새로운 게임 시작 시 초기화 필요)
-  const [timeModifiedPlayers, setTimeModifiedPlayers] = useState(new Set());
+  // 3. 모든 useCallback, useEffect 선언을 여기에 배치
+  const sendMessageToChat = useCallback((message) => {
+    chatBoxRef.current?.receiveMessage(message);
+  }, []);
 
-  // 게임 상태에 따른 stageIndex 설정
+  const sendGameSystemMessage = useCallback((message) => {
+    sendSystemMessage(message);
+    sendMessageToChat({
+      text: message,
+      isSystemMessage: true
+    });
+  }, [sendSystemMessage, sendMessageToChat]);
+
+  const handleOpenFirstJobExplainPopup = useCallback(() => {
+    setFirstJobExplainPopup(true);
+  }, []);
+
+  const handleCloseFirstJobExplainPopup = useCallback(() => {
+    setFirstJobExplainPopup(false);
+  }, []);
+
+  const handleOpenPopup = useCallback((playerName) => {
+    setSelectedPlayer(playerName);
+    setIsPopupOpen(true);
+  }, []);
+
+  const handleClosePopup = useCallback(() => {
+    setIsPopupOpen(false);
+    setSelectedPlayer(null);
+  }, []);
+
+  const handleTargetChange = useCallback((currentPlayerNum, targetPlayerNumber) => {
+    setTargetSelection(prev => ({
+      ...prev,
+      [currentPlayerNum]: targetPlayerNumber,
+    }));
+  }, []);
+
+  const handleStageChange = useCallback(async (newStageIndex) => {
+    setStageIndex(newStageIndex);
+    if (gameStatus === GAME_STATUS.NIGHT) {
+      const targetPlayerNumber = targetSelection[currentPlayer?.playerNumber];
+      if (targetPlayerNumber !== undefined) {
+        await handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
+      }
+      await handleNightActions(roomKey);
+      if (isHost) {
+        updateGameStatus(NEXT_STATUS[gameStatus]);
+      }
+    }
+  }, [gameStatus, currentPlayer, targetSelection, roomKey, isHost, updateGameStatus]);
+
+  const canModifyTime = useCallback(() => {
+    if (!currentPlayer || !gameStatus) return false;
+    return (
+      gameStatus === "DAY" && 
+      currentPlayer.isAlive && 
+      !Array.from(timeModifiedPlayers).includes(currentPlayer.playerNumber)
+    );
+  }, [gameStatus, currentPlayer, timeModifiedPlayers]);
+
+  const handleModifyTime = useCallback((adjustment) => {
+    if (!canModifyTime() || !currentPlayer) return;
+    modifyGameTime(adjustment);
+    setTimeModifiedPlayers(prev => new Set([...prev, currentPlayer.playerNumber]));
+    sendGameSystemMessage(
+      `Player ${currentPlayer.playerNumber}님이 시간을 ${Math.abs(adjustment)}초 ${adjustment > 0 ? '증가' : '감소'}시켰습니다.`
+    );
+  }, [canModifyTime, modifyGameTime, currentPlayer, sendGameSystemMessage]);
+
+  const handlePlayerSelect = useCallback((targetId) => {
+    if (!currentPlayer || !gameStatus) return;
+    if (gameStatus === "NIGHT" && currentPlayer.role === "MAFIA") {
+      setTarget(targetId);
+    } else if (gameStatus === "VOTE" && canVote()) {
+      sendVote(targetId);
+      sendGameSystemMessage(
+        `Player ${currentPlayer.playerNumber}님이 Player ${targetId}님을 지목했습니다.`
+      );
+    }
+    if (gameStatus !== "VOTE" && gameStatus !== "FINALVOTE" && gameStatus !== "NIGHT") {
+      const player = players?.find((p) => p.playerNumber === targetId);
+      if (player) {
+        handleOpenPopup(`Player ${player.playerNumber} (${player.role})`);
+      }
+    }
+  }, [gameStatus, currentPlayer, canVote, setTarget, sendVote, sendGameSystemMessage, players, handleOpenPopup]);
+
+  const handleTimerEnd = useCallback(async () => {
+    if (!isHost) return;
+
+    console.log("타이머 종료 이벤트:", { 
+      gameStatus, 
+      stageIndex,
+      currentTime: gameTime 
+    });
+    
+    if (gameStatus === GAME_STATUS.NIGHT) {
+      console.log("밤 시간 종료 처리 시작");
+      sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
+      await handleStageChange(1);
+    } else if (gameStatus === GAME_STATUS.VOTE) {
+      console.log("투표 시간 종료 처리 시작");
+      const result = await processVoteResult();
+      if (result.success) {
+        sendGameSystemMessage(`투표가 종료되었습니다.`);
+        updateGameStatus(NEXT_STATUS[gameStatus]);
+      }
+    } else {
+      console.log(`${gameStatus} 시간 종료 처리 시작`);
+      sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
+      updateGameStatus(NEXT_STATUS[gameStatus]);
+    }
+  }, [
+    isHost,
+    gameStatus, 
+    stageIndex, 
+    gameTime,
+    sendGameSystemMessage, 
+    handleStageChange, 
+    processVoteResult, 
+    updateGameStatus
+  ]);
+
+  // 4. useEffect 선언
   useEffect(() => {
-    // 나이트:0 딜레이:1 데이:2 투표:3 최후의변론:4
-    setStageIndex(STATUS_INDEX[gameStatus]);
+    if (gameStatus) {
+      setStageIndex(STATUS_INDEX[gameStatus]);
+    }
   }, [gameStatus]);
 
-  // 게임 상태가 변경될 때 timeModifiedPlayers 초기화
   useEffect(() => {
     if (gameStatus === 'NIGHT') {
       setTimeModifiedPlayers(new Set());
     }
   }, [gameStatus]);
 
-  // 처음 직업설명 팝업창 열기
-  const handleOpenFirstJobExplainPopup = () => {
-    setFirstJobExplainPopup(true);
-  };
+  // 5. 초기화 체크는 마지막에
+  const isGameInitialized = useMemo(() => {
+    return (
+      players?.length > 0 && 
+      currentPlayer && 
+      gameStatus !== null && 
+      gameStatus !== 'NONE'
+    );
+  }, [players, currentPlayer, gameStatus]);
 
-  // 처음 직업설명 팝업창 닫기
-  const handleCloseFirstJobExplainPopup = () => {
-    setFirstJobExplainPopup(false);
-  };
-
-  const sendMessageToChat = (message) => {
-    chatBoxRef.current?.receiveMessage(message);
-  };
-
-  const handleOpenPopup = (playerName) => {
-    setSelectedPlayer(playerName);
-    setIsPopupOpen(true);
-  };
-
-  const handleClosePopup = () => {
-    setIsPopupOpen(false);
-    setSelectedPlayer(null);
-  };
-
-  //하은님 구현
-  const handleStageChange = async (newStageIndex) => {
-    setStageIndex(newStageIndex);
-
-    if (gameStatus === GAME_STATUS.NIGHT) {
-        const targetPlayerNumber = targetSelection[currentPlayer.playerNumber];
-
-        // 1. 먼저 타겟 정보 전송
-        if (targetPlayerNumber !== undefined) {
-            await handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
-        }
-
-        // 2. 밤 액션 처리
-        await handleNightActions(roomKey); 
-
-        // 3. 모든 처리가 완료된 후에만 상태 업데이트
-        if (isHost) {
-            updateGameStatus(NEXT_STATUS[gameStatus]);
-        }
-    }
-};
-
-  // 밤 이벤트 처리를 위한 새로운 함수
-const handleNightEvent = async () => {
-  // 1. 스테이지 인덱스 업데이트
-  setStageIndex(1);
-
-  // 2. 타겟 정보 처리 (모든 플레이어)
-  const targetPlayerNumber = targetSelection[currentPlayer.playerNumber];
-  
-  if (targetPlayerNumber !== undefined) {
-      await handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
+  if (!isGameInitialized) {
+    return <div className="game-loading">게임 초기화 중...</div>;
   }
 
-  // 3. 밤 행동 처리 (모든 플레이어)
-  await handleNightActions(1);
-};
-
-  // 타겟 변경을 처리하는 함수
-  const handleTargetChange = (currentPlayerNum, targetPlayerNumber) => {
-    console.log("handleTargetChange 함수 실행");
-
-    //타겟을 상태에 저장.
-    setTargetSelection((prev) => ({
-      ...prev,
-      [currentPlayerNum]: targetPlayerNumber,
-    }));
-    // 타겟 정보는 밤 단계가 끝난 후 한 번에 서버로 전송하므로 상태만 저장함.
-  };
-
-  // 플레이어 선택 핸들러 수정
-  const handlePlayerSelect = (targetId) => {
-    if (gameStatus === "NIGHT" && currentPlayer?.role === "MAFIA") {
-      setTarget(targetId);
-    } else if (gameStatus === "VOTE" && canVote()) {
-      sendVote(targetId);
-    }
-
-    // 기존의 팝업 로직 유지
-    const player = players.find((p) => p.playerNumber === targetId);
-    if (player) {
-      const playerName = `Player ${player.playerNumber} (${player.role})`;
-      handleOpenPopup(playerName);
-    }
-  };
-
-  // 시간 조절 가능 여부 체크
-  const canModifyTime = useCallback(() => {
-    return gameStatus === "DAY" && 
-           currentPlayer?.isAlive && 
-           !timeModifiedPlayers.has(currentPlayer?.playerNumber);
-  }, [gameStatus, currentPlayer, timeModifiedPlayers]);
-
-  // 시스템 메시지 전송을 위한 통합 핸들러
-  const sendGameSystemMessage = useCallback((message) => {
-    sendSystemMessage(message);
-    // 채팅창에도 시스템 메시지 표시
-    sendMessageToChat({
-      text: message,
-      isSystemMessage: true
-    });
-  }, [sendSystemMessage]);
-
-  // 게임 상태 변경 시 시스템 메시지 전송
-  useEffect(() => {
-    if (gameStatus && stages[stageIndex]) {
-      sendGameSystemMessage(`${stages[stageIndex].name} 시간이 시작되었습니다.`);
-    }
-  }, [gameStatus, stageIndex, sendGameSystemMessage]);
-
-  // 시간 조절 핸들러 수정
-  const handleModifyTime = useCallback((adjustment) => {
-    if (canModifyTime()) {
-      modifyGameTime(adjustment);
-      // 시간 조절한 플레이어 추가
-      setTimeModifiedPlayers(prev => new Set([...prev, currentPlayer.playerNumber]));
-      
-      // 시간 조절 시스템 메시지
-      sendGameSystemMessage(
-        `Player ${currentPlayer.playerNumber}님이 시간을 ${Math.abs(adjustment)}초 ${adjustment > 0 ? '증가' : '감소'}시켰습니다.`
-      );
-    }
-  }, [canModifyTime, modifyGameTime, currentPlayer, sendGameSystemMessage]);
-
-// handleTimerEnd에서는 handleStageChange 호출하도록 수정
-const handleTimerEnd = useCallback(async () => {
-  if (gameStatus === GAME_STATUS.NIGHT) {
-      if (isHost) {
-          sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
-      }
-      // handleStageChange를 통해 모든 처리를 일관되게 진행
-      await handleStageChange(1);
-  } else {
-      if (isHost) {
-          sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
-          updateGameStatus(NEXT_STATUS[gameStatus]);
-      }
-  }
-}, [isHost, gameStatus, stageIndex, updateGameStatus, sendGameSystemMessage]);
-
+  // 6. 렌더링
   return (
     <div className={`game-room ${stageIndex === 1 ? "shadow-inset-top" : ""}`}>
       {currentPlayer && showFirstJobExplainPopup && (
@@ -226,7 +223,7 @@ const handleTimerEnd = useCallback(async () => {
       <div className="chat-area">
         <div className="player-area">
           <div className="header">
-            {players.length > 0 && currentPlayer && (
+            {players?.length > 0 && currentPlayer && (
               <Timer
                 time={gameTime}
                 gameStatus={gameStatus}
@@ -240,24 +237,24 @@ const handleTimerEnd = useCallback(async () => {
           </div>
           {currentPlayer && <JobInfoIcon role={currentPlayer.role} />}
           <div className="player-cards">
-            {players.length > 0 ? (
+            {players?.length > 0 ? (
               players.map((player, index) => (
-                <PlayerCard
-                  key={index}
-                  name={`Player ${player.playerNumber}`}
-                  index={player.playerNumber - 1}
-                  role={player.role}
-                  isNight={stageIndex === STATUS_INDEX[GAME_STATUS.NIGHT]}
-                  currentPlayerRole={currentPlayer.role}
-                  currentPlayerNum={currentPlayer.playerNumber}
-                  onTargetChange={handleTargetChange}
-                  isAlive={currentPlayer.isAlive}
-                  onClick={() => {
-                    const playerName = `Player ${player.playerNumber} (${player.role})`;
-                    handleOpenPopup(playerName);
-                    handlePlayerSelect(player.playerNumber);
-                  }}
-                />
+                player && (
+                  <PlayerCard
+                    key={index}
+                    name={`Player ${player.playerNumber}`}
+                    index={player.playerNumber - 1}
+                    role={player.role}
+                    isNight={stageIndex === STATUS_INDEX[GAME_STATUS.NIGHT]}
+                    currentPlayerRole={currentPlayer?.role}
+                    currentPlayerNum={currentPlayer?.playerNumber}
+                    onTargetChange={handleTargetChange}
+                    isAlive={player.isAlive}
+                    gameStatus={gameStatus}
+                    voteStatus={voteStatus}
+                    onClick={() => handlePlayerSelect(player.playerNumber)}
+                  />
+                )
               ))
             ) : (
               <div>플레이어 정보를 불러오는 중...</div>

@@ -20,6 +20,10 @@ const PlayerCard = ({
   currentPlayerNum,
   onTargetChange, // 타겟 선택 업데이트 함수
   isAlive,
+  //김남영 따로 추가 게임스테이터스 소켓 변수 이건 안추가 할수가 없네요요
+  gameStatus,
+  voteStatus, // 추가: 투표 현황
+  onClick // 수정: 투표 처리를 위한 click handler
 }) => {
   const [isRoleMemoOpen, setIsRoleMemoOpen] = useState(false);
   const [avatar, setAvatar] = useState("/img/default-avatar.png");
@@ -70,7 +74,54 @@ const PlayerCard = ({
     if (isNight && currentPlayerRole !== "CITIZEN" && isAlive) {
       handleTargetSelect(index + 1); // 클릭된 카드의 플레이어 번호를 타겟으로 설정
     }
+    //밤로직은 하은님. 그외 로직은 밑에거
+    // 투표 로직
+    if (gameStatus === "VOTE" && isAlive) {
+      onClick && onClick(); // GameRoom의 handlePlayerSelect 호출
+    } else {
+      handleCardClickOthers(gameStatus);
+    }
   };
+
+  //====김남영 추가 블록 손코=====
+  const handleCardClickOthers = (gameSatus) => {
+
+    switch(gameStatus){
+      case "NIGHT":
+        //하은님 코드만 돌아가게하고 끝
+        break;
+      case "DELAY":
+        //클릭 자체가 암것도 안해
+        break;
+      case "DAY":
+        //메모창 열기??
+        handleRoleMemoOpen();
+        break;
+      case "VOTE":
+        if (isAlive) {
+          handleTargetSelect(index + 1); // 클릭된 카드의 플레이어 번호를 타겟으로 설정
+        }
+        break;
+      case "FINALVOTE" :
+        //아직 미구현현
+        break;
+      default:
+        //일단 막아
+        break;
+    }
+  }
+  // 투표 카운트 표시 컴포넌트
+  const VoteCount = () => {
+    if (gameStatus !== "VOTE" || !voteStatus) return null;
+
+    const count = voteStatus[index + 1] || 0;
+    return (
+      <div className="vote-count">
+        <span>{count} 표</span>
+      </div>
+    );
+  };
+  //==============================
 
   const handleClose = () => {
     setIsRoleMemoOpen(false);
@@ -80,7 +131,7 @@ const PlayerCard = ({
     <div>
       <div
         className={`player-card ${
-          isNight && currentPlayerRole !== "CITIZEN" && isAlive
+          ((isNight && currentPlayerRole !== "CITIZEN") || gameStatus === "VOTE") && isAlive
             ? "clickable"
             : ""
         }`}
@@ -93,6 +144,7 @@ const PlayerCard = ({
           style={{ backgroundImage: `url(${avatar})` }} // 동적으로 아바타 이미지 설정
         />
         <div className="player-name">{name}</div>
+        <VoteCount />
 
         {/* 김남영 추가 투표용 라디오 버튼*/}
         <div className="player-card-radio-container">
