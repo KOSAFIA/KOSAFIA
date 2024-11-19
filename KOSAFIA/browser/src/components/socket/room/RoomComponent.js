@@ -129,7 +129,7 @@ const handleLeaveRoom = async () => {
                             return (
                                 <div key={index} className="chat-wrapper">
                                     {msg.username !== currentUsername && (
-                                        <div className="chat-username">{msg.username}</div> /* 닉네임을 바깥에 표시 */
+                                        <div className="chat-username">{msg.username}</div> /* 닉네임을 바깥에 표시   */
                                     )}
                                     <div
                                         className={`chat-message ${
@@ -141,7 +141,7 @@ const handleLeaveRoom = async () => {
                                 </div>
                             );
                         })}
-                    </div>
+                    </div>    // 
 
                     <div className="room-chat-input">
                         <input
