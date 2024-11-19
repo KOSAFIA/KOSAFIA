@@ -157,6 +157,62 @@
   word-break: break-word; /* 긴 단어가 잘리거나 넘칠 때 줄바꿈 처리 */
 }
 
+/* 채팅 전체 래퍼 */
+.chat-wrapper {
+  display: flex;
+  flex-direction: column; /* 닉네임과 채팅을 세로로 배치 */
+  align-items: flex-start; /* 기본적으로 왼쪽 정렬 */
+  margin-bottom: 10px; /* 채팅 간 여백 */
+}
+
+/* 닉네임 스타일 */
+.chat-username {
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffc107; /* 닉네임 색상 */
+  margin-bottom: 5px; /* 채팅 물풍선과 간격 */
+  margin-left: 5px; /* 닉네임 위치 조정 */
+  text-align: left;
+}
+
+/* 채팅 메시지 */
+.chat-message {
+  display: inline-block;
+  max-width: 60%; /* 최대 너비 제한 */
+  word-break: break-word; /* 긴 단어 줄바꿈 */
+  padding: 10px;
+  border-radius: 10px;
+  position: relative;
+}
+
+/* 내 메시지 */
+.my-message {
+  align-self: flex-end;
+  background-color: #ffffffc7;
+  color: black;
+  border-bottom-right-radius: 0;
+  text-align: left;
+  margin-right: 10px;
+}
+
+/* 상대방 메시지 */
+.other-message {
+  align-self: flex-start;
+  background-color: #ffffffc7;
+  color: black;
+  border-bottom-left-radius: 0;
+  text-align: left;
+  margin-left: 10px;
+}
+
+/* 채팅 글자 수에 따라 크기 조정 */
+.chat-content {
+  display: block; /* 크기를 텍스트에 맞게 조정 */
+  padding: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
 .room-chat-input {
   display: flex;
   align-items: center;
@@ -180,6 +236,7 @@
   color: #fff;
   cursor: pointer;
 }
+
 
 /* 플레이어 리스트 영역 */
 .room-player-section {
@@ -215,7 +272,8 @@
 }
 
 .room-player-card.empty {
-  background-color: transparent;
+  background-color: #3a3a3a;
+  border: 2px dashed #555;
 }
 
 .room-player-number {

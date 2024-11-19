@@ -122,19 +122,27 @@ const handleLeaveRoom = async () => {
                 {/* 채팅 영역 */}
                 <div className="room-chat-section">
                     <div className="room-chat-log">
-                        {messages.map((msg, index) => (
-                            //지연 추가
-                            <div key={index} className={msg.type === 'system' ? 'room-chat-warning' : ''}>
-                                {msg.type === 'system' ? (
-                                                <span>{msg.content}</span>
-                                ) : (
-                                    <>
-                                        <strong>{msg.username}:</strong> {msg.content}
-                                    </>
-                                )}                            
-                            </div>
-                        ))}
+                        {messages.map((msg, index) => {
+                            const player = JSON.parse(sessionStorage.getItem('player'));
+                            const currentUsername = player ? player.username : null;
+
+                            return (
+                                <div key={index} className="chat-wrapper">
+                                    {msg.username !== currentUsername && (
+                                        <div className="chat-username">{msg.username}</div> /* 닉네임을 바깥에 표시 */
+                                    )}
+                                    <div
+                                        className={`chat-message ${
+                                            msg.username === currentUsername ? 'my-message' : 'other-message'
+                                        }`}
+                                    >
+                                        <div className="chat-content">{msg.content}</div>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
+
                     <div className="room-chat-input">
                         <input
                             type="text"
@@ -145,8 +153,8 @@ const handleLeaveRoom = async () => {
                             }}
                             placeholder="메시지를 입력하세요"
                         />
-                        <button className="room-send-button" onClick={handleSendMessage}>
-                            ▶
+                        <button className="send-button" onClick={handleSendMessage}>
+                            
                         </button>
                     </div>
                 </div>
