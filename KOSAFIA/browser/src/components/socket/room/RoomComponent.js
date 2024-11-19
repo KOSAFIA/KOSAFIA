@@ -141,7 +141,7 @@ const handleLeaveRoom = async () => {
                                 </div>
                             );
                         })}
-                    </div>    // 
+                    </div>    
 
                     <div className="room-chat-input">
                         <input
