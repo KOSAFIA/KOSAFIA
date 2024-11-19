@@ -243,6 +243,15 @@ const handleTimerEnd = useCallback(async () => {
 
   }, [isHost, gameStatus, stageIndex, updateGameStatus, sendGameSystemMessage]);
 
+  // messages 상태 디버깅을 위한 useEffect 추가
+  useEffect(() => {
+    console.log('Messages updated:', messages);
+  }, [messages]);
+
+  // currentPlayer 상태 디버깅을 위한 useEffect 추가
+  useEffect(() => {
+    console.log('Current player updated:', currentPlayer);
+  }, [currentPlayer]);
 
   return (
     <div className={`game-room ${stageIndex === 1 ? "shadow-inset-top" : ""}`}>
@@ -303,11 +312,11 @@ const handleTimerEnd = useCallback(async () => {
         </div>
         <ChatBox
           ref={chatBoxRef}
-          stageIndex={stageIndex}
-          messages={messages}
-          canChat={canChat()}
+          gameStatus={gameStatus}
+          messages={messages || []}
+          canChat={canChat() || false}
           onSendMessage={sendGameMessage}
-          currentPlayer={currentPlayer}
+          currentPlayer={currentPlayer || null}
         />
       </div>
       {isPopupOpen && (

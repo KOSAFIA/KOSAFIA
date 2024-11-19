@@ -5,75 +5,58 @@ import SendButton from "./SendButton";
 import MessageList from "./MessageList";
 
 const ChatBox = forwardRef(({ 
-  stageIndex,
-  messages: contextMessages, // GameSocketContext에서 받은 메시지들
-  canChat, // 채팅 가능 여부
-  onSendMessage, // 메시지 전송 함수
-  currentPlayer // 현재 플레이어 정보
+  gameStatus,
+  messages = [], 
+  canChat = false, 
+  onSendMessage,
+  currentPlayer
 }, ref) => {
   const [localMessages, setLocalMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  // ref를 통한 메시지 수신 기능 유지
+  // Hook은 조건문 이전에 호출
   useImperativeHandle(ref, () => ({
     receiveMessage: (message) => {
       const formattedMessage = {
-        text: typeof message === 'string' ? message : message.text || message.content,
-        player: message.username || 'System',
-        isSystemMessage: message.isSystemMessage,
-        isMafiaChat: message.isMafiaChat
+        username: message.username || 'System',
+        content: message.content || message.text,
+        gameStatus: message.gameStatus,
+        role: message.role,
+        roomKey: message.roomKey,
+        playerNumber: message.playerNumber,
+        isSystemMessage: message.isSystemMessage
       };
       setLocalMessages(prev => [...prev, formattedMessage]);
     },
   }));
 
+  if (!currentPlayer) {
+    return <div>Loading...</div>;
+  }
+
   const handleSendMessage = () => {
     if (!canChat || input.trim() === "") return;
-    
-    const message = {
-      content: input.trim(),
-      username: currentPlayer?.username,
-      role: currentPlayer?.role,
-      isMafiaChat: currentPlayer?.role === 'MAFIA' && stageIndex === 1
-    };
-
-    onSendMessage(message.content, message.isMafiaChat);
+    onSendMessage(input.trim(), currentPlayer?.role === 'MAFIA');
     setInput("");
   };
 
-  const formatMessages = (messages) => {
-    if (!messages) return [];
-    
-    return messages.map(msg => ({
-      text: msg.content || msg.text,
-      player: msg.isSystemMessage ? 'System' : (msg.username || msg.role || 'Unknown'),
-      isSystemMessage: msg.isSystemMessage,
-      isMafiaChat: msg.isMafiaChat
-    })).filter(msg => {
-      // 시스템 메시지는 항상 표시
-      if (msg.isSystemMessage) return true;
-      
-      // 기존 필터 로직 유지
-      if (stageIndex === 1) {
-        if (currentPlayer?.role !== 'MAFIA') {
-          return false;
-        }
-        if (!msg.isMafiaChat) {
-          return false;
-        }
-      }
-      return true;
-    });
-  };
+  const filteredMessages = messages.filter(msg => {
+    if (!msg) return false;
+    if (msg.isSystemMessage) return true;
+    if (gameStatus === 'NIGHT') {
+      return currentPlayer?.role === 'MAFIA' && msg.role === 'MAFIA';
+    }
+    return true;
+  });
 
   return (
     <div className="chat-box">
-      {stageIndex === 1 && (
+      {gameStatus === 'NIGHT' && (
         <img src="/img/light.png" alt="Night Effect" className="night-image" />
       )}
       <MessageList 
-        messages={formatMessages(contextMessages || localMessages)}
-        currentPlayer={currentPlayer?.username}
+        messages={filteredMessages}
+        currentPlayer={currentPlayer}
         currentRole={currentPlayer?.role}
       />
       <div className="input-area">

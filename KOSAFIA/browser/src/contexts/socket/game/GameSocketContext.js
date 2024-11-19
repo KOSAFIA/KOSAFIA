@@ -542,7 +542,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                     username: 'System',
                     content: text,
                     gameStatus: gameStatus,
-                    role: 'SYSTEM',
+                    // role: 'SYSTEM',
                     roomKey: roomKey,
                     playerNumber: 0,
                     isSystemMessage: true
