@@ -44,28 +44,22 @@
   position: relative;
 }
 
-.room-info {
-  display: flex;
-  align-items: center;
-}
-
-/* .room-title {
-  font-size: 16px;
-} */
 
 .room-title-container {
   display: flex; /* Flexbox로 자식 요소를 한 줄에 배치 */
   align-items: center; /* 세로 중앙 정렬 */
-  gap: 8px; /* 제목과 아이콘 간 간격 */
+  gap: 12px; /* 제목과 아이콘 간 간격 */
 }
 
 .room-title {
+  display: inline-block;
   font-size: 18px;
   font-weight: bold;
   color: #fff;
 }
 
 .lock-icon {
+  display: inline-block;
   font-size: 16px; /* 아이콘 크기 */
   color: #ffcc00; /* 아이콘 색상 (선택 사항) */
 }

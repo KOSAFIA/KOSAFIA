@@ -10,76 +10,123 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.kosafia.gameapp.models.gameroom.FinishGame;
 import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Role;
+import com.kosafia.gameapp.repositories.gameroom.RoomRepository;
 
 @Service
 public class GameServiceImpl implements GameService {
 
-    // 8명을 기준으로, 역할을 하드코딩으로 나누어지도록 설정한 상태. 수정 필요
-    private static final Role[] ROLES = {
-            Role.MAFIA, Role.DOCTOR, Role.POLICE,
-            Role.CITIZEN, Role.CITIZEN, Role.CITIZEN,
-            Role.CITIZEN, Role.CITIZEN
-    };
+    @Autowired
+    RoomRepository roomRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     @Override
-    public void assignRoles(ArrayList<Player> players) {
-        if (players == null || players.isEmpty()) {
-            throw new IllegalArgumentException("Players list cannot be null or empty.");
-        }
-        ArrayList<Role> roles = new ArrayList<>(List.of(ROLES));
-        Collections.shuffle(roles);
+    public void handleNightActions(List<Player> players, Integer roomKey) {
+        Integer doctorTarget = null;
+        Integer mafiaTarget = null;
 
-        for (int i = 0; i < players.size(); i++) {
-            players.get(i).setRole(roles.get(i));
-        }
-    }
-
-    @Override
-    public void handleNightActions(ArrayList<Player> players) {
-        Player doctorTarget = null;
-        Player mafiaTarget = null;
-
-        // 1. 마피아, 경찰, 의사의 행동을 정리
         for (Player player : players) {
+            // 1. 마피아, 경찰, 의사의 행동을 정리
             if (player.getRole() == Role.MAFIA && player.getTarget() != null) {
-                mafiaTarget = players.get(player.getTarget() - 1);
+                mafiaTarget = player.getTarget();
             }
 
             if (player.getRole() == Role.DOCTOR && player.getTarget() != null) {
-                doctorTarget = players.get(player.getTarget() - 1);
+                doctorTarget = player.getTarget();
             }
 
             if (player.getRole() == Role.POLICE && player.getTarget() != null) {
-                Player investigatedPlayer = players.get(player.getTarget() - 1);
+                Integer investigatedPlayer = player.getTarget();
                 // 경찰은 마피아 여부를 조사하여 메시지로 알려줌
-                boolean isMafia = investigatedPlayer.getRole() == Role.MAFIA;
+                boolean isMafia = (roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(investigatedPlayer)
+                        .getRole() == Role.MAFIA);
                 System.out.println(
-                        "경찰 조사 결과: " + investigatedPlayer.getPlayerNumber() + "은 "
+                        "경찰 조사 결과: "
+                                + roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(investigatedPlayer)
+                                        .getPlayerNumber()
+                                + "은 "
                                 + (isMafia ? "마피아입니다." : "마피아가 아닙니다."));
+
+                // 경찰 조사 결과 나타내는 채팅? 팝업?
             }
-        }
 
-        // 2. 의사가 마피아의 타겟을 보호하는지 확인
-        if (mafiaTarget != null && doctorTarget != null && mafiaTarget.equals(doctorTarget)) {
-            System.out.println("의사가 마피아의 타겟을 보호했습니다!");
-        } else if (mafiaTarget != null) {
-            // 마피아의 타겟이 보호받지 못했다면 사망 처리
-            mafiaTarget.setAlive(false);
-            System.out.println(mafiaTarget.getPlayerNumber() + "은(는) 마피아에게 살해당했습니다.");
-        }
+            // 2. 의사가 마피아의 타겟을 보호하는지 확인
+            if (mafiaTarget != null && doctorTarget != null &&
+                    mafiaTarget.equals(doctorTarget)) {
+                System.out.println("의사가 마피아의 타겟을 보호했습니다!");
 
-        // 플레이어의 상태가 제대로 변경되었는지 확인 (디버깅용)
-        for (Player player : players) {
-            System.out.println("업데이트된 플레이어 상태: " + player.getPlayerNumber() + " - alive 여부 : " + player.isAlive());
+                messagingTemplate.convertAndSend(
+                        "/topic/game.sound." + roomKey,
+                        Map.of("sound", "heal"));
+
+            } else if (mafiaTarget != null) {
+                // 마피아의 타겟이 보호받지 못했다면 사망 처리
+                roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).setAlive(false);
+                System.out
+                        .println(roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).getPlayerNumber()
+                                + "은(는) 마피아에게 살해당했습니다.");
+                // 클라이언트에게 비명 사운드 재생 요청
+                messagingTemplate.convertAndSend(
+                        "/topic/game.sound." + roomKey,
+                        Map.of("sound", "gun"));
+
+                // System.out.println("Alive 된지 확인 여부 : "
+                // +
+                // roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).isAlive());
+                // 마피아 살해당한 이미지 나타내기
+
+                // 클라이언트에게 비명 사운드 재생 요청
+                messagingTemplate.convertAndSend(
+                        "/topic/game.sound." + roomKey,
+                        Map.of("sound", "gun"));
+
+                // 승리조건 확인
+                checkGameEnd(players, roomKey);
+            }
         }
     }
 
+    // 게임 승리 조건을 체크하는 함수
+    private void checkGameEnd(List<Player> players, Integer roomKey) {
+        long mafiaCount = players.stream().filter(player -> player.getRole() == Role.MAFIA && player.isAlive()).count();
+        long otherCount = players.stream().filter(player -> player.getRole() != Role.MAFIA && player.isAlive()).count();
+
+        // 1. 마피아의 인원수가 다른 직업들 이상일 경우 마피아 승리
+        if (mafiaCount >= otherCount) {
+            System.out.println("마피아 승리");
+            // 승리 상태와 이미지 URL을 포함하여 브로드캐스트
+            broadcastGameStatus(roomKey, players, "mafia_win_image_url");
+            return;
+        }
+
+        // 2. 마피아가 모두 사망하면 마피아 승리
+        if (mafiaCount == 0) {
+            System.out.println("마피아 전멸!");
+            // 시민 승리 상태와 이미지 URL을 포함하여 브로드캐스트
+            broadcastGameStatus(roomKey, players, "citizen_win_image_url");
+            return;
+        }
+
+        // 게임이 종료되지 않으면 게임 상태를 업데이트하여 계속 진행
+        broadcastGameStatus(roomKey, players, null);
+    }
+
+    public void broadcastGameStatus(Integer roomKey, List<Player> players, String imageUrl) {
+        Map<String, Object> message = new HashMap<>();
+        message.put("players", players);
+        if (imageUrl != null) {
+            message.put("imageUrl", imageUrl); // 이미지 URL 포함
+        }
+
+        // messagingTemplate.convertAndSend("/topic/game.state." + roomKey, message);
+    }
+
     // ===============김남영 추가=============
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
 
     @Override
     // 게임 상태 변경을 브로드캐스트

@@ -19,6 +19,8 @@ export const RoomProvider = ({ roomKey, children }) => {
     const clientRef = useRef(null); // 웹소켓 연결을 안전하게 보관하는 곳
     const messageQueue = useRef([]); // 아직 보내지 못한 메시지를 임시로 보관하는 곳
     const navigate = useNavigate();
+    const [isHost, setIsHost] = useState(false); // 웹소켓이 연결되었는지 확인하는 곳
+
 
 
     // 방에 들어왔을 때 다른 사람들에게 알려주는 함수예요
@@ -245,7 +247,9 @@ export const RoomProvider = ({ roomKey, children }) => {
         players: players || [],      // 방에 있는 사람들 목록
         isConnected, // 방 연결 상태
         sendMessage, // 채팅 메시지 보내는 함수
-        startGame    // 게임 시작 신호 보내는 함수
+        startGame,    // 게임 시작 신호 보내는 함수
+        isHost, // 방장 여부
+        setIsHost, // 방장 여부 업데이트 함수
     };
 
     return (

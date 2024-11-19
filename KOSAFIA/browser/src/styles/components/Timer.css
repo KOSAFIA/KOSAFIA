@@ -38,7 +38,15 @@
   background-image: url('../../../public/img/timer-minus.png');
 }
 
+/* //==김남영 CSS 수정 시작== */
+.increase-time {
+  background-image: url('../../../public/img/timer-plus.png'); 
+}
 
+.decrease-time {
+  background-image: url('../../../public/img/timer-minus.png');
+}
+/* //==김남영 CSS 수정 끝== */
 .time-display .button {
   margin-bottom: 24px;
 }

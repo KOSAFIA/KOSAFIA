@@ -154,10 +154,10 @@ const TestLobby = () => {
       <div className="room-list">
         {rooms.map(room => (
           <div className="room-item" key={room.roomKey}>
-            <div className="room-info">
+            <div className="room-title-container">
              
               <div className="room-title">{room.roomKey}. {room.roomName}</div>
-              {room.isPrivate && <span className="lock-icon">🔒</span>} {/* 비밀방 아이콘 추가 */}
+              {room.isPrivate && <div className="lock-icon">🔒</div>} {/* 비밀방 아이콘 추가 */}
             </div>
             <div className="room-status">
 

@@ -27,31 +27,30 @@ public class GameChatMessageController {
 
     @Autowired
     public GameChatMessageController(SimpMessagingTemplate messagingTemplate, GameSessionService gameSessionService) {
-        this.messagingTemplate = messagingTemplate; this.gameSessionService = gameSessionService;
+        this.messagingTemplate = messagingTemplate;
+        this.gameSessionService = gameSessionService;
     }
 
-        // 일반 채팅
+    // 일반 채팅
     @MessageMapping("/room.{roomId}")
     @SendTo("/topic/room.{roomId}")
     public GameChatMessage handleGameChat(
-        @DestinationVariable String roomId,
-        GameChatMessage message,
-        SimpMessageHeaderAccessor headerAccessor
-    ) {
+            @DestinationVariable String roomId,
+            GameChatMessage message,
+            SimpMessageHeaderAccessor headerAccessor) {
         // 세션에서 현재 게임 상태와 플레이어 상태 확인
         GameSession session = gameSessionService.getSession(roomId);
         Player player = session.getPlayers().get(message.getSender());
         String playerId = message.getSender();
-        
 
         // // 메시지 전송 가능 여부 확인
         // if (!player.isAlive()) {
-        //     throw new IllegalStateException("Dead players cannot send messages");
+        // throw new IllegalStateException("Dead players cannot send messages");
         // }
 
-        // if (session.getGameState() == GameState.NIGHT 
-        //     && player.getRole() != GameRole.MAFIA) {
-        //     throw new IllegalStateException("Only mafia can chat during night");
+        // if (session.getGameState() == GameState.NIGHT
+        // && player.getRole() != GameRole.MAFIA) {
+        // throw new IllegalStateException("Only mafia can chat during night");
         // }
 
         // 채팅 가능 여부 확인
@@ -67,10 +66,9 @@ public class GameChatMessageController {
     @MessageMapping("/room.{roomId}.mafia")
     @SendTo("/topic/room.{roomId}.mafia")
     public GameChatMessage handleMafiaChat(
-        @DestinationVariable String roomId,
-        GameChatMessage message,
-        SimpMessageHeaderAccessor headerAccessor
-    ) {
+            @DestinationVariable String roomId,
+            GameChatMessage message,
+            SimpMessageHeaderAccessor headerAccessor) {
         GameSession session = gameSessionService.getSession(roomId);
         Player player = session.getPlayers().get(message.getSender());
 
@@ -90,41 +88,39 @@ public class GameChatMessageController {
     // 시스템 메시지
     public void sendGameSystemMessage(String roomId, String content) {
         GameChatMessage message = GameChatMessage.builder()
-            .type(MessageType.SYSTEM)
-            .sender("SYSTEM")
-            .content(content)
-            .role("SYSTEM")
-            .timestamp(LocalDateTime.now().toString())
-            .build();
-            
-        messagingTemplate.convertAndSend("/topic/room." + roomId, message);
-    }    
+                .type(MessageType.SYSTEM)
+                .sender("SYSTEM")
+                .content(content)
+                .role("SYSTEM")
+                .timestamp(LocalDateTime.now().toString())
+                .build();
 
-        // 채팅 히스토리 요청 처리
+        messagingTemplate.convertAndSend("/topic/room." + roomId, message);
+    }
+
+    // 채팅 히스토리 요청 처리
     @MessageMapping("/room.{roomId}.history")
     @SendTo("/topic/room.{roomId}")
     public List<GameChatMessage> handleHistoryRequest(
-        @DestinationVariable String roomId
-    ) {
+            @DestinationVariable String roomId) {
         return gameSessionService.getChatHistory(roomId);
     }
 
-        // 참가자 목록 요청 처리
+    // 참가자 목록 요청 처리
     @MessageMapping("/room.{roomId}.participants.get")
     @SendTo("/topic/room.{roomId}.participants")
     public List<Player> handleParticipantsRequest(
-        @DestinationVariable String roomId
-    ) {
+            @DestinationVariable String roomId) {
         return gameSessionService.getSessionPlayers(roomId);
     }
 
-     // 새 참가자 입장 시 브로드캐스트
-     @SendTo("/topic/room.{roomId}.participants")
-     public List<Player> broadcastParticipants(
-         @DestinationVariable String roomId
-     ) {
-         return gameSessionService.getSessionPlayers(roomId);
-     }
+    // 새 참가자 입장 시 브로드캐스트
+    @SendTo("/topic/room.{roomId}.participants")
+    public List<Player> broadcastParticipants(
+            @DestinationVariable String roomId) {
+        return gameSessionService.getSessionPlayers(roomId);
+    }
+
     // 채팅 제한 메시지 생성
     private String getChatRestrictMessage(GameState gameState) {
         switch (gameState) {
@@ -137,5 +133,5 @@ public class GameChatMessageController {
             default:
                 return "현재 채팅이 불가능한 상태입니다.";
         }
-    }   
+    }
 }
