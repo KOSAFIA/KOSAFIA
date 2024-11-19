@@ -14,12 +14,14 @@ import { useRouteLoaderData } from "react-router-dom";
 const WEBSOCKET_URL = "http://localhost:8080/wstomp";
 const API_BASE_URL = "http://localhost:8080/api";
 const GAME_STATUS = {
-    NONE: 'NONE',
     NIGHT: 'NIGHT',
-    DELAY: 'DELAY',
+    FIRSTDELAY: 'FIRSTDELAY',
     DAY: 'DAY',
+    SECONDDELAY: 'SECONDDELAY',
     VOTE: 'VOTE',
-    FINALVOTE: 'FINALVOTE'
+    THIRDDELAY: 'THIRDDELAY',
+    FINALVOTE: 'FINALVOTE',
+    FOURTHDELAY: 'FOURTHDELAY'
 };
 
 export const GameSocketContext = createContext();
@@ -28,7 +30,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     const [messages, setMessages] = useState([]);
     const [players, setPlayers] = useState([]);
     const [isConnected, setIsConnected] = useState(false);
-    const [gameStatus, setGameStatus] = useState(GAME_STATUS.NIGHT);
+    const [gameStatus, setGameStatus] = useState(GAME_STATUS.NIGHT); //결국 문자열임 이자식
     const [currentPlayer, setCurrentPlayer] = useState(null);
     const [mafiaTarget, setMafiaTarget] = useState(null);
     const [voteStatus, setVoteStatus] = useState({});

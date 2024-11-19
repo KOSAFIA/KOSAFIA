@@ -215,6 +215,35 @@ const handleTimerEnd = useCallback(async () => {
   }
 }, [isHost, gameStatus, stageIndex, updateGameStatus, sendGameSystemMessage]);
 
+
+  const [customIdx, setCustomIdx] = useState(0);
+  // 다음 페이즈로 넘어가는 핸들러 추가
+  const handleNextPhase = useCallback(async () => {
+    if (gameStatus === GAME_STATUS.NIGHT) {
+      const targetPlayerNumber = targetSelection[currentPlayer.playerNumber];
+
+      // 1. 먼저 타겟 정보 전송
+      if (targetPlayerNumber !== undefined) {
+        await handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
+      }
+      // 2. 밤 액션 처리
+      await handleNightActions(1); 
+    }else if (gameStatus === GAME_STATUS.DAY) {
+      // await handleDayActions(1);
+    }else if (gameStatus === GAME_STATUS.VOTE) {
+      // await handleVoteActions(1);
+    }else if (gameStatus === GAME_STATUS.FINALVOTE) {
+      // await handleFinalVoteActions(1);
+    }
+    if (isHost) {
+      sendGameSystemMessage(`${gameStatus} 단계가 종료되었습니다.`);
+      // 다음 상태로 업데이트
+      updateGameStatus(NEXT_STATUS[gameStatus]);
+    }
+
+  }, [isHost, gameStatus, stageIndex, updateGameStatus, sendGameSystemMessage]);
+
+
   return (
     <div className={`game-room ${stageIndex === 1 ? "shadow-inset-top" : ""}`}>
       {currentPlayer && showFirstJobExplainPopup && (
@@ -235,6 +264,14 @@ const handleTimerEnd = useCallback(async () => {
                 onModifyTime={handleModifyTime}
                 canModifyTime={canModifyTime()}
               />
+            )}
+            {isHost && (
+                <button 
+                  className="next-phase-btn"
+                  onClick={handleNextPhase}
+                >
+                  다음 단계
+                </button>
             )}
             <DayIndicator currentPhase={stageIndex === 1 ? "NIGHT" : "DAY"} />
           </div>

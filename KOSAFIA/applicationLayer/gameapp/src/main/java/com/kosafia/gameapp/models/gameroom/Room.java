@@ -54,10 +54,13 @@ public class Room {
     private int currentTime;  // 현재 타이머 시간 (초 단위)
     private final Map<GameStatus, Integer> defaultTimes = Map.of(
         GameStatus.NIGHT, 60,     // 밤 60초
-        GameStatus.DELAY, 10,     // 딜레이 10초
+        GameStatus.FIRSTDELAY, 10,     // 딜레이 10초
         GameStatus.DAY, 120,      // 낮 120초
+        GameStatus.SECONDDELAY, 10,      // 딜레이 10초
         GameStatus.VOTE, 60,      // 투표 60초
-        GameStatus.FINALVOTE, 30  // 최후 변론 30초
+        GameStatus.THIRDDELAY, 10,      // 딜레이 10초
+        GameStatus.FINALVOTE, 30,      // 최후 변론 30초
+        GameStatus.FOURTHDELAY, 10   // 딜레이 10초
     );
 
     // 게임 상태 변경 시 타이머 자동 초기화를 위해 setGameStatus 수정
@@ -106,7 +109,7 @@ public class Room {
         this.turn = 0;
         this.password = password;
         this.isPrivate = isPrivate;
-        this.gameStatus = GameStatus.NONE;
+        this.gameStatus = GameStatus.NIGHT;
 
         // 김남영이 추가함 버그나면 김남영 불러
         this.voteStatus = new HashMap<>();
@@ -323,7 +326,7 @@ public class Room {
     public void endGame() {
         this.isPlaying = false;
         this.turn = 0;
-        this.gameStatus = GameStatus.NONE;
+        this.gameStatus = GameStatus.NIGHT;
         this.currentTime = 0;
     }
 

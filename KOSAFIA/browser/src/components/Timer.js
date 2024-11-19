@@ -5,10 +5,13 @@ import "../styles/components/Timer.css";
 
 const stages = [
   { name: "NIGHT", image: "/img/night.png" },
-  { name: "DELAY", image: "/img/day.png" },
+  { name: "FIRSTDELAY", image: "/img/day.png" },
   { name: "DAY", image: "/img/day.png" },
+  { name: "SECONDDELAY", image: "/img/vote.png" },
   { name: "VOTE", image: "/img/vote.png" },
+  { name: "THIRDDELAY", image: "/img/discussion.png" },
   { name: "FINALVOTE", image: "/img/discussion.png" },
+  { name: "FOURTHDELAY", image: "/img/night.png" },
 ];
 
 const Timer = ({ 

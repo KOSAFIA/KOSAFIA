@@ -1,5 +1,5 @@
 package com.kosafia.gameapp.models.gameroom;
 
 public enum GameStatus {
-    NONE, NIGHT, DELAY, DAY, VOTE, FINALVOTE;
+    NIGHT, FIRSTDELAY, DAY, SECONDDELAY, VOTE, THIRDDELAY, FINALVOTE, FOURTHDELAY;
 }

@@ -7,6 +7,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import com.kosafia.gameapp.controllers.socket.game.GameSocketController.GameStateResponse;
+import com.kosafia.gameapp.controllers.socket.game.GameSocketController.TimerResponse;
 import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Role;
@@ -179,7 +181,7 @@ public void handleGameStart(@DestinationVariable("roomKey") Integer roomKey) {
 
         // 게임 상태를 NIGHT로 설정하고 타이머 시작
         room.setGameStatus(GameStatus.NIGHT);
-        room.setCurrentTime(getDefaultTime(GameStatus.NIGHT));
+        room.setCurrentTime(room.getDefaultTimes().get(GameStatus.NIGHT));
         room.setTurn(1); // 1일차부터 시작
         
         // 상태 변경 알림
@@ -187,7 +189,7 @@ public void handleGameStart(@DestinationVariable("roomKey") Integer roomKey) {
             new GameStateResponse(
                 GameStatus.NIGHT.toString(),
                 room.getPlayers(),
-                getDefaultTime(GameStatus.NIGHT),
+                room.getDefaultTimes().get(GameStatus.NIGHT),
                 room.getTurn(),
                 true,
                 "게임이 시작되었습니다. " + GameStatus.NIGHT.toString() + " 시간입니다."
@@ -256,75 +258,58 @@ public void handleGameStart(@DestinationVariable("roomKey") Integer roomKey) {
         }
     }
 
-    // 다음 상태 가져오기
-    private GameStatus getNextStatus(GameStatus current) {
-        return switch (current) {
-            case NIGHT -> GameStatus.DELAY;
-            case DELAY -> GameStatus.DAY;
-            case DAY -> GameStatus.VOTE;
-            case VOTE -> GameStatus.FINALVOTE;
-            case FINALVOTE -> GameStatus.NIGHT;
-            default -> null;
-        };
-    }
-
-    // 각 상태별 기본 시간
-    private int getDefaultTime(GameStatus status) {
-        return switch (status) {
-            case NIGHT -> 30;    // 30초
-            case DELAY -> 5;     // 5초
-            case DAY -> 60;      // 60초
-            case VOTE -> 30;     // 30초
-            case FINALVOTE -> 15;// 15초
-            default -> 0;
-        };
-    }
-
-    // 게임 상태 업데이트 메서드
     @MessageMapping("/game.state.update/{roomKey}")
     public void handleGameStateUpdate(
         @DestinationVariable("roomKey") Integer roomKey,
         @Payload GameStateUpdateRequest request
     ) {
-        log.info("게임 상태 업데이트 요청 - 방: {}, 상태: {}", roomKey, request.gameStatus());
+        log.info("1. 게임 상태 업데이트 시작 - 방: {}, 요청: {}", roomKey, request);
+        log.info("2. 받은 게임 상태값: {}", request.gameStatus());
         
         try {
+            log.info("3. Room 객체 조회 시작");
             Room room = roomRepository.getRoom(roomKey);
-            if (room == null) return;
-
-            GameStatus newStatus = GameStatus.valueOf(request.gameStatus());
-            room.setGameStatus(newStatus);
-            
-            // 새로운 상태에 맞는 초기 시간 설정
-            int initialTime = 30; // 기본값
-            switch (newStatus) {
-                case NIGHT -> initialTime = 30;
-                case DELAY -> initialTime = 10;
-                case DAY -> initialTime = 60;
-                case VOTE -> initialTime = 30;
-                case FINALVOTE -> initialTime = 15;
-                default -> initialTime = 0;
+            if (room == null) {
+                log.error("4. Room이 null입니다");
+                return;
             }
-            room.setCurrentTime(initialTime);
+            log.info("4. Room 조회 성공: {}", room);
+    
+            log.info("5. GameStatus 변환 시도. 입력값: {}", request.gameStatus());
+            GameStatus newStatus = GameStatus.valueOf(request.gameStatus());
+            log.info("6. GameStatus 변환 성공: {}", newStatus);
             
-            // 상태 변경 알림
+            log.info("7. Room 상태 업데이트 시도");
+            room.setGameStatus(newStatus);
+            log.info("8. Room 상태 업데이트 성공");
+            
+            log.info("9. 새로운 시간 설정 시도");
+            room.setCurrentTime(room.getDefaultTimes().get(newStatus));
+            log.info("10. 새로운 시간 설정 성공: {}", room.getCurrentTime());
+            
+            log.info("11. 상태 변경 알림 전송 시도");
             messagingTemplate.convertAndSend("/topic/game.state." + roomKey, 
                 new GameStateResponse(
                     newStatus.toString(),
                     room.getPlayers(),
-                    initialTime,
+                    room.getDefaultTimes().get(newStatus),
                     room.getTurn(),
                     true,
                     newStatus.toString() + " 시간이 시작되었습니다."
                 )
             );
+            log.info("12. 상태 변경 알림 전송 성공");
             
-            // 타이머 시작 (NONE 상태가 아닐 때)
-            if (newStatus != GameStatus.NONE) {
-                startRoomTimer(roomKey);
-            }
+            log.info("13. 타이머 시작 시도");
+            startRoomTimer(roomKey);
+            log.info("14. 타이머 시작 성공");
+            
         } catch (Exception e) {
-            log.error("게임 상태 업데이트 중 오류:", e);
+            log.error("에러 발생 위치 추적:");
+            log.error("요청 데이터: {}", request);
+            log.error("에러 타입: {}", e.getClass().getName());
+            log.error("에러 메시지: {}", e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -623,7 +608,7 @@ public void handlePlayerJoin(
             
             // 초기 상태 설정
             room.setGameStatus(GameStatus.NIGHT);
-            room.setCurrentTime(getDefaultTime(GameStatus.NIGHT));
+            room.setCurrentTime(room.getDefaultTimes().get(GameStatus.NIGHT));
             room.setTurn(1); // 1일차로 설정
 
             // 상태 전송
@@ -653,6 +638,28 @@ public void handlePlayerJoin(
         log.error("플레이어 입장 처리 중 오류:", e);
     }
 }
+
+record SystemMessage(
+    String username,
+    String content,
+    String gameStatus,
+    Integer roomKey,
+    Integer playerNumber,
+    boolean isSystemMessage
+) {}
+
+@MessageMapping("/game.system.{roomKey}")
+public void handleSystemMessage(
+    @DestinationVariable("roomKey") Integer roomKey,
+    @Payload SystemMessage systemMessage
+) {
+    log.info("시스템 메시지 수신 - 방: {}, 메시지: {}", roomKey, systemMessage);
+    messagingTemplate.convertAndSend(
+        "/topic/game.system." + roomKey,
+        systemMessage
+    );
+}
+
 }
 
 
