@@ -20,10 +20,20 @@ public class GameSocketController {
     private SimpMessagingTemplate messagingTemplate;
     @Autowired
     private RoomRepository roomRepository;
-    private final Map<Integer, Thread> roomTimers = new ConcurrentHashMap<>();
+    // private final Map<Integer, Thread> roomTimers = new ConcurrentHashMap<>();
 
     @MessageMapping("/game.chat/{roomKey}")
     public void handleChat(@DestinationVariable("roomKey") Integer roomKey, @Payload ChatMessage message) {
+        try {
+            Room room = roomRepository.getRoom(roomKey);
+            if (room == null) return;
+            sendChatMessage(room, message);
+        } catch (Exception e) {
+            log.error("메시지 처리 중 오류:", e);
+        }
+    }
+    @MessageMapping("/game.chat.mafia/{roomKey}")
+    public void handleChatMafia(@DestinationVariable("roomKey") Integer roomKey, @Payload ChatMessage message) {
         try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null) return;
@@ -116,26 +126,26 @@ public class GameSocketController {
                 room.getRoomKey(), e.getMessage());
         }
     }
-    private void startRoomTimer(Integer roomKey) {
-        log.info("[타이머 시작 요청] 방번호: {}", roomKey);
+    // private void startRoomTimer(Integer roomKey) {
+    //     log.info("[타이머 시작 요청] 방번호: {}", roomKey);
         
-        // 이전 타이머가 있다면 중지
-        stopRoomTimer(roomKey);
+    //     // 이전 타이머가 있다면 중지
+    //     stopRoomTimer(roomKey);
         
-        Room room = roomRepository.getRoom(roomKey);
-        if (room == null || room.getCurrentTime() <= 0) {
-            log.error("[타이머 시작 실패] 잘못된 방 상태 - 방: {}", roomKey);
-            return;
-        }
+    //     Room room = roomRepository.getRoom(roomKey);
+    //     if (room == null || room.getCurrentTime() <= 0) {
+    //         log.error("[타이머 시작 실패] 잘못된 방 상태 - 방: {}", roomKey);
+    //         return;
+    //     }
 
-        Thread timerThread = new Thread(() -> runTimer(roomKey));
-        timerThread.setName("Timer-" + roomKey);
-        timerThread.start();
-        roomTimers.put(roomKey, timerThread);
+    //     Thread timerThread = new Thread(() -> runTimer(roomKey));
+    //     timerThread.setName("Timer-" + roomKey);
+    //     timerThread.start();
+    //     roomTimers.put(roomKey, timerThread);
         
-        log.info("[타이머 스레드 시작] 방: {}, 스레드: {}, 초기시간: {}초", 
-            roomKey, timerThread.getName(), room.getCurrentTime());
-    }
+    //     log.info("[타이머 스레드 시작] 방: {}, 스레드: {}, 초기시간: {}초", 
+    //         roomKey, timerThread.getName(), room.getCurrentTime());
+    // }
 
 
     @MessageMapping("/game.vote/{roomKey}")
@@ -349,9 +359,9 @@ public class GameSocketController {
         room.setGameStatus(newStatus);
         room.setCurrentTime(getDefaultTime(newStatus));
         broadcastGameState(room);
-        if (newStatus != GameStatus.NONE) {
-            startRoomTimer(room.getRoomKey());
-        }
+        // if (newStatus != GameStatus.NONE) {
+        //     startRoomTimer(room.getRoomKey());
+        // }
     }
 
     private void updatePlayerStatus(Room room, Player player) {
@@ -441,7 +451,7 @@ public class GameSocketController {
         room.setCurrentTime(getDefaultTime(GameStatus.NIGHT));
         room.setTurn(1);
         broadcastGameState(room);
-        startRoomTimer(room.getRoomKey());
+        // startRoomTimer(room.getRoomKey());
     }
 
     public void broadcastGameState(Room room) {
@@ -608,8 +618,8 @@ public class GameSocketController {
     }
 
     private void stopRoomTimer(Integer roomKey) {
-        Optional.ofNullable(roomTimers.remove(roomKey))
-               .ifPresent(Thread::interrupt);
+        // Optional.ofNullable(roomTimers.remove(roomKey))
+        //        .ifPresent(Thread::interrupt);
     }
 
     private void sendTimerUpdate(Room room) {

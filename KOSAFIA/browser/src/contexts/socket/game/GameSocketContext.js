@@ -33,43 +33,44 @@ export const GameSocketProvider = ({ roomKey, children }) => {
   }, [roomKey]);
 
   // 그 다음이 게임 액션 함수들
-  const gameActions = {
-    startGame: useCallback(() => {
-      if (!isHost) return;
-      publishMessage(CONFIG.SOCKET_PUBLISH.GAME_START);
-    }, [isHost]),
+  const startGame = useCallback(() => {
+    if (!isHost) return;
+    publishMessage(CONFIG.SOCKET_PUBLISH.GAME_START);
+}, [isHost, publishMessage]);
 
-    setTarget: useCallback((targetId) => {
-      if (!clientRef.current || currentPlayer?.role !== "MAFIA") return;
-      publishMessage(CONFIG.SOCKET_PUBLISH.MAFIA_TARGET, { 
-        mafiaId: currentPlayer.playerNumber, 
-        targetId 
-      });
-    }, [currentPlayer]),
+const setTarget = useCallback((targetId) => {
+    if (!clientRef.current || currentPlayer?.role !== "MAFIA") return;
+    publishMessage(CONFIG.SOCKET_PUBLISH.MAFIA_TARGET, {
+        mafiaId: currentPlayer.playerNumber,
+        targetId
+    });
+}, [currentPlayer, publishMessage]);
 
-    sendVote: useCallback((targetId) => {
-      if (!clientRef.current || !currentPlayer) return;
-      publishMessage(CONFIG.SOCKET_PUBLISH.VOTE, { 
-        voterId: currentPlayer.playerNumber, 
-        targetId 
-      });
-    }, [currentPlayer]),
+const sendVote = useCallback((targetId) => {
+    if (!clientRef.current || !currentPlayer) return;
+    publishMessage(CONFIG.SOCKET_PUBLISH.VOTE, {
+        voterId: currentPlayer.playerNumber,
+        targetId
+    });
+}, [currentPlayer, publishMessage]);
 
-    processVoteResult: useCallback(() => {
-      if (!isHost) throw new Error("방장만 투표 결과를 처리할 수 있습니다.");
-      publishMessage(CONFIG.SOCKET_PUBLISH.VOTE_RESULT);
-    }, [isHost]),
+const processVoteResult = useCallback(async () => {
+    if (!isHost) throw new Error("방장만 투표 결과를 처리할 수 있습니다.");
+    await publishMessage(CONFIG.SOCKET_PUBLISH.VOTE_RESULT);
+    return { success: true };
+}, [isHost, publishMessage]);
 
-    processFinalVoteResult: useCallback(() => {
-      if (!isHost) throw new Error("방장만 최종 투표 결과를 처리할 수 있습니다.");
-      publishMessage(CONFIG.SOCKET_PUBLISH.FINAL_VOTE_RESULT);
-    }, [isHost]),
+const processFinalVoteResult = useCallback(async () => {
+    if (!isHost) throw new Error("방장만 최종 투표 결과를 처리할 수 있습니다.");
+    await publishMessage(CONFIG.SOCKET_PUBLISH.FINAL_VOTE_RESULT);
+    return { success: true };
+}, [isHost, publishMessage]);
 
-    processNightResult: useCallback(() => {
-      if (!isHost) throw new Error("방장만 밤 결과를 처리할 수 있습니다.");
-      publishMessage(CONFIG.SOCKET_PUBLISH.NIGHT_RESULT);
-    }, [isHost])
-  };  
+const processNightResult = useCallback(async () => {
+    if (!isHost) throw new Error("방장만 밤 결과를 처리할 수 있습니다.");
+    await publishMessage(CONFIG.SOCKET_PUBLISH.NIGHT_RESULT);
+    return { success: true };
+}, [isHost, publishMessage]);
 
   const handleGameStart = useCallback((message) => {
     console.log("게임 시작 메시지 수신:", message);
@@ -91,12 +92,19 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     }
 }, [publishMessage]);
 
-const startGame = useCallback(() => {
-  if (!isHost || !clientRef.current) return;
-  console.log("게임 시작 요청");
-  publishMessage(CONFIG.SOCKET_PUBLISH.GAME_START);
-}, [isHost, publishMessage]);
-
+// 게임 상태 업데이트 함수 추가
+const updateGameStatus = useCallback((nextStatus) => {
+  console.log("게임 상태 업데이트 요청:", { 
+      currentStatus: gameStatus, 
+      nextStatus 
+  });
+  
+  // 서버에 상태 변경 요청
+  publishMessage(CONFIG.SOCKET_PUBLISH.GAME_STATE_CHANGE, {
+      currentStatus: gameStatus,
+      nextStatus: nextStatus
+  });
+}, [gameStatus, publishMessage]);
 
   // 소켓 연결 및 초기화
   useEffect(() => {
@@ -414,6 +422,68 @@ const handleTimerUpdate = useCallback((message) => {
     }
     return true;
   }, [currentPlayer, gameStatus]);
+  const handleTimerEnd = useCallback(async () => {
+    if (!isHost) return;
+
+    console.log("타이머 종료 이벤트:", { 
+        gameStatus, 
+        currentTime: gameTime 
+    });
+    
+    const currentStatus = gameStatus;
+    switch (currentStatus) {
+        case GAME_STATUS.NIGHT:
+            await handleNightEnd();
+            break;
+        case GAME_STATUS.DAY:
+            await handleDayEnd();
+            break;
+        case GAME_STATUS.VOTE:
+            await handleVoteEnd();
+            break;
+        case GAME_STATUS.FINALVOTE:
+            await handleFinalVoteEnd();
+            break;
+        default:
+            break;
+    }
+}, [isHost, gameStatus, gameTime]);
+
+const handleNightEnd = async () => {
+    console.log("밤 시간 종료 처리 시작");
+    sendSystemMessage("밤이 끝났습니다.");
+    await handleStageChange(GAME_STATUS.DELAY);
+    await processNightResult();
+};
+
+const handleDayEnd = async () => {
+    console.log("낮 시간 종료 처리 시작");
+    sendSystemMessage("낮이 끝났습니다. 투표를 시작합니다.");
+    await handleStageChange(GAME_STATUS.DELAY);
+};
+
+const handleVoteEnd = async () => {
+    console.log("투표 시간 종료 처리 시작");
+    const result = await processVoteResult();
+    if (result.success) {
+        sendSystemMessage("투표가 종료되었습니다.");
+        await handleStageChange(GAME_STATUS.DELAY);
+    }
+};
+
+const handleFinalVoteEnd = async () => {
+    console.log("최종 투표 시간 종료 처리 시작");
+    await processFinalVoteResult();
+    sendSystemMessage("최종 투표가 종료되었습니다.");
+    await handleStageChange(GAME_STATUS.DELAY);
+};
+
+const handleStageChange = useCallback(async (nextStatus) => {
+    publishMessage(CONFIG.SOCKET_PUBLISH.GAME_STATE_CHANGE, {
+        currentStatus: gameStatus,
+        nextStatus: nextStatus
+    });
+}, [gameStatus, publishMessage]);
 
 
   useEffect(() => {
@@ -447,7 +517,13 @@ const handleTimerUpdate = useCallback((message) => {
     isHost, 
     gameTime, 
     dayCount,
-    ...gameActions,
+        // 개별 함수들로 전달
+    startGame,
+    setTarget,
+    sendVote,
+    processVoteResult,
+    processFinalVoteResult,
+    processNightResult,
     sendGameMessage,
     canVote,
     canChat,
@@ -458,8 +534,8 @@ const handleTimerUpdate = useCallback((message) => {
         adjustment 
       })
     , [currentPlayer, publishMessage]),
-    startGame,
     setGameTime,
+    updateGameStatus,
   };
 
   return <GameSocketContext.Provider value={value}>{children}</GameSocketContext.Provider>;

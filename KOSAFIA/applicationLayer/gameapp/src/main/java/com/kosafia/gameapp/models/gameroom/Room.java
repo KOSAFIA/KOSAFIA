@@ -325,7 +325,8 @@ public class Room {
     //아 타이머 미치겠네 ㅠㅠ
     public void startGame(GameSocketController socketController) {
         this.gameStatus = GameStatus.NIGHT;
-        this.currentTime = Timer.getDefaultTime(GameStatus.NIGHT);
+        // this.currentTime = Timer.getDefaultTime(GameStatus.NIGHT);
+        this.currentTime = defaultTimes.get(GameStatus.NIGHT);
         this.turn = 1;
         this.isPlaying = true;
         

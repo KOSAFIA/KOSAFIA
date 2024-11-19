@@ -35,6 +35,7 @@ const GameRoom = () => {
   const [targetSelection, setTargetSelection] = useState({});
   const [timeModifiedPlayers, setTimeModifiedPlayers] = useState(new Set());
   const chatBoxRef = useRef();
+  const [previousGameStatus, setPreviousGameStatus] = useState(null);
 
   // 2. Context에서 값 가져오기
   const { 
@@ -58,6 +59,8 @@ const GameRoom = () => {
     voteStatus, // 투표 현황 추가
     processVoteResult, // 투표 결과 처리 함수 추가
     startGame,
+    processNightResult,    // context에서 가져오기   // context에서 가져오기
+    processFinalVoteResult // context에서 가져오기
   } = useGameContext();
 
   // 3. 모든 useCallback, useEffect 선언을 여기에 배치
@@ -98,19 +101,77 @@ const GameRoom = () => {
     }));
   }, []);
 
-  const handleStageChange = useCallback(async (newStageIndex) => {
-    setStageIndex(newStageIndex);
-    if (gameStatus === GAME_STATUS.NIGHT) {
-      const targetPlayerNumber = targetSelection[currentPlayer?.playerNumber];
-      if (targetPlayerNumber !== undefined) {
-        await handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
+    // 스테이지 변경 핸들러 - 모든 게임 로직의 중심
+    const handleStageChange = useCallback(async () => {
+      
+      try {
+          console.log("스테이지 변경:", { gameStatus, stageIndex });
+          setPreviousGameStatus(gameStatus);
+
+          switch (gameStatus) {
+              case GAME_STATUS.NIGHT:
+                  // 밤 종료 시 타겟 처리
+                  const targetPlayerNumber = targetSelection[currentPlayer?.playerNumber];
+                  if (targetPlayerNumber !== undefined) {
+                      await handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
+                  }
+                  await handleNightActions(1);
+                  if (!isHost) return;
+                  sendGameSystemMessage("밤이 끝났습니다.");
+                  updateGameStatus(GAME_STATUS.DELAY);
+                  break;
+
+              case GAME_STATUS.DAY:
+                  if (!isHost) return;
+                  sendGameSystemMessage("낮이 끝났습니다. 투표를 시작합니다.");
+                  updateGameStatus(GAME_STATUS.DELAY);
+                  break;
+
+              case GAME_STATUS.VOTE:
+                  if (!isHost) return;
+                  const result = await processVoteResult();
+                  if (result.success) {
+                      sendGameSystemMessage("투표가 종료되었습니다.");
+                      updateGameStatus(GAME_STATUS.DELAY);
+                  }
+                  break;
+
+              case GAME_STATUS.FINALVOTE:
+                  if (!isHost) return;
+                  await processFinalVoteResult();
+                  sendGameSystemMessage("최종 투표가 종료되었습니다.");
+                  updateGameStatus(GAME_STATUS.DELAY);
+                  break;
+
+              case GAME_STATUS.DELAY:
+                  if (!isHost) return;
+                  const nextStatus = getNextStatusAfterDelay();
+                  if (nextStatus) {
+                      updateGameStatus(nextStatus);
+                  }
+                  break;
+          }
+      } catch (error) {
+          console.error("스테이지 변경 중 오류:", error);
       }
-      await handleNightActions(roomKey);
-      if (isHost) {
-        updateGameStatus(NEXT_STATUS[gameStatus]);
+  }, [
+      isHost, gameStatus, stageIndex,
+      currentPlayer, targetSelection, roomKey,
+      handleTargetsUpdate, handleNightActions,
+      processVoteResult, processFinalVoteResult,
+      sendGameSystemMessage, updateGameStatus
+  ]);
+
+  const getNextStatusAfterDelay = useCallback(() => {
+      const previousStatus = getPreviousStatus();
+      switch (previousStatus) {
+          case GAME_STATUS.NIGHT: return GAME_STATUS.DAY;
+          case GAME_STATUS.DAY: return GAME_STATUS.VOTE;
+          case GAME_STATUS.VOTE: return GAME_STATUS.FINALVOTE;
+          case GAME_STATUS.FINALVOTE: return GAME_STATUS.NIGHT;
+          default: return null;
       }
-    }
-  }, [gameStatus, currentPlayer, targetSelection, roomKey, isHost, updateGameStatus]);
+  }, [gameStatus]);
 
   const canModifyTime = useCallback(() => {
     if (!currentPlayer || !gameStatus) return false;
@@ -148,41 +209,46 @@ const GameRoom = () => {
     }
   }, [gameStatus, currentPlayer, canVote, setTarget, sendVote, sendGameSystemMessage, players, handleOpenPopup]);
 
-  const handleTimerEnd = useCallback(async () => {
-    if (!isHost) return;
+  // const handleTimerEnd = useCallback(async () => {
+  //   if (!isHost) return;
 
-    console.log("타이머 종료 이벤트:", { 
-      gameStatus, 
-      stageIndex,
-      currentTime: gameTime 
-    });
+  //   console.log("타이머 종료 이벤트:", { 
+  //     gameStatus, 
+  //     stageIndex,
+  //     currentTime: gameTime 
+  //   });
     
-    if (gameStatus === GAME_STATUS.NIGHT) {
-      console.log("밤 시간 종료 처리 시작");
-      sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
-      await handleStageChange(1);
-    } else if (gameStatus === GAME_STATUS.VOTE) {
-      console.log("투표 시간 종료 처리 시작");
-      const result = await processVoteResult();
-      if (result.success) {
-        sendGameSystemMessage(`투표가 종료되었습니다.`);
-        updateGameStatus(NEXT_STATUS[gameStatus]);
-      }
-    } else {
-      console.log(`${gameStatus} 시간 종료 처리 시작`);
-      sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
-      updateGameStatus(NEXT_STATUS[gameStatus]);
-    }
-  }, [
-    isHost,
-    gameStatus, 
-    stageIndex, 
-    gameTime,
-    sendGameSystemMessage, 
-    handleStageChange, 
-    processVoteResult, 
-    updateGameStatus
-  ]);
+  //   if (gameStatus === GAME_STATUS.NIGHT) {
+  //     console.log("밤 시간 종료 처리 시작");
+  //     sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
+  //     await handleStageChange(1);
+  //   } else if (gameStatus === GAME_STATUS.VOTE) {
+  //     console.log("투표 시간 종료 처리 시작");
+  //     const result = await processVoteResult();
+  //     if (result.success) {
+  //       sendGameSystemMessage(`투표가 종료되었습니다.`);
+  //       updateGameStatus(NEXT_STATUS[gameStatus]);
+  //     }
+  //   } else {
+  //     console.log(`${gameStatus} 시간 종료 처리 시작`);
+  //     sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
+  //     updateGameStatus(NEXT_STATUS[gameStatus]);
+  //   }
+  // }, [
+  //   isHost,
+  //   gameStatus, 
+  //   stageIndex, 
+  //   gameTime,
+  //   sendGameSystemMessage, 
+  //   handleStageChange, 
+  //   processVoteResult, 
+  //   updateGameStatus
+  // ]);
+
+  // 이전 상태 가져오는 함수 추가
+  const getPreviousStatus = useCallback(() => {
+    return previousGameStatus;
+  }, [previousGameStatus]);
 
   // 4. useEffect 선언
   useEffect(() => {
@@ -192,6 +258,9 @@ const GameRoom = () => {
   }, [gameStatus]);
 
   useEffect(() => {
+    if (gameStatus !== GAME_STATUS.DELAY) {
+      setPreviousGameStatus(gameStatus);
+    }
     if (gameStatus === 'NIGHT') {
       setTimeModifiedPlayers(new Set());
     }
@@ -228,7 +297,7 @@ const GameRoom = () => {
                 time={gameTime}
                 gameStatus={gameStatus}
                 dayCount={dayCount}
-                onTimerEnd={handleTimerEnd}
+                onTimerEnd={handleStageChange}
                 onModifyTime={handleModifyTime}
                 canModifyTime={canModifyTime()}
               />
