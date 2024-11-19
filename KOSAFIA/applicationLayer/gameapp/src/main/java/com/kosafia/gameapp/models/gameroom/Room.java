@@ -315,6 +315,24 @@ public class Room {
         this.isPlaying = false;
         this.turn = 0;
         this.gameStatus = GameStatus.NONE;
+
+        // 플레이어 상태 초기화
+        for (Player player : players) {
+            player.setAlive(true); // 모든 플레이어를 살아 있는 상태로 초기화
+            player.setRole(null); // 직업 초기화
+            player.setVoteTarget(false); // 투표 타겟 여부 초기화
+
+            player.setResult(Result.NONE);
+            player.setTarget(null);
+
+        }
+        
+        // 투표 관련 정보 초기화
+        clearVotes();
+        clearFinalVotes();
+
+        log.info("방 상태가 초기화되었습니다: roomKey {}", this.roomKey);
+
         this.currentTime = 0;
 
         // 플레이어 상태 초기화
