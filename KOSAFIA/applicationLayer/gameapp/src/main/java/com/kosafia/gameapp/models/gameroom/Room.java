@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 public class Room {
 
-
     private final Integer roomKey; // PK와 로비에 보이는 키 인티저 형식이야 바보야 멍청아 똥아 아 이거 쥐피티 멍청이
     private String roomName; // 방제 //입력받음
     private List<Player> players; // 플레이어 목록
@@ -51,13 +50,16 @@ public class Room {
     // private Integer nextPlayerNumber = 1; // 다음에 부여할 번호
     private Random random = new Random();
 
-    private int currentTime;  // 현재 타이머 시간 (초 단위)
+    private int currentTime; // 현재 타이머 시간 (초 단위)
     private final Map<GameStatus, Integer> defaultTimes = Map.of(
-        GameStatus.NIGHT, 60,     // 밤 60초
-        GameStatus.DELAY, 10,     // 딜레이 10초
-        GameStatus.DAY, 120,      // 낮 120초
-        GameStatus.VOTE, 60,      // 투표 60초
-        GameStatus.FINALVOTE, 30  // 최후 변론 30초
+            GameStatus.NIGHT, 60, // 밤 60초
+            GameStatus.FIRST_DELAY, 5, // 딜레이 5초
+            GameStatus.DAY, 120, // 낮 120초
+            GameStatus.SECOND_DELAY, 1, // 딜레이 5초
+            GameStatus.VOTE, 60, // 투표 60초
+            GameStatus.THIRD_DELAY, 5, // 딜레이 5초
+            GameStatus.FINALVOTE, 30, // 최후 변론 30초
+            GameStatus.FOURTH_DELAY, 5 // 딜레이 5초
     );
 
     // 게임 상태 변경 시 타이머 자동 초기화를 위해 setGameStatus 수정
@@ -66,10 +68,10 @@ public class Room {
             this.gameStatus = newStatus;
             // 상태 변경 시 해당 상태의 기본 시간으로 초기화
             this.currentTime = defaultTimes.getOrDefault(newStatus, 0);
-            
+
             // 밤상태 진입시 일차 증가겠지 똘빡아 주석보고 반성해
-            if (newStatus == GameStatus.NIGHT && 
-                (this.gameStatus == GameStatus.FINALVOTE || this.gameStatus == GameStatus.VOTE)) {
+            if (newStatus == GameStatus.NIGHT &&
+                    (this.gameStatus == GameStatus.FINALVOTE || this.gameStatus == GameStatus.VOTE)) {
                 this.turn++;
             }
         }
@@ -93,8 +95,6 @@ public class Room {
         setCurrentTime(newTime);
         return true;
     }
-
-
 
     public Room(Integer roomKey, String roomName, int maxPlayers, String password, boolean isPrivate) {
         this.roomKey = roomKey;
@@ -226,14 +226,14 @@ public class Room {
         if (targetPlayer != null && getAgreeVotes() > getDisagreeVotes()) {
             targetPlayer.setAlive(false);
             targetPlayer.setVoteTarget(false);
-            setGameStatus(GameStatus.NIGHT);
+            setGameStatus(GameStatus.FOURTH_DELAY);
             return targetPlayer;
         }
 
         if (targetPlayer != null) {
             targetPlayer.setVoteTarget(false);
         }
-        setGameStatus(GameStatus.NIGHT);
+        setGameStatus(GameStatus.FOURTH_DELAY);
         return null;
     }
 
@@ -303,12 +303,12 @@ public class Room {
         if (!isPlaying) {
             this.isPlaying = true;
             this.turn = 1; // 첫 턴 초기화
-            this.gameStatus = GameStatus.NIGHT;
+            this.gameStatus = GameStatus.FOURTH_DELAY;
             // setGameStatus(gameStatus);
             System.out.println("게임 시작 완료 ");
             System.out.println(this.toString());
 
-            this.currentTime = defaultTimes.get(GameStatus.NIGHT); // 게임은 밤부터 시작
+            this.currentTime = defaultTimes.get(GameStatus.FOURTH_DELAY); // 게임은 밤부터 시작
 
             players.forEach(player -> {
                 player.setAlive(true);

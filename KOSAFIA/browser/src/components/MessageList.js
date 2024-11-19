@@ -18,11 +18,11 @@ const mafiaColors = [
 
 const MessageList = ({ messages, currentPlayer, currentRole }) => {
   // 디버깅용 로그
-  console.log('MessageList props:', {
-    messages,
-    currentPlayer,
-    currentRole
-  });
+  // console.log('MessageList props:', {
+  //   messages,
+  //   currentPlayer,
+  //   currentRole
+  // });
 
   // 마피아 메시지별 고유 색상 할당
   const mafiaColorMap = React.useMemo(() => {
