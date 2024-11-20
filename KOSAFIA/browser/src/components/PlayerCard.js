@@ -35,16 +35,16 @@ const PlayerCard = ({
 
   // 역할에 따른 아바타 설정
   useEffect(() => {
-    // 각 플레이어의 역할에 맞는 이미지 설정
-    if (role) {
+    // 현재 플레이어일 경우에만 역할 이미지를 표시
+    if (currentPlayerNum === index + 1) {
       const selectedRole = roles.find((r) => r.name === role);
       if (selectedRole) {
-        setAvatar(selectedRole.image); // 해당 역할에 맞는 이미지를 설정
-      } else {
-        setAvatar("/img/default-avatar.png"); // 역할이 없으면 기본 이미지 설정
+        setAvatar(selectedRole.image); // 자신의 역할 이미지 설정
       }
+    } else {
+      setAvatar("/img/default-avatar.png"); // 다른 플레이어는 기본 이미지 표시
     }
-  }, [role]); // role이 바뀔 때마다 실행
+  }, [role, currentPlayerNum, index]);
 
   // 밤이 되면 자동으로 타겟 초기화
   useEffect(() => {
@@ -58,6 +58,7 @@ const PlayerCard = ({
     const cardElement = cardRef.current;
     if (!isAlive) {
       cardElement.classList.add("player-card-dead");
+      console.log("player-card-dead 추가됨")
     } else {
       cardElement.classList.remove("player-card-dead");
     }
@@ -70,15 +71,18 @@ const PlayerCard = ({
   const handleTargetSelect = (targetPlayerNumber) => {
     setTarget(targetPlayerNumber);
     onTargetChange(currentPlayerNum, targetPlayerNumber); // 타겟 선택 즉시 부모 컴포넌트로 업데이트
+    console.log(currentPlayerNum + "이 " + targetPlayerNumber + "을 클릭했음.");
   };
 
   // 카드 클릭시 타겟 선택
   const handleCardClick = () => {
     if (isNight && currentPlayerRole !== "CITIZEN" && isAlive) {
       handleTargetSelect(index + 1); // 클릭된 카드의 플레이어 번호를 타겟으로 설정
-    }
-    if(gameStatus === "VOTE" && isAlive) {
+    } 
+    else if(gameStatus === "VOTE" && isAlive) {
       onClick?.();
+    }else {
+      handleRoleMemoOpen(); // 조건이 만족되지 않을 경우 역할 메모 열기
     }
   };
 
