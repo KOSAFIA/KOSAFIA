@@ -52,22 +52,23 @@ public class Room {
 
     private int currentTime; // 현재 타이머 시간 (초 단위)
     private final Map<GameStatus, Integer> defaultTimes = Map.of(
-            GameStatus.NIGHT, 60, // 밤 60초
+            GameStatus.NIGHT, 30, // 밤 30초
             GameStatus.FIRST_DELAY, 5, // 딜레이 5초
-            GameStatus.DAY, 120, // 낮 120초
-            GameStatus.SECOND_DELAY, 1, // 딜레이 5초
-            GameStatus.VOTE, 60, // 투표 60초
+            GameStatus.DAY, 60, // 낮 60초
+            GameStatus.SECOND_DELAY, 1, // 딜레이 1초
+            GameStatus.VOTE, 30, // 투표 30초
             GameStatus.THIRD_DELAY, 5, // 딜레이 5초
-            GameStatus.FINALVOTE, 30, // 최후 변론 30초
+            GameStatus.FINALVOTE, 15, // 최후 변론 15초
             GameStatus.FOURTH_DELAY, 5 // 딜레이 5초
     );
+
 
     // 게임 상태 변경 시 타이머 자동 초기화를 위해 setGameStatus 수정
     public void setGameStatus(GameStatus newStatus) {
         if (this.gameStatus != newStatus) {
             this.gameStatus = newStatus;
             // 상태 변경 시 해당 상태의 기본 시간으로 초기화
-            this.currentTime = defaultTimes.getOrDefault(newStatus, 0);
+            this.currentTime = getDefaultTimes().get(newStatus);
 
             // 밤상태 진입시 일차 증가겠지 똘빡아 주석보고 반성해
             if (newStatus == GameStatus.NIGHT &&
@@ -112,7 +113,7 @@ public class Room {
         this.voteStatus = new HashMap<>();
         this.voterRecords = new HashMap<>();
         this.finalVoteStatus = new HashMap<>();
-        this.currentTime = defaultTimes.get(GameStatus.NIGHT);
+        this.currentTime = 30;
     }
 
     // 투표 매서드: 이전에 이미 등록된 투표자의 타겟은 1만큼 감소시키고 다시 현재 투표 반영
@@ -313,7 +314,7 @@ public class Room {
             System.out.println("게임 시작 완료 ");
             System.out.println(this.toString());
 
-            this.currentTime = defaultTimes.get(GameStatus.FOURTH_DELAY); // 게임은 밤부터 시작
+            this.currentTime = 30; // 게임은 밤부터 시작
 
             players.forEach(player -> {
                 player.setAlive(true);

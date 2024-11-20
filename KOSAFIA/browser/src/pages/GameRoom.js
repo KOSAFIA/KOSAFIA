@@ -213,8 +213,7 @@ const handleTimerEnd = useCallback(async () => {
           sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
           updateGameStatus(NEXT_STATUS[gameStatus]);
       }
-  }
-}, [isHost, gameStatus, updateGameStatus, sendGameSystemMessage]);
+  }, [isHost, gameStatus, updateGameStatus, sendGameSystemMessage]);
 
 
   const [customIdx, setCustomIdx] = useState(0);

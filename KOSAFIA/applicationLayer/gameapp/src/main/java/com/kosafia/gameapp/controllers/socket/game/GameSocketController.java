@@ -31,22 +31,6 @@ public class GameSocketController {
     @Autowired
     private RoomRepository roomRepository;
 
-    // 시간용 작업 -------------------------------------------------------------------
-    // 1) 각 상태별 기본 시간
-    private int getDefaultTime(GameStatus status) {
-        return switch (status) {
-            case NIGHT -> 30; // 30초
-            case FIRST_DELAY -> 5; // 5초
-            case DAY -> 60; // 60초
-            case SECOND_DELAY -> 5; // 5초
-            case VOTE -> 30; // 30초
-            case THIRD_DELAY -> 5; // 5초
-            case FINALVOTE -> 15;// 15초
-            case FOURTH_DELAY -> 5; // 5초
-            default -> 0;
-        };
-    }
-
     // 각 방의 타이머를 관리할 Thread Map
     private final Map<Integer, Thread> roomTimers = new ConcurrentHashMap<>();
 
@@ -246,7 +230,7 @@ public class GameSocketController {
             room.setGameStatus(newStatus);
 
             // 새로운 상태에 맞는 초기 시간 설정
-            int initialTime = getDefaultTime(newStatus);
+            int initialTime = room.getDefaultTimes().get(newStatus);
             room.setCurrentTime(initialTime);
 
             // 상태 변경 알림
@@ -601,7 +585,7 @@ public class GameSocketController {
 
                 // 초기 상태 설정--> 하은님 제가 바꿨어요 여기에여
                 room.setGameStatus(GameStatus.FOURTH_DELAY);
-                room.setCurrentTime(getDefaultTime(GameStatus.FOURTH_DELAY));
+                room.setCurrentTime(room.getDefaultTimes().get(GameStatus.FOURTH_DELAY));
                 room.setTurn(1); // 1일차로 설정
 
                 // 상태 전송

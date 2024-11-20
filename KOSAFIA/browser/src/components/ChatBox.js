@@ -1,8 +1,8 @@
+// ChatBox.js
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import "../styles/components/ChatBox.css";
 import SendButton from "./SendButton";
 import MessageList from "./MessageList";
-import { STATUS_INDEX, GAME_STATUS } from "../constants/GameStatus";
 
 const ChatBox = forwardRef(({ 
   gameStatus,
@@ -73,10 +73,10 @@ const ChatBox = forwardRef(({
           disabled={!canChat}
         />
       </div>
-    );
-  }
-);
+    </div>
+  );
+});
 
-ChatBox.displayName = "ChatBox";
+ChatBox.displayName = 'ChatBox';
 
 export default ChatBox;
