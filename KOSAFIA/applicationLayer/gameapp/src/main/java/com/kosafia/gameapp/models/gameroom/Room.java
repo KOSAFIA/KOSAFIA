@@ -268,11 +268,6 @@ public class Room {
 
     // 플레이어 제거 메서드
     public boolean removePlayer(Player player) {
-        // int index = players.indexOf(player); // 나가는 플레이어의 인덱스 확인
-        // if (index == -1) {
-        // System.out.println("플레이어를 찾을 수 없습니다.");
-        // return false;
-        // }
 
         // 플레이어를 직접 제거
         boolean removed = players.remove(player);
@@ -294,10 +289,6 @@ public class Room {
             players.get(i).setPlayerNumber(i + 1); // 새 번호를 1부터 다시 부여
         }
 
-        // // 뒤에 있는 플레이어들의 번호를 앞으로 당김
-        // for (int i = index; i < players.size(); i++) {
-        // players.get(i).setPlayerNumber(i + 1); // playerNumber를 i + 1로 업데이트
-        // }
         return true;
     }
 
@@ -330,7 +321,43 @@ public class Room {
         this.isPlaying = false;
         this.turn = 0;
         this.gameStatus = GameStatus.NIGHT;
+
+        // 플레이어 상태 초기화
+        for (Player player : players) {
+            player.setAlive(true); // 모든 플레이어를 살아 있는 상태로 초기화
+            player.setRole(null); // 직업 초기화
+            player.setVoteTarget(false); // 투표 타겟 여부 초기화
+
+            player.setResult(Result.NONE);
+            player.setTarget(null);
+
+        }
+        
+        // 투표 관련 정보 초기화
+        clearVotes();
+        clearFinalVotes();
+
+        log.info("방 상태가 초기화되었습니다: roomKey {}", this.roomKey);
+
         this.currentTime = 0;
+
+        // 플레이어 상태 초기화
+        for (Player player : players) {
+            player.setAlive(true); // 모든 플레이어를 살아 있는 상태로 초기화
+            player.setRole(null); // 직업 초기화
+            player.setVoteTarget(false); // 투표 타겟 여부 초기화
+
+            player.setResult(Result.NONE);
+            player.setTarget(null);
+
+        }
+        
+        // 투표 관련 정보 초기화
+        clearVotes();
+        clearFinalVotes();
+
+        log.info("방 상태가 초기화되었습니다: roomKey {}", this.roomKey);
+
     }
 
     ///////////////////////////
@@ -352,4 +379,5 @@ public class Room {
 
         }
     }
+
 }

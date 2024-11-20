@@ -1,4 +1,4 @@
-package com.kosafia.gameapp.services.room;
+package com.kosafia.gameapp.services.gameroom;
 
 import java.util.List;
 import java.util.Map;
@@ -28,25 +28,6 @@ public class RoomService {
         this.roomRepository = roomRepository;
         this.userService = userService;
     }
-
-
-    // // 초기화 메서드: 서버 시작 시 임시 방 생성
-    // @PostConstruct
-    // public void init() {
-    //     // 서버 시작 시 임시 방 생성
-    //     createTestRoom();
-    // }
-
-    // // 테스트용 임시 방 생성
-    // private void createTestRoom() {
-    //     String roomName = "testRoom";
-    //     String password = null; // 공개 방으로 설정
-    //     boolean isPrivate = false;
-
-    //     Room room = roomRepository.createRoom(roomName, password, isPrivate);
-    //     System.out.println("초기 룸 생성 완료: " + roomName);
-    // }
-
 
 
     // 세션에서 유저 정보를 가져오는 메서드
@@ -147,6 +128,10 @@ public class RoomService {
         Room room = roomRepository.getRoom(roomKey);
         if (room != null) {
             room.endGame();
+            log.info("게임 종료 - 방 상태 초기화 완료: roomKey: {}", roomKey);
+        }
+        else {
+            log.warn("게임 종료 요청 실패 - 방을 찾을 수 없음: roomKey: {}", roomKey);
         }
     }
 

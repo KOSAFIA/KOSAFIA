@@ -1,70 +1,252 @@
-/* 마이페이지 모달 오버레이 */
+/* Mypage 모달 오버레이 스타일 */
 .mypage-modal-overlay {
-  background: rgba(0, 0, 0, 0.7); /* 어두운 반투명 배경 */
-  display: flex; /* 중앙 정렬 */
-  justify-content: center;
-  align-items: center;
+  display: flex; /* 플렉스 박스를 사용하여 중앙 정렬 */
+  justify-content: center; /* 가로 방향 중앙 정렬 */
+  align-items: center; /* 세로 방향 중앙 정렬 */
   position: fixed; /* 화면 고정 */
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1000; /* 모달 최상위 배치 */
+  z-index: 2000; /* 다른 요소보다 위에 배치 */
+  backdrop-filter: blur(8px); /* 배경 블러 효과 추가 */
 }
 
-/* 마이페이지 모달 */
+/* Mypage 모달 */
 .mypage-modal {
-  background: white; /* 흰색 배경 */
-  border-radius: 10px; /* 둥근 모서리 */
-  padding: 20px; /* 내부 여백 */
-  max-width: 400px; /* 최대 너비 */
+  background: linear-gradient(
+    145deg,
+    #f5f5f7af,
+    #a3a3a4
+  ); /* 부드러운 그라데이션 배경 */
+  border-radius: 20px; /* 모서리를 둥글게 설정 */
+  padding: 40px; /* 내부 여백 추가 */
+  max-width: 450px; /* 최대 너비 */
   width: 90%; /* 화면 크기에 따라 너비 조정 */
+  box-shadow: 0 8px 30px rgba(227, 26, 26, 0.3); /* 그림자 효과 추가 */
+  position: relative;
+  animation: fadeInScale 0.5s ease-out; /* 등장 애니메이션 추가 */
   text-align: center; /* 텍스트 중앙 정렬 */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* 그림자 효과 */
-  position: relative; /* 위치 설정 */
-  animation: fadeIn 0.3s ease; /* 페이드 인 애니메이션 */
+  
 }
 
-/* 마이페이지 버튼 스타일 */
+/* Mypage 제목 스타일 */
+.mypage-modal h1 {
+  font-size: 2rem;
+  margin-bottom: 25px;
+  color: #333; /* 제목 색상 */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 텍스트 그림자 효과 */
+}
+
+/* Mypage 입력 필드 */
+.mypage-modal input {
+  width: 100%;
+  padding: 12px 15px; /* 내부 여백 추가 */
+  margin: 15px 0; /* 입력 필드 간격 */
+  border: 2px solid rgba(223, 221, 221, 0.333); /* 부드러운 테두리 */
+  border-radius: 8px; /* 모서리 둥글게 설정 */
+  font-size: 1rem;
+  background-color: #bdb6b6!important; /* 입력 필드 배경색 흰색으로 설정 */
+  color: #333333 !important; /* 텍스트 색상 어두운 회색 */
+  box-sizing: border-box;
+  transition: all 0.3s ease-in-out; /* 부드러운 변화 효과 */
+}
+
+.mypage-modal input:focus {
+  border-color: #b9b6bd; /* 포커스 시 테두리 색상 */
+  outline: none;
+  box-shadow: 0 0 10px rgba(173, 148, 23, 0.5); /* 네온 효과 */
+  background-color: #bbbbbd; /* 포커스 시 배경색 부드러운 회색 */
+  color: #363232; /* 포커스 시 텍스트 색상 검정 */
+}
+
+/* Mypage 버튼 */
 .mypage-modal button {
-  background-color: #5b9bd5; /* 버튼 배경색 */
-  color: white; /* 버튼 텍스트 색 */
-  border: none; /* 테두리 없음 */
-  padding: 10px 20px; /* 버튼 여백 */
-  border-radius: 5px; /* 둥근 모서리 */
-  cursor: pointer; /* 클릭 가능한 커서 */
-  margin-top: 10px; /* 버튼 간격 */
-  transition: background-color 0.3s ease; /* 색상 전환 효과 */
+  background: linear-gradient(
+    145deg,
+    #46415c,
+    #273b5d
+  ); /* 버튼에 그라데이션 적용 */
+  color: rgb(181, 183, 185); /* 텍스트 색상 */
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px; /* 둥근 모서리 */
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: transform 0.2s ease, box-shadow 0.3s ease; /* 부드러운 애니메이션 효과 */
+  box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3); /* 그림자 효과 */
 }
 
 .mypage-modal button:hover {
-  background-color: #4a86c5; /* 호버 상태에서 색 변경 */
+  transform: translateY(-3px); /* 버튼이 살짝 올라가는 효과 */
+  box-shadow: 0 6px 20px rgba(106, 17, 203, 0.5); /* 호버 시 그림자 강조 */
+  background: linear-gradient(145deg, #654e82, #5e275a); /* 버튼 배경 변경 */
 }
 
-/* 마이페이지 인풋 필드 */
-.mypage-modal input {
-  width: calc(100% - 20px); /* 부모 요소에 맞는 너비 */
-  padding: 10px; /* 내부 여백 */
-  border: 1px solid #ccc; /* 테두리 색상 */
-  border-radius: 5px; /* 둥근 모서리 */
-  margin-bottom: 10px; /* 아래 여백 */
-  box-sizing: border-box; /* 박스 모델 설정 */
+/* 메시지 스타일 */
+.modal-message {
+  color: #8b4c4a; /* 오류 메시지 색상 */
+  font-weight: bold; /* 텍스트 강조 */
+  margin: 15px 0;
+  font-size: 1.1rem; /* 메시지 크기 */
 }
 
-.mypage-modal h1 {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  color: #333; /* 제목 색상 */
-}
-
-/* 페이드 인 애니메이션 */
-@keyframes fadeIn {
+/* 애니메이션 정의 */
+@keyframes fadeInScale {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: scale(0.8); /* 작게 시작 */
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1); /* 원래 크기로 */
   }
+}
+
+/* 공통 오버레이 스타일 */
+.mypage-password-modal-overlay {
+  position: fixed; /* 화면 고정 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(114, 110, 110, 0.703); /* 어두운 반투명 배경 */
+  display: flex; /* 중앙 정렬 */
+  justify-content: center;
+  align-items: center;
+  z-index: 3000; /* 가장 높은 z-index */
+  backdrop-filter: blur(10px); /* 배경 블러 효과 */
+}
+
+.password-delete-modal-overlay{
+  position: fixed; /* 화면 고정 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(121, 79, 79, 0.8); /* 어두운 반투명 배경 */
+  display: flex; /* 중앙 정렬 */
+  justify-content: center;
+  align-items: center;
+  z-index: 3000; /* 가장 높은 z-index */
+  backdrop-filter: blur(10px); /* 배경 블러 효과 */
+}
+
+
+/* 비밀번호 변경 모달 */
+.mypage-password-modal {
+  background: rgb(161, 159, 159); /* 모달 배경 */
+  border-radius: 15px; /* 모서리 둥글게 */
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); /* 그림자 효과 */
+  position: relative;
+  animation: fadeInScale 0.4s ease; /* 등장 애니메이션 */
+  text-align: center; /* 텍스트 중앙 정렬 */
+  z-index: 4000; /* 모달 자체의 z-index */
+}
+
+/* 회원탈퇴 모달 */
+.password-delete-modal {
+  background: rgb(172, 91, 91); /* 모달 배경 */
+  border-radius: 15px; /* 모서리 둥글게 */
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 30px rgba(6, 5, 5, 0.47); /* 그림자 효과 */
+  position: relative;
+  animation: fadeInScale 0.4s ease; /* 등장 애니메이션 */
+  text-align: center; /* 텍스트 중앙 정렬 */
+  z-index: 4000; /* 모달 자체의 z-index */
+}
+/* 비밀번호 변경 모달 */
+.mypage-password-modal input {
+  width: 100%;
+  padding: 12px 15px; /* 내부 여백 추가 */
+  margin: 15px 0; /* 입력 필드 간격 */
+  border: 2px solid rgba(223, 221, 221, 0.333); /* 부드러운 테두리 */
+  border-radius: 8px; /* 모서리 둥글게 설정 */
+  font-size: 1rem;
+  background-color: #bdb6b6!important; /* 입력 필드 배경색 흰색으로 설정 */
+  color: #333333 !important; /* 텍스트 색상 어두운 회색 */
+  box-sizing: border-box;
+  transition: all 0.3s ease-in-out; /* 부드러운 변화 효과 */
+}
+
+/* 회원탈퇴 모달 */
+.password-delete-modal input {
+  width: 100%;
+  padding: 12px 15px; /* 내부 여백 추가 */
+  margin: 15px 0; /* 입력 필드 간격 */
+  border: 2px solid rgba(223, 221, 221, 0.333); /* 부드러운 테두리 */
+  border-radius: 8px; /* 모서리 둥글게 설정 */
+  font-size: 1rem;
+  background-color: #d5b0b0!important; /* 입력 필드 배경색 흰색으로 설정 */
+  color: #333333 !important; /* 텍스트 색상 어두운 회색 */
+  box-sizing: border-box;
+  transition: all 0.3s ease-in-out; /* 부드러운 변화 효과 */
+}
+
+.mypage-password-modal button {
+  background: linear-gradient(
+    145deg,
+    #46415ca1,
+    #273b5d7f
+  ); /* 버튼에 그라데이션 적용 */
+  color: rgb(181, 183, 185); /* 텍스트 색상 */
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px; /* 둥근 모서리 */
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: transform 0.2s ease, box-shadow 0.3s ease; /* 부드러운 애니메이션 효과 */
+  
+}
+
+.mypage-password-modal button:hover {
+  transform: translateY(-3px); /* 버튼이 살짝 올라가는 효과 */
+  box-shadow: 0 6px 20px rgba(106, 17, 203, 0.5); /* 호버 시 그림자 강조 */
+  background: linear-gradient(145deg, #654e82, #5e275a); /* 버튼 배경 변경 */
+}
+
+.password-delete-modal button {
+  background: linear-gradient(
+    145deg,
+    #46415c,
+    #273b5d
+  ); /* 버튼에 그라데이션 적용 */
+  color: rgb(181, 183, 185); /* 텍스트 색상 */
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px; /* 둥근 모서리 */
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: transform 0.2s ease, box-shadow 0.3s ease; /* 부드러운 애니메이션 효과 */
+}
+
+.password-delete-modal button:hover {
+  transform: translateY(-3px); /* 버튼이 살짝 올라가는 효과 */
+  box-shadow: 0 6px 20px rgba(106, 17, 203, 0.5); /* 호버 시 그림자 강조 */
+  background: linear-gradient(145deg, #654e82, #5e275a); /* 버튼 배경 변경 */
+}
+
+/* 성공 팝업 */
+.success-popup-modal {
+  background: rgb(181, 181, 181);
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); /* 그림자 효과 */
+  position: relative;
+  animation: fadeInScale 0.4s ease; /* 등장 애니메이션 */
+  text-align: center;
+  z-index: 4000; /* 모달 자체의 z-index */
 }

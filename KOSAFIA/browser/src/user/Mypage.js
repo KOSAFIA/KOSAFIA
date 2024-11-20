@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react"; // React에서 제공하는 
 import Modal from "react-modal"; // 모달을 구현하기 위한 라이브러리 Modal을 임포트
 import { useNavigate } from "react-router-dom"; // 로그인 화면으로  페이지 이동을 위해 useNavigate 사용
 import "../styles/components/Mypage.css";
-
 Modal.setAppElement("#root");
 
 function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
@@ -37,15 +36,11 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch(
-
-          `${BASE_URL}/api/user/profile`,
-          {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include", // 쿠키 등 인증 정보를 포함하여 서버에 요청
-          }
-        );
+        const response = await fetch(`${BASE_URL}/api/user/profile`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // 쿠키 등 인증 정보를 포함하여 서버에 요청
+        });
 
         if (response.ok) {
           const data = await response.json(); // 서버로부터 받은 데이터를 JSON 형태로 파싱
@@ -111,15 +106,12 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
     }
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/api/user/update-password`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include", // 쿠키 등 인증 정보를 포함하여 서버에 요청
-          body: JSON.stringify({ currentPassword, newPassword }), // 서버에 현재 비밀번호와 새 비밀번호 전송
-        }
-      );
+      const response = await fetch(`${BASE_URL}/api/user/update-password`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // 쿠키 등 인증 정보를 포함하여 서버에 요청
+        body: JSON.stringify({ currentPassword, newPassword }), // 서버에 현재 비밀번호와 새 비밀번호 전송
+      });
 
       if (response.ok) {
         setMessage("비밀번호가 성공적으로 변경되었습니다."); // 성공 메시지 설정
@@ -164,7 +156,6 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
       setMessage("회원탈퇴 중 오류가 발생했습니다.");
     }
   };
- 
 
   // 비밀번호 변경 모달 열기
   const openPasswordModal = () => {
@@ -217,8 +208,9 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
 
   return (
     <div>
-      <h1>마이페이지</h1>
+      <h1>Mapage</h1>
       <p>이메일: {userEmail}</p>
+
       <div>
         <label>닉네임: </label>
         {isEditingUsername ? (
@@ -228,9 +220,12 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
               type="text"
               value={username} // 현재 닉네임 값 표시
               onChange={(e) => setLocalUsername(e.target.value)} // 사용자가 입력한 값을 로컬 상태에 저장
+              className="username-edit"
             />
-            <button onClick={handleUsernameSave}>저장</button>
-            <button onClick={() => setIsEditingUsername(false)}>취소</button>
+            <div>
+              <button onClick={handleUsernameSave}>저장</button>
+              <button onClick={() => setIsEditingUsername(false)}>취소</button>
+            </div>
           </>
         ) : (
           // 닉네임 보기 모드일 때
@@ -263,8 +258,9 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
         isOpen={isPasswordModalOpen} // 모달이 열려 있는지 여부
         onRequestClose={closePasswordModal} // 모달 닫기 함수
         contentLabel="비밀번호 변경" // 모달 내용 설명
-        className="password-modal" // 모달의 스타일 지정 클래스
-        overlayClassName="password-modal-overlay" // 모달 오버레이의 스타일 지정 클래스
+        className="mypage-password-modal" // 모달의 스타일 지정 클래스
+        overlayClassName="mypage-password-modal-overlay" // 모달 오버레이의 스타일 지정 클래스
+        portalClassName="ReactModalPortal" // 최상단 계층에서 렌더링
       >
         <h2>비밀번호 변경</h2>
         <form>
@@ -279,6 +275,7 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
                 onChange={(e) => setCurrentPassword(e.target.value)} // 현재 비밀번호 입력값 업데이트
                 required
               />
+              <br></br>
               <input
                 type="password"
                 placeholder="새 비밀번호"
@@ -293,8 +290,8 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
                 onChange={(e) => setConfirmNewPassword(e.target.value)} // 새 비밀번호 확인 입력값 업데이트
                 required
               />
+              <br></br>
               <button type="button" onClick={handlePasswordChange}>
-                {" "}
                 {/* 비밀번호 변경 요청 버튼 */}
                 비밀번호 변경
               </button>
@@ -317,8 +314,9 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
         isOpen={isDeleteModalOpen || isOAuthDeleteModalOpen} // 모달이 열려 있는지 여부
         onRequestClose={isOAuthUser ? closeOAuthDeleteModal : closeDeleteModal} // 모달 닫기 함수
         contentLabel="회원탈퇴" // 모달 내용 설명
-        className="password-modal" // 모달의 스타일 지정 클래스
-        overlayClassName="password-modal-overlay" // 모달 오버레이의 스타일 지정 클래스
+        className="password-delete-modal" // 모달의 스타일 지정 클래스
+        overlayClassName="password-delete-modal-overlay" // 모달 오버레이의 스타일 지정 클래스
+        portalClassName="ReactModalPortal" // 최상단 계층에서 렌더링
       >
         <h2>회원탈퇴</h2>
         {isOAuthUser ? (
