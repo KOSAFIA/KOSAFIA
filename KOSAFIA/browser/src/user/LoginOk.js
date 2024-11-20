@@ -133,6 +133,7 @@ function LoginOk() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
+        // await CheckCors();
         const response = await axios.get(`${BASE_URL}/api/user/profile`, {
           withCredentials: true, // 쿠키 포함
         });
