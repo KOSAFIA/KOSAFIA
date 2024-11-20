@@ -24,10 +24,10 @@ const TestLobby = () => {
       const response = await axios.get('http://localhost:8080/api/rooms/all');
       // console.log("방 목록 조회 성공 - 응답 데이터:", response.data);
 
-       // 서버 응답이 배열인지 확인하고, 배열이 아니면 객체의 값을 배열로 변환
-       const roomsArray = Array.isArray(response.data) ? response.data : Object.values(response.data);
+      // 서버 응답이 배열인지 확인하고, 배열이 아니면 객체의 값을 배열로 변환
+      const roomsArray = Array.isArray(response.data) ? response.data : Object.values(response.data);
 
-    //   setRooms(response.data);
+      //   setRooms(response.data);
       setRooms(roomsArray); // rooms 상태에 배열로 저장
     } catch (error) {
       console.error("방 목록 조회 실패 - 오류:", error);
@@ -39,7 +39,7 @@ const TestLobby = () => {
   }, []);
 
   // Input 값이 변경될 때 호출되는 함수
-const handleInputChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setRoomDetails((prevDetails) => ({
       ...prevDetails,
@@ -145,19 +145,22 @@ const handleInputChange = (e) => {
   };
 
   return (
-    <div className="jiyeon">
-            <div className="room-list-container">
+
+    <div className="room-list-container">
       <header className="header">
         <button className="create-room-button" onClick={openModal}>방 만들기</button>
       </header>
-      
+
       <div className="room-list">
         {rooms.map(room => (
           <div className="room-item" key={room.roomKey}>
-            <div className="room-info">
+            <div className="room-title-container">
+             
               <div className="room-title">{room.roomKey}. {room.roomName}</div>
+              {room.isPrivate && <div className="lock-icon">🔒</div>} {/* 비밀방 아이콘 추가 */}
             </div>
             <div className="room-status">
+
               <span className={room.players?.length >= room.maxPlayers ? 'full' : 'available'}>
                 {room.players?.length || 0}/{room.maxPlayers}명
               </span>
@@ -167,8 +170,8 @@ const handleInputChange = (e) => {
                 <span className="in-progress">대기중</span>
               )}
             </div>
-            <button 
-              className="enter-button" 
+            <button
+              className="enter-button"
               onClick={() => handleJoinRoom(room.roomKey, room.isPrivate)}
               disabled={room.players?.length >= room.maxPlayers || room.isPlaying}
             >
@@ -184,36 +187,36 @@ const handleInputChange = (e) => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>방 만들기</h2>
             <label>방 제목</label>
-            <input 
-              type="text" 
-              name="roomName" 
-              placeholder="방 제목을 입력하세요" 
-              value={roomDetails.roomName} 
-              onChange={(e) => handleInputChange(e)} 
+            <input
+              type="text"
+              name="roomName"
+              placeholder="방 제목을 입력하세요"
+              value={roomDetails.roomName}
+              onChange={(e) => handleInputChange(e)}
             />
-            
+
             <label>최대 인원</label>
-            <input 
-              type="number" 
-              name="maxPlayers" 
-              min="1" 
-              max="12" 
-              value={roomDetails.maxPlayers} 
-              onChange={(e) => handleInputChange(e)} 
+            <input
+              type="number"
+              name="maxPlayers"
+              min="1"
+              max="12"
+              value={roomDetails.maxPlayers}
+              onChange={(e) => handleInputChange(e)}
             />
-            
+
             <div className="password-section">
               <label>비밀번호 여부</label>
               <div className="toggle-switch" onClick={() => setRoomDetails(prev => ({ ...prev, isPrivate: !prev.isPrivate }))}>
                 <div className={`switch ${roomDetails.isPrivate ? 'active' : ''}`}></div>
               </div>
               {roomDetails.isPrivate && (
-                <input 
-                  type="password" 
-                  name="password" 
-                  placeholder="비밀번호를 입력하세요" 
-                  className="password-input" 
-                  value={roomDetails.password} 
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="비밀번호를 입력하세요"
+                  className="password-input"
+                  value={roomDetails.password}
                   onChange={(e) => handleInputChange(e)}
                 />
               )}
@@ -248,8 +251,8 @@ const handleInputChange = (e) => {
       )}
     </div>
 
-    </div>
-   
+
+
   );
 };
 

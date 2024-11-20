@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { GameSocketProvider } from '../contexts/socket/game/GameSocketContext';
+import { GameSocketProvider, useGameContext } from '../contexts/socket/game/GameSocketContext';
 import GameRoom from '../pages/GameRoom';
 
 function TestPlayRoom() {
@@ -40,7 +40,6 @@ function TestPlayRoom() {
 
     return (
         <div style={{ padding: '20px'}}>
-            <h1>게임 진행 창 - 방 {roomKey}</h1>
             {isSocketReady && (
                 <GameSocketProvider roomKey={parseInt(roomKey)}>
                     <GameRoom />

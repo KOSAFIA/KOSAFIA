@@ -128,6 +128,10 @@ public class RoomService {
         Room room = roomRepository.getRoom(roomKey);
         if (room != null) {
             room.endGame();
+            log.info("게임 종료 - 방 상태 초기화 완료: roomKey: {}", roomKey);
+        }
+        else {
+            log.warn("게임 종료 요청 실패 - 방을 찾을 수 없음: roomKey: {}", roomKey);
         }
     }
 
