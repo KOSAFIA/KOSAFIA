@@ -20,10 +20,16 @@ import "../styles/GameRoom.css";
 // 상단에 stages 상수 추가
 const stages = [
   { name: "NIGHT", image: "/img/night.png" },
-  { name: "DELAY", image: "/img/day.png" },
+  { name: "FIRSTDELAY", image: "/img/day.png" },
+
   { name: "DAY", image: "/img/day.png" },
+  { name: "SECONDDELAY", image: "/img/day.png" },
+
   { name: "VOTE", image: "/img/vote.png" },
+  { name: "THIRDDELAY", image: "/img/day.png" },
+
   { name: "FINALVOTE", image: "/img/discussion.png" },
+  { name: "FOURTHDELAY", image: "/img/day.png" }
 ];
 
 const GameRoom = () => {
@@ -53,6 +59,12 @@ const GameRoom = () => {
     dayCount,         // 현재 일차
     sendSystemMessage, // 시스템 메시지 전송 함수
     modifyGameTime,
+    processVoteResult,
+    processFinalVoteResult,
+    sendFinalVote,
+    canFinalVote,
+    voteStatus,
+    finalVotes
   } = useGameContext();
 
   // 시간 조절한 플레이어 목록 관리 (새로운 게임 시작 시 초기화 필요)
@@ -180,10 +192,10 @@ const handleNightEvent = async () => {
 
   // 게임 상태 변경 시 시스템 메시지 전송
   useEffect(() => {
-    if (gameStatus && stages[stageIndex]) {
-      sendGameSystemMessage(`${stages[stageIndex].name} 시간이 시작되었습니다.`);
+    if (gameStatus && isHost) {
+      sendGameSystemMessage(`${gameStatus} 시간이 시작되었습니다.`);
     }
-  }, [gameStatus, stageIndex, sendGameSystemMessage]);
+  }, [gameStatus, gameStatus, sendGameSystemMessage, isHost]);
 
   // 시간 조절 핸들러 수정
   const handleModifyTime = useCallback((adjustment) => {
@@ -203,13 +215,13 @@ const handleNightEvent = async () => {
 const handleTimerEnd = useCallback(async () => {
   if (gameStatus === GAME_STATUS.NIGHT) {
       if (isHost) {
-          sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
+          sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
       }
       // handleStageChange를 통해 모든 처리를 일관되게 진행
       await handleStageChange(1);
   } else {
       if (isHost) {
-          sendGameSystemMessage(`${stages[stageIndex].name} 시간이 종료되었습니다.`);
+          sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
           updateGameStatus(NEXT_STATUS[gameStatus]);
       }
   }
@@ -231,10 +243,25 @@ const handleTimerEnd = useCallback(async () => {
     }else if (gameStatus === GAME_STATUS.DAY) {
       // await handleDayActions(1);
     }else if (gameStatus === GAME_STATUS.VOTE) {
-      // await handleVoteActions(1);
+      if(isHost) {
+        processVoteResult();
+      }
     }else if (gameStatus === GAME_STATUS.FINALVOTE) {
-      // await handleFinalVoteActions(1);
+      if(isHost) {
+        processFinalVoteResult();
+      }
+    }else if(gameStatus === GAME_STATUS.FIRSTDELAY) {
+
     }
+    else if(gameStatus === GAME_STATUS.SECONDDELAY) {
+    }
+    else if(gameStatus === GAME_STATUS.THIRDDELAY) {
+
+    }
+    else if(gameStatus === GAME_STATUS.FOURTHDELAY) {
+
+    }
+
     if (isHost) {
       sendGameSystemMessage(`${gameStatus} 단계가 종료되었습니다.`);
       // 다음 상태로 업데이트
@@ -297,11 +324,28 @@ const handleTimerEnd = useCallback(async () => {
                   currentPlayerRole={currentPlayer.role}
                   currentPlayerNum={currentPlayer.playerNumber}
                   onTargetChange={handleTargetChange}
-                  isAlive={currentPlayer.isAlive}
+                  isAlive={player.isAlive}
+                  gameStatus={gameStatus}
+                  voteCount={voteStatus[player.playerNumber] || 0}
+                  agreeCount={finalVotes.agree || 0}
+                  disagreeCount={finalVotes.disagree || 0}
+                  isVoteTarget={player.isVoteTarget}
                   onClick={() => {
-                    const playerName = `Player ${player.playerNumber} (${player.role})`;
-                    handleOpenPopup(playerName);
-                    handlePlayerSelect(player.playerNumber);
+                    // 투표 단계에서는 팝업을 열지 않고 투표만 처리
+                    if (gameStatus === GAME_STATUS.VOTE && canVote()) {
+                      sendVote(player.playerNumber);
+                    } else if (gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
+                      // sendFinalVote(player.playerNumber); 플레이어 카드를 클릭하는거로 처리할수가 없겠어..
+                    } else {
+                      const playerName = `Player ${player.playerNumber} (${player.role})`;
+                      handleOpenPopup(playerName);
+                      handlePlayerSelect(player.playerNumber);
+                    }
+                  }}
+                  onFinalVoteClick={(isAgreeButtonValue) => {
+                    if (gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
+                      sendFinalVote(isAgreeButtonValue);
+                    }
                   }}
                 />
               ))

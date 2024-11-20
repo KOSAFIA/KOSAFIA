@@ -136,31 +136,35 @@ public class Room {
     // 최다 득표자 반환 그냥 플레이어로 반환하는걸로 고침 멍청한 gpt 동률이면 null 반환
     public Player getMostVotedPlayer() {
         if (voteStatus.isEmpty()) {
+            log.info("투표 기록이 없습니다.");
             return null;
         }
 
-        // 득표수 집계
-        Map<Integer, Long> voteCounts = voteStatus.values().stream()
-                .collect(Collectors.groupingBy(
-                        targetId -> targetId,
-                        Collectors.counting()));
+        // voteStatus에서 직접 최다 득표자 찾기
+        Map.Entry<Integer, Integer> maxEntry = voteStatus.entrySet().stream()
+            .max(Map.Entry.comparingByValue())
+            .orElse(null);
 
-        // 최다 득표수 찾기
-        long maxVotes = voteCounts.values().stream()
-                .mapToLong(count -> count)
-                .max()
-                .orElse(0);
-
-        if (maxVotes == 0) {
+        if (maxEntry == null || maxEntry.getValue() == 0) {
+            log.info("유효한 투표가 없습니다.");
             return null;
-        } else if (voteCounts.values().stream().filter(count -> count == maxVotes).count() > 1) {
-            return null;
-        } else {
-            return getPlayerByPlayerNumber(voteCounts.entrySet().stream()
-                    .filter(entry -> entry.getValue() == maxVotes)
-                    .map(Map.Entry::getKey)
-                    .findFirst().orElse(null));
         }
+
+        // 동률 체크
+        int maxVotes = maxEntry.getValue();
+        long tieCount = voteStatus.values().stream()
+            .filter(votes -> votes == maxVotes)
+            .count();
+
+        if (tieCount > 1) {
+            log.info("동률이 발생했습니다. 최다 득표수: {}", maxVotes);
+            return null;
+        }
+
+        Player targetPlayer = getPlayerByPlayerNumber(maxEntry.getKey());
+        log.info("최다 득표자 선정: Player {}, 득표수: {}", maxEntry.getKey(), maxVotes);
+        
+        return targetPlayer;
     }
 
     // 특정 플레이어의 득표수 확인
@@ -220,6 +224,7 @@ public class Room {
         finalVoteStatus.clear();
     }
 
+    //여기서 서버 플레이어 죽네
     public Player processFinalVoteResult() {
         Player targetPlayer = players.stream()
                 .filter(Player::isVoteTarget)

@@ -18,7 +18,7 @@ const ChatBox = forwardRef(({
   useImperativeHandle(ref, () => ({
     receiveMessage: (message) => {
       const formattedMessage = {
-        username: message.username || 'System',
+        username: message.username || 'SYSTEM',
         content: message.content || message.text,
         gameStatus: message.gameStatus,
         role: message.role,

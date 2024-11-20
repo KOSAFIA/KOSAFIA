@@ -14,13 +14,13 @@
   max-width: 80%;
 }
 
-.own-message {
-  justify-content: flex-start; /* 본인 메시지는 왼쪽 정렬 */
+.other-message {
+  justify-content: flex-start; /* 본인 메시지는 오른쪽 정렬 */
 }
 
-.other-message {
+.own-message {
   margin-left: 120px;
-  justify-content: flex-end; /* 다른 사람 메시지는 오른쪽 정렬 */
+  justify-content: flex-end; /* 다른 사람 메시지는 왼쪽 정렬 */
 }
 
 .message-icon {

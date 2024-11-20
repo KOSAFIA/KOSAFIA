@@ -304,16 +304,16 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                     const voteData = JSON.parse(socketMsg.body);
                     console.log('투표 상태 수신:', voteData); // 디버깅용
 
-            if (voteData && voteData.voteStatus) {
-              console.log("투표 상태 업데이트:", voteData.voteStatus);
-              setVoteStatus(voteData.voteStatus);
-            } else {
-              console.log("직접 투표 상태 업데이트:", voteData);
-              setVoteStatus(voteData);
-            }
-          }
-        )
-      );
+                if (voteData && voteData.voteStatus) {
+                  console.log("투표 상태 업데이트:", voteData.voteStatus);
+                  setVoteStatus(voteData.voteStatus);
+                } else {
+                  console.log("직접 투표 상태 업데이트:", voteData);
+                  setVoteStatus(voteData);
+                }
+              }
+            )
+          );
 
             // 8. 투표 결과 구독
             subscriptions.push(
@@ -326,10 +326,10 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                             prevPlayers.map(player => 
                                 player.playerNumber === result.targetPlayer?.playerNumber
                                     ? { ...player, isVoteTarget: true }
-                                    : player
+                                    : { ...player, isVoteTarget: false }
                             )
                         );
-                        setVoteStatus(result.finalVoteStatus);
+                        setVoteStatus(result.voteResult);
                     }
                 })
             );
@@ -453,26 +453,29 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     }
   }, [roomKey, isHost, voteStatus]);
 
-  const sendFinalVote = useCallback(
-    async (isAgree) => {
-      try {
-        await axios.post(
-          `${API_BASE_URL}/game/finalvote/${roomKey}`,
-          {
-            roomKey: parseInt(roomKey),
-            playerNumber: currentPlayer.playerNumber,
-            isAgree,
-          },
-          { withCredentials: true }
-        );
-      } catch (error) {
-        throw error;
+  const sendFinalVote = useCallback(async (isAgree) => {
+    try {
+      console.log('최종 투표 요청:', { isAgree, playerNumber: currentPlayer?.playerNumber });
+      const response = await axios.post(
+        `${API_BASE_URL}/game/finalvote/${roomKey}`,
+        {
+          roomKey: roomKey,
+          playerNumber: currentPlayer?.playerNumber,
+          isAgree: isAgree
+        }
+      );
+      
+      if (response.data) {
+        console.log('최종 투표 성공:', response.data);
+        // 투표 상태 업데이트를 위한 소켓 구독은 유지
       }
-    },
-    [roomKey, currentPlayer]
-  );
+    } catch (error) {
+      console.error('최종 투표 실패:', error);
+      throw error;
+    }
+  }, [roomKey, currentPlayer]);
 
-  const requestFinalVoteResult = useCallback(() => {
+  const processFinalVoteResult = useCallback(() => {
     if (!isHost || !clientRef.current) {
       throw new Error("방장만 최종 투표 결과를 요청할 수 있습니다.");
     }
@@ -579,7 +582,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         sendVote,
         processVoteResult,
         sendFinalVote,
-        requestFinalVoteResult,
+        processFinalVoteResult,
         updateGameStatus,
         canChat,
         canVote,

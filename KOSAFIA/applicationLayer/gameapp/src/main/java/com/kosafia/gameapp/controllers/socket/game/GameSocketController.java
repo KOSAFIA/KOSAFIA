@@ -439,8 +439,14 @@ public void handleGameStart(@DestinationVariable("roomKey") Integer roomKey) {
 
             // 최다 득표자 찾기
             Player mostVotedPlayer = room.getMostVotedPlayer();
+            //최다 득표자가 있으면 최종 투표 대상으로 설정
             if (mostVotedPlayer != null) {
                 mostVotedPlayer.setVoteTarget(true);
+                log.info("최종 투표 대상자로 설정됨: {}", mostVotedPlayer);
+            }
+            else{
+                //없으면 최종 투표 대상 초기화
+                room.getPlayers().forEach(player -> player.setVoteTarget(false));
             }
             // 투표 결과 브로드캐스트
             VoteResultResponse response = new VoteResultResponse(
@@ -454,6 +460,19 @@ public void handleGameStart(@DestinationVariable("roomKey") Integer roomKey) {
                 "/topic/game.vote.result." + roomKey,
                 response
             );
+
+            messagingTemplate.convertAndSend(
+                "/topic/game.players." + roomKey,
+                room.getPlayers()
+            );
+            messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
+                "SYSTEM",
+                mostVotedPlayer.getUsername() + "님이 최후 변론을 시작합니다.",
+                room.getGameStatus().toString(),
+                roomKey,
+                0,
+                true
+            ));
 
             room.clearVotes();
 
@@ -487,6 +506,10 @@ public void handleGameStart(@DestinationVariable("roomKey") Integer roomKey) {
             room.setGameStatus(GameStatus.NIGHT);
             //최종 투표 결과 처리
             Player executedPlayer = room.processFinalVoteResult();
+
+            //일반 투표 초기화
+            room.clearVotes();
+            messagingTemplate.convertAndSend("/topic/game.vote.result." + roomKey, room.getVoteStatus());
             
             //클라에 뿌리기
             FinalVoteResultResponse response = new FinalVoteResultResponse(
@@ -503,6 +526,31 @@ public void handleGameStart(@DestinationVariable("roomKey") Integer roomKey) {
                 "/topic/game.finalvote.result." + roomKey,
                 response
             );
+            //걍 플레이어 업데이트
+            messagingTemplate.convertAndSend("/topic/game.players." + roomKey, room.getPlayers());
+
+            if(executedPlayer != null) {
+                //시스템 메시지 걍 보내
+                messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
+                "SYSTEM",
+                executedPlayer.getUsername() + "님이 처형되었습니다.",
+                room.getGameStatus().toString(),
+                roomKey,
+                0,
+                true    
+                ));
+            }else{
+                //시스템 메시지 걍 보내
+                messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
+                "SYSTEM",
+                "투표 결과 처형되지 않았습니다.",
+                room.getGameStatus().toString(),
+                roomKey,
+                0,
+                true    
+                ));
+            }
+
 
         } catch (Exception e) {
             log.error("최종 투표 결과 처리 실패:", e);

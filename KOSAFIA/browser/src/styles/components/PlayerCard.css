@@ -63,3 +63,64 @@
   font-size: 25px;
   font-weight: bold;
 }
+
+/* 기본적으로 투표 카운트는 숨김 */
+.vote-count,
+.agree-count,
+.disagree-count {
+  position: absolute;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+/* 일반 투표 카운트 */
+.vote-count {
+  top: -10px;
+  right: -10px;
+  background-color: #ff4444;
+  color: white;
+}
+
+/* 찬성 투표 카운트 */
+.agree-count {
+  top: -10px;
+  right: -10px;
+  background-color: #4CAF50;
+  color: white;
+}
+
+/* 반대 투표 카운트 */
+.disagree-count {
+  top: -10px;
+  left: -10px;
+  background-color: #f44336;
+  color: white;
+}
+
+/* 일반 투표 단계에서만 vote-count 표시 */
+.vote-clickable .vote-count {
+  display: flex;
+}
+
+/* 최종 투표 단계에서만 agree/disagree count 표시 */
+.final-vote-clickable .agree-count,
+.final-vote-clickable .disagree-count {
+  display: flex;
+}
+
+/* 최종 투표시 호버 효과 */
+.final-vote-clickable {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.final-vote-clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(128, 0, 128, 0.5);
+}
