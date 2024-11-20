@@ -31,7 +31,9 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     agree: 0,
     disagree: 0,
   });
-  const [gameTime, setGameTime] = useState(STATUS_DURATION[GAME_STATUS.FOURTH_DELAY]);
+  const [gameTime, setGameTime] = useState(
+    STATUS_DURATION[GAME_STATUS.FOURTH_DELAY]
+  );
   const [dayCount, setDayCount] = useState(1);
   const clientRef = useRef(null);
 

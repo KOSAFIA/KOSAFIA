@@ -83,6 +83,25 @@ const GameRoom = () => {
     }
   }, [gameStatus, targetSelection, currentPlayer, isHost, updateGameStatus]);
 
+  useEffect(() => {
+    if (!roomKey) return;
+  
+    const subscription = chatBoxRef.current.subscribe(
+      `/topic/game.state.${roomKey}`,
+      (message) => {
+        const { imageUrl } = JSON.parse(message.body);
+  
+        // 이미지 URL 상태 업데이트
+        if (imageUrl) {
+          setVictoryImage(imageUrl);
+        }
+      }
+    );
+  
+    return () => subscription.unsubscribe(); // 구독 해제
+  }, [roomKey]);
+
+  
   // 처음 직업설명 팝업창 열기
   const handleOpenFirstJobExplainPopup = () => {
     setFirstJobExplainPopup(true);
@@ -232,14 +251,14 @@ const GameRoom = () => {
               players.map((player, index) => (
                 <PlayerCard
                   key={index}
-                  name={`Player ${player.playerNumber}`}
+                  name={`Player ${player.username}`}
                   index={player.playerNumber - 1}
                   role={player.role}
                   isNight={gameStatus === GAME_STATUS.NIGHT}
                   currentPlayerRole={currentPlayer.role}
                   currentPlayerNum={currentPlayer.playerNumber}
                   onTargetChange={handleTargetChange}
-                  isAlive={currentPlayer.isAlive}
+                  isAlive={player.isAlive}
                   onClick={() => {
                     const playerName = `Player ${player.playerNumber} (${player.role})`;
                     handleOpenPopup(playerName);
@@ -262,6 +281,18 @@ const GameRoom = () => {
       </div>
       {isPopupOpen && (
         <Popup onClose={handleClosePopup} selectedPlayer={selectedPlayer} />
+      )}
+
+      {/* 승리 이미지 표시 */}
+      {victoryImage && (
+        <div className="victory-image">
+          <img  
+            id="game-status-image"
+            src={victoryImage}
+            alt="게임 상태 이미지"
+            style={{ width: 300, height: "auto" }}
+          />
+        </div>
       )}
     </div>
   );

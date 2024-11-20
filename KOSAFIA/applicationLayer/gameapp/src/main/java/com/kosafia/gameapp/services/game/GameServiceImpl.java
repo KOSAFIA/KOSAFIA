@@ -70,15 +70,10 @@ public class GameServiceImpl implements GameService {
                 System.out
                         .println(roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).getPlayerNumber()
                                 + "은(는) 마피아에게 살해당했습니다.");
-                // 클라이언트에게 비명 사운드 재생 요청
+                // 클라이언트에게 총 사운드 재생 요청
                 messagingTemplate.convertAndSend(
                         "/topic/game.sound." + roomKey,
                         Map.of("sound", "gun"));
-
-                // System.out.println("Alive 된지 확인 여부 : "
-                // +
-                // roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).isAlive());
-                // 마피아 살해당한 이미지 나타내기
 
                 // 클라이언트에게 비명 사운드 재생 요청
                 messagingTemplate.convertAndSend(
@@ -93,37 +88,37 @@ public class GameServiceImpl implements GameService {
 
     // 게임 승리 조건을 체크하는 함수
     private void checkGameEnd(List<Player> players, Integer roomKey) {
-        long mafiaCount = players.stream().filter(player -> player.getRole() == Role.MAFIA && player.isAlive()).count();
-        long otherCount = players.stream().filter(player -> player.getRole() != Role.MAFIA && player.isAlive()).count();
+        long mafiaCount = players.stream()
+                .filter(player -> player.getRole() == Role.MAFIA && player.isAlive())
+                .count();
+        long otherCount = players.stream()
+                .filter(player -> player.getRole() != Role.MAFIA && player.isAlive())
+                .count();
 
-        // 1. 마피아의 인원수가 다른 직업들 이상일 경우 마피아 승리
+        String imageUrl = null;
+
+        // 마피아 승리 조건
         if (mafiaCount >= otherCount) {
-            System.out.println("마피아 승리");
-            // 승리 상태와 이미지 URL을 포함하여 브로드캐스트
-            broadcastGameStatus(roomKey, players, "mafia_win_image_url");
-            return;
+            imageUrl = "/img/mafia_win.png";
+        }
+        // 시민 승리 조건
+        else if (mafiaCount == 0) {
+            imageUrl = "/img/citizen_win.png";
         }
 
-        // 2. 마피아가 모두 사망하면 마피아 승리
-        if (mafiaCount == 0) {
-            System.out.println("마피아 전멸!");
-            // 시민 승리 상태와 이미지 URL을 포함하여 브로드캐스트
-            broadcastGameStatus(roomKey, players, "citizen_win_image_url");
-            return;
-        }
-
-        // 게임이 종료되지 않으면 게임 상태를 업데이트하여 계속 진행
-        broadcastGameStatus(roomKey, players, null);
+        // 브로드캐스트
+        broadcastGameStatus(roomKey, imageUrl);
     }
 
-    public void broadcastGameStatus(Integer roomKey, List<Player> players, String imageUrl) {
+    private void broadcastGameStatus(Integer roomKey, String imageUrl) {
         Map<String, Object> message = new HashMap<>();
-        message.put("players", players);
+
         if (imageUrl != null) {
-            message.put("imageUrl", imageUrl); // 이미지 URL 포함
+            message.put("imageUrl", imageUrl); // 이미지 URLs
         }
 
-        // messagingTemplate.convertAndSend("/topic/game.state." + roomKey, message);
+        // WebSocket 메시지 브로드캐스트
+        messagingTemplate.convertAndSend("/topic/game.state." + roomKey, message);
     }
 
     // ===============김남영 추가=============

@@ -41,7 +41,6 @@ public class GameController {
     @Autowired
     private RoomRepository roomRepository;
 
-
     @PostMapping("/update-targets-at-night")
     public ResponseEntity<Object> updatePlayerTargetAtNight(@RequestBody Map<String, Object> requestData,
             HttpSession session) {
@@ -96,7 +95,8 @@ public class GameController {
     }
 
     // PlayersUpdateResponse 레코드 추가
-    record PlayersUpdateResponse(List<Player> players) {}
+    record PlayersUpdateResponse(List<Player> players) {
+    }
 
     // -----------------김남영 추가 시작 리스트-----------------
     // 1. 방장 지정
