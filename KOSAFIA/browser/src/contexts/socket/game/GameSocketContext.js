@@ -512,7 +512,6 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         if (gameStatus === GAME_STATUS.DAY) {
             return currentPlayer.isAlive;
         }
-        
         // 밤에는 마피아만 채팅 가능
         if (gameStatus === GAME_STATUS.NIGHT) {
             return currentPlayer.isAlive && currentPlayer.role === 'MAFIA';
@@ -524,7 +523,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         }
 
     return false;
-  }, [currentPlayer, gameStatus]);
+      }, [currentPlayer, gameStatus]);
 
   const canVote = useCallback(() => {
     return currentPlayer?.isAlive && gameStatus === GAME_STATUS.VOTE;
