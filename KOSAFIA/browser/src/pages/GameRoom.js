@@ -23,6 +23,7 @@ const GameRoom = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [targetSelection, setTargetSelection] = useState({}); // 각 플레이어가 선택한 타겟을 저장
+  const [victoryImage, setVictoryImage] = useState(null); //승리이미지
   const chatBoxRef = useRef();
 
   // GameSocketContext에서 필요한 상태들을 가져옴
@@ -256,7 +257,7 @@ const handleTimerEnd = useCallback(async () => {
       updateGameStatus(NEXT_STATUS[gameStatus]);
     }
 
-  }, [isHost, gameStatus, stageIndex, updateGameStatus, sendGameSystemMessage]);
+  }, [isHost, gameStatus, updateGameStatus, sendGameSystemMessage]);
 
   // messages 상태 디버깅을 위한 useEffect 추가
   useEffect(() => {
@@ -302,7 +303,7 @@ const handleTimerEnd = useCallback(async () => {
                   다음 단계
                 </button>
             )}
-            <DayIndicator currentPhase={stageIndex === 1 ? "NIGHT" : "DAY"} />
+            <DayIndicator currentPhase={gameStatus === GAME_STATUS.NIGHT ? "NIGHT" : "DAY"} />
           </div>
           {currentPlayer && <JobInfoIcon role={currentPlayer.role} />}
           <div className="player-cards">
