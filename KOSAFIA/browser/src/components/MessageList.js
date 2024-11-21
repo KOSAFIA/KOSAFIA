@@ -39,10 +39,22 @@ const MessageList = ({ messages = [], currentPlayer, currentRole }) => {
       {messages.map((msg, index) => {
         if (!msg) return null;
 
+        //시스템 메시지의 포맷 처리
         if (msg.isSystemMessage) {
           return (
             <div key={index} className="system-message">
               <div className="message-box system">
+                <span className="message-text">{msg.content}</span>
+              </div>
+            </div>
+          );
+        }
+
+        // 경찰 메시지의 포맷 처리
+        else if (msg.username === "POLICE" && currentRole === "POLICE") {
+          return (
+            <div key={index} className="police-message">
+              <div className="message-box police">
                 <span className="message-text">{msg.content}</span>
               </div>
             </div>

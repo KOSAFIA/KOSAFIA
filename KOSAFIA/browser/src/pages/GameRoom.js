@@ -78,7 +78,9 @@ const GameRoom = () => {
         }
 
         // 그 후, 밤 동안의 직업별 행동을 처리
-        await handleNightActions(1);
+        if(isHost) {
+          await handleNightActions(1);
+        }
 
         // 마지막으로, 게임 상태를 업데이트
         if (isHost) {
@@ -208,9 +210,14 @@ const GameRoom = () => {
     [canModifyTime, modifyGameTime, currentPlayer, sendGameSystemMessage]
   );
 
-// handleTimerEnd에서는 handleStageChange 호출하도록 수정
+// handleTimerEnd와 nextPhase 함수 합침
 const handleTimerEnd = useCallback(async () => {
       if (isHost) {
+        //김남영 추가 구문부
+        if(gameStatus === GAME_STATUS. VOTE) processVoteResult();
+        else if(gameStatus === GAME_STATUS.FINALVOTE) processFinalVoteResult();
+        
+        //김남영 추가 구문부 끝
           sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
           updateGameStatus(NEXT_STATUS[gameStatus]);
       }
@@ -295,7 +302,7 @@ const handleTimerEnd = useCallback(async () => {
               />
             )}
 
-            {isHost && (
+            {isHost && !isHost && (
                 <button 
                   className="next-phase-btn"
                   onClick={handleNextPhase}
