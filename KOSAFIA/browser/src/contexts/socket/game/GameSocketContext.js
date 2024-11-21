@@ -402,7 +402,22 @@ export const GameSocketProvider = ({ roomKey, children }) => {
           }
         )
       );
-
+      //경찰만 받는 비밀 시스템 메시지 구독.
+      if (currentPlayer.role === "POLICE") {
+        subscriptions.push(
+          clientRef.current.subscribe(
+            `/topic/game.police.${roomKey}`,
+            (socketMsg) => {
+            const policeMsg = JSON.parse(socketMsg.body);
+            setMessages((prev) => [...prev,{
+              ...policeMsg,
+              isSystemMessage: false,
+              },]);
+            }
+          )
+        );
+      }
+    
       return () => {
         console.log("구독 정리 중...");
         subscriptions.forEach((sub) => sub?.unsubscribe());

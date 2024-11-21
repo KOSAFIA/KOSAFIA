@@ -369,7 +369,7 @@ public class GameSocketController {
     public void handleVoteResult(
             @DestinationVariable("roomKey") Integer roomKey,
             @Payload VoteResultRequest request) {
-        try {
+       try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null)
                 return;
@@ -401,6 +401,8 @@ public class GameSocketController {
                 "/topic/game.players." + roomKey,
                 room.getPlayers()
             );
+
+            //시스템 메시지 보내기 전에 음... 
             messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
                 "SYSTEM",
                 mostVotedPlayer.getUsername() + "님이 최후 변론을 시작합니다.",
@@ -613,7 +615,7 @@ public class GameSocketController {
     }
 }
 
-record SystemMessage(
+public record SystemMessage(
     String username,
     String content,
     String gameStatus,
@@ -630,6 +632,19 @@ public void handleSystemMessage(
     log.info("시스템 메시지 수신 - 방: {}, 메시지: {}", roomKey, systemMessage);
     messagingTemplate.convertAndSend(
         "/topic/game.system." + roomKey,
+        systemMessage
+    );
+}
+
+//자바스크립트에서 쏘는 경찰 채팅 메시지가 있다면 얘 사용하면됨.
+@MessageMapping("/game.police.{roomKey}")
+public void handlePoliceMessage(
+    @DestinationVariable("roomKey") Integer roomKey,
+    @Payload SystemMessage systemMessage
+) {
+    log.info("경찰 조사 결과 수신 - 방: {}, 메시지: {}", roomKey, systemMessage);
+    messagingTemplate.convertAndSend(
+        "/topic/game.police." + roomKey,
         systemMessage
     );
 }

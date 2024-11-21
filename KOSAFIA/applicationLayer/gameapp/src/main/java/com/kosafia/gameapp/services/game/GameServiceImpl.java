@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.kosafia.gameapp.controllers.socket.game.GameSocketController.SystemMessage;
 import com.kosafia.gameapp.models.gameroom.FinishGame;
 import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
@@ -29,6 +30,9 @@ public class GameServiceImpl implements GameService {
     public void handleNightActions(List<Player> players, Integer roomKey) {
         Integer doctorTarget = null;
         Integer mafiaTarget = null;
+        String totalMessage = null;
+        String policeMessage = null;
+        String resultCase = "none";
 
         for (Player player : players) {
             // 1. 마피아, 경찰, 의사의 행동을 정리
@@ -52,7 +56,12 @@ public class GameServiceImpl implements GameService {
                                 + "은 "
                                 + (isMafia ? "마피아입니다." : "마피아가 아닙니다."));
 
-                // 경찰 조사 결과 나타내는 채팅? 팝업?
+                // 김남영 경찰 조사 결과 나타내는 채팅 일단 추가
+                policeMessage = "경찰 조사 결과: "
+                                + roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(investigatedPlayer)
+                                        .getUsername()
+                                + "은 "
+                                + (isMafia ? "마피아입니다." : "마피아가 아닙니다.");
             }
 
             // 2. 의사가 마피아의 타겟을 보호하는지 확인
@@ -60,9 +69,11 @@ public class GameServiceImpl implements GameService {
                     mafiaTarget.equals(doctorTarget)) {
                 System.out.println("의사가 마피아의 타겟을 보호했습니다!");
 
-                messagingTemplate.convertAndSend(
-                        "/topic/game.sound." + roomKey,
-                        Map.of("sound", "heal"));
+                //여기에 사운드 결과 추가
+                resultCase = "heal";
+
+                //김남영 전체 시스템 메시지 추가
+                totalMessage = "의사가 마피아로부터 보호했습니다!";
 
             } else if (mafiaTarget != null) {
                 // 마피아의 타겟이 보호받지 못했다면 사망 처리
@@ -70,20 +81,58 @@ public class GameServiceImpl implements GameService {
                 System.out
                         .println(roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).getPlayerNumber()
                                 + "은(는) 마피아에게 살해당했습니다.");
-                // 클라이언트에게 총 사운드 재생 요청
-                messagingTemplate.convertAndSend(
-                        "/topic/game.sound." + roomKey,
-                        Map.of("sound", "gun"));
 
-                // 클라이언트에게 비명 사운드 재생 요청
-                messagingTemplate.convertAndSend(
-                        "/topic/game.sound." + roomKey,
-                        Map.of("sound", "gun"));
+                //김남영 시스템 메시지 추가
+                totalMessage = roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).getUsername()
+                        + "은(는) 마피아에게 살해당했습니다.";
 
-                // 승리조건 확인
-                checkGameEnd(players, roomKey);
+                //여기에 사운드 결과 추가
+                resultCase = "dead";
             }
         }
+        // 승리조건 확인도 여기서 해야지 맞을듯요.
+        checkGameEnd(players, roomKey);
+
+        //여기에 소켓 추가해야. players 반복문 횟수만큼 쏘는 현상을 방지함.
+
+        switch (resultCase) {
+            case "heal":
+                messagingTemplate.convertAndSend(
+                        "/topic/game.sound." + roomKey,
+                        Map.of("sound", "heal"));
+                break;
+            case "dead":
+                messagingTemplate.convertAndSend(
+                        "/topic/game.sound." + roomKey,
+                        Map.of("sound", "gun"));
+                messagingTemplate.convertAndSend(
+                        "/topic/game.sound." + roomKey,
+                        Map.of("sound", "gun"));
+                break;
+            default:
+                break;
+        }
+
+        //김남영 전체 시스템 메시지 추가
+        messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
+            "SYSTEM",
+            totalMessage,
+            roomRepository.getRoom(roomKey).getGameStatus().toString(),
+            roomKey,
+            0,
+            true
+        ));
+
+        //김남영 경찰 조사 결과 메시지 추가
+        messagingTemplate.convertAndSend("/topic/game.police." + roomKey, new SystemMessage(
+            "POLICE",
+            policeMessage,
+            roomRepository.getRoom(roomKey).getGameStatus().toString(),
+            roomKey,
+            0,
+            false
+        ));
+
     }
 
     // 게임 승리 조건을 체크하는 함수
