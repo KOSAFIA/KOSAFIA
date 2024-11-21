@@ -58,7 +58,6 @@ const PlayerCard = ({
     const cardElement = cardRef.current;
     if (!isAlive) {
       cardElement.classList.add("player-card-dead");
-      console.log("player-card-dead 추가됨")
     } else {
       cardElement.classList.remove("player-card-dead");
     }
@@ -71,7 +70,6 @@ const PlayerCard = ({
   const handleTargetSelect = (targetPlayerNumber) => {
     setTarget(targetPlayerNumber);
     onTargetChange(currentPlayerNum, targetPlayerNumber); // 타겟 선택 즉시 부모 컴포넌트로 업데이트
-    console.log(currentPlayerNum + "이 " + targetPlayerNumber + "을 클릭했음.");
   };
 
   // 카드 클릭시 타겟 선택

@@ -15,6 +15,8 @@ import com.kosafia.gameapp.models.gameroom.Role;
 import com.kosafia.gameapp.models.gameroom.Room;
 import com.kosafia.gameapp.repositories.gameroom.RoomRepository;
 
+import com.kosafia.gameapp.services.game.GameService;
+
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -30,6 +32,8 @@ public class GameSocketController {
 
     @Autowired
     private RoomRepository roomRepository;
+
+    GameService gameService;
 
     // 각 방의 타이머를 관리할 Thread Map
     private final Map<Integer, Thread> roomTimers = new ConcurrentHashMap<>();
@@ -244,7 +248,7 @@ public class GameSocketController {
                             newStatus.toString() + " 시간이 시작되었습니다."));
 
             startRoomTimer(roomKey);
-            
+
         } catch (Exception e) {
             log.error("게임 상태 업데이트 중 오류:", e);
         }
@@ -369,20 +373,19 @@ public class GameSocketController {
     public void handleVoteResult(
             @DestinationVariable("roomKey") Integer roomKey,
             @Payload VoteResultRequest request) {
-       try {
+        try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null)
                 return;
 
             // 최다 득표자 찾기
             Player mostVotedPlayer = room.getMostVotedPlayer();
-            //최다 득표자가 있으면 최종 투표 대상으로 설정
+            // 최다 득표자가 있으면 최종 투표 대상으로 설정
             if (mostVotedPlayer != null) {
                 mostVotedPlayer.setVoteTarget(true);
                 log.info("최종 투표 대상자로 설정됨: {}", mostVotedPlayer);
-            }
-            else{
-                //없으면 최종 투표 대상 초기화
+            } else {
+                // 없으면 최종 투표 대상 초기화
                 room.getPlayers().forEach(player -> player.setVoteTarget(false));
             }
             // 투표 결과 브로드캐스트
@@ -393,24 +396,21 @@ public class GameSocketController {
                     "투표 결과가 처리되었습니다.");
 
             messagingTemplate.convertAndSend(
-                "/topic/game.vote.result." + roomKey,
-                response
-            );
+                    "/topic/game.vote.result." + roomKey,
+                    response);
 
             messagingTemplate.convertAndSend(
-                "/topic/game.players." + roomKey,
-                room.getPlayers()
-            );
+                    "/topic/game.players." + roomKey,
+                    room.getPlayers());
 
-            //시스템 메시지 보내기 전에 음... 
+            // 시스템 메시지 보내기 전에 음...
             messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
-                "SYSTEM",
-                mostVotedPlayer.getUsername() + "님이 최후 변론을 시작합니다.",
-                room.getGameStatus().toString(),
-                roomKey,
-                0,
-                true
-            ));
+                    "SYSTEM",
+                    mostVotedPlayer.getUsername() + "님이 최후 변론을 시작합니다.",
+                    room.getGameStatus().toString(),
+                    roomKey,
+                    0,
+                    true));
 
             room.clearVotes();
 
@@ -444,11 +444,13 @@ public class GameSocketController {
             // 최종 투표 결과 처리
             Player executedPlayer = room.processFinalVoteResult();
 
-            //일반 투표 초기화
+            // 일반 투표 초기화
             room.clearVotes();
             messagingTemplate.convertAndSend("/topic/game.vote.result." + roomKey, room.getVoteStatus());
-            
-            //클라에 뿌리기
+
+            gameService.checkGameEnd(roomRepository.getRoom(roomKey).getPlayers(), roomKey);
+
+            // 클라에 뿌리기
             FinalVoteResultResponse response = new FinalVoteResultResponse(
                     room.getGameStatus().toString(),
                     room.getPlayers(),
@@ -457,34 +459,30 @@ public class GameSocketController {
                     executedPlayer != null,
                     executedPlayer != null ? executedPlayer.getUsername() + "님이 처형되었습니다." : "투표 결과 처형되지 않았습니다.");
             messagingTemplate.convertAndSend(
-                "/topic/game.finalvote.result." + roomKey,
-                response
-            );
-            //걍 플레이어 업데이트
+                    "/topic/game.finalvote.result." + roomKey,
+                    response);
+            // 걍 플레이어 업데이트
             messagingTemplate.convertAndSend("/topic/game.players." + roomKey, room.getPlayers());
 
-            if(executedPlayer != null) {
-                //시스템 메시지 걍 보내
+            if (executedPlayer != null) {
+                // 시스템 메시지 걍 보내
                 messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
-                "SYSTEM",
-                executedPlayer.getUsername() + "님이 처형되었습니다.",
-                room.getGameStatus().toString(),
-                roomKey,
-                0,
-                true    
-                ));
-            }else{
-                //시스템 메시지 걍 보내
+                        "SYSTEM",
+                        executedPlayer.getUsername() + "님이 처형되었습니다.",
+                        room.getGameStatus().toString(),
+                        roomKey,
+                        0,
+                        true));
+            } else {
+                // 시스템 메시지 걍 보내
                 messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
-                "SYSTEM",
-                "투표 결과 처형되지 않았습니다.",
-                room.getGameStatus().toString(),
-                roomKey,
-                0,
-                true    
-                ));
+                        "SYSTEM",
+                        "투표 결과 처형되지 않았습니다.",
+                        room.getGameStatus().toString(),
+                        roomKey,
+                        0,
+                        true));
             }
-
 
         } catch (Exception e) {
             log.error("최종 투표 결과 처리 실패:", e);
@@ -610,43 +608,39 @@ public class GameSocketController {
                     "/topic/game.players." + roomKey,
                     room.getPlayers());
 
-    } catch (Exception e) {
-        log.error("플레이어 입장 처리 중 오류:", e);
+        } catch (Exception e) {
+            log.error("플레이어 입장 처리 중 오류:", e);
+        }
     }
-}
 
-public record SystemMessage(
-    String username,
-    String content,
-    String gameStatus,
-    Integer roomKey,
-    Integer playerNumber,
-    boolean isSystemMessage
-) {}
+    public record SystemMessage(
+            String username,
+            String content,
+            String gameStatus,
+            Integer roomKey,
+            Integer playerNumber,
+            boolean isSystemMessage) {
+    }
 
-@MessageMapping("/game.system.{roomKey}")
-public void handleSystemMessage(
-    @DestinationVariable("roomKey") Integer roomKey,
-    @Payload SystemMessage systemMessage
-) {
-    log.info("시스템 메시지 수신 - 방: {}, 메시지: {}", roomKey, systemMessage);
-    messagingTemplate.convertAndSend(
-        "/topic/game.system." + roomKey,
-        systemMessage
-    );
-}
+    @MessageMapping("/game.system.{roomKey}")
+    public void handleSystemMessage(
+            @DestinationVariable("roomKey") Integer roomKey,
+            @Payload SystemMessage systemMessage) {
+        log.info("시스템 메시지 수신 - 방: {}, 메시지: {}", roomKey, systemMessage);
+        messagingTemplate.convertAndSend(
+                "/topic/game.system." + roomKey,
+                systemMessage);
+    }
 
-//자바스크립트에서 쏘는 경찰 채팅 메시지가 있다면 얘 사용하면됨.
-@MessageMapping("/game.police.{roomKey}")
-public void handlePoliceMessage(
-    @DestinationVariable("roomKey") Integer roomKey,
-    @Payload SystemMessage systemMessage
-) {
-    log.info("경찰 조사 결과 수신 - 방: {}, 메시지: {}", roomKey, systemMessage);
-    messagingTemplate.convertAndSend(
-        "/topic/game.police." + roomKey,
-        systemMessage
-    );
-}
+    // 자바스크립트에서 쏘는 경찰 채팅 메시지가 있다면 얘 사용하면됨.
+    @MessageMapping("/game.police.{roomKey}")
+    public void handlePoliceMessage(
+            @DestinationVariable("roomKey") Integer roomKey,
+            @Payload SystemMessage systemMessage) {
+        log.info("경찰 조사 결과 수신 - 방: {}, 메시지: {}", roomKey, systemMessage);
+        messagingTemplate.convertAndSend(
+                "/topic/game.police." + roomKey,
+                systemMessage);
+    }
 
 }
