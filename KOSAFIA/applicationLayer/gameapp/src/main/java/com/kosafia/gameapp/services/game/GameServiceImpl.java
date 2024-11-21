@@ -30,6 +30,7 @@ public class GameServiceImpl implements GameService {
         String totalMessage = null;
         String policeMessage = null;
         String resultCase = "none";
+        String imageUrl = null;
 
         for (Player player : players) {
             // 1. 마피아, 경찰, 의사의 행동을 정리
@@ -53,6 +54,10 @@ public class GameServiceImpl implements GameService {
                                 + "은 "
                                 + (isMafia ? "마피아입니다." : "마피아가 아닙니다."));
 
+                // // 마피아 발견 이미지 전달
+                // imageUrl = "/img/find_mafia.png";
+                // broadcastGameStatus(roomKey, imageUrl);
+
                 // 김남영 경찰 조사 결과 나타내는 채팅 일단 추가
                 policeMessage = "경찰 조사 결과: "
                         + roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(investigatedPlayer)
@@ -65,6 +70,7 @@ public class GameServiceImpl implements GameService {
             if (mafiaTarget != null && doctorTarget != null &&
                     mafiaTarget.equals(doctorTarget)) {
                 System.out.println("의사가 마피아의 타겟을 보호했습니다!");
+                roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).setAlive(true);
 
                 // 여기에 사운드 결과 추가
                 resultCase = "heal";
@@ -86,6 +92,8 @@ public class GameServiceImpl implements GameService {
                 // 여기에 사운드 결과 추가
                 resultCase = "dead";
             }
+
+            player.setTarget(null);
         }
         // 승리조건 확인도 여기서 해야지 맞을듯요.
         checkGameEnd(players, roomKey);
@@ -97,14 +105,19 @@ public class GameServiceImpl implements GameService {
                 messagingTemplate.convertAndSend(
                         "/topic/game.sound." + roomKey,
                         Map.of("sound", "heal"));
+
+                imageUrl = "/img/survive_from_doctor.png";
+                broadcastGameStatus(roomKey, imageUrl);
                 break;
             case "dead":
                 messagingTemplate.convertAndSend(
                         "/topic/game.sound." + roomKey,
                         Map.of("sound", "gun"));
-                messagingTemplate.convertAndSend(
-                        "/topic/game.sound." + roomKey,
-                        Map.of("sound", "gun"));
+
+                if (imageUrl != "/img/mafia_win") {
+                    imageUrl = "/img/dead_by_mafia.png";
+                    broadcastGameStatus(roomKey, imageUrl);
+                }
                 break;
             default:
                 break;
@@ -145,24 +158,22 @@ public class GameServiceImpl implements GameService {
         // 마피아 승리 조건
         if (mafiaCount >= otherCount) {
             imageUrl = "/img/mafia_win.png";
-            System.out.println("마피아 승리");
         }
         // 시민 승리 조건
         else if (mafiaCount == 0) {
             imageUrl = "/img/citizen_win.png";
-            System.out.println("시민 승리");
         }
 
         // 브로드캐스트
         broadcastGameStatus(roomKey, imageUrl);
     }
 
-    private void broadcastGameStatus(Integer roomKey, String imageUrl) {
+    @Override
+    public void broadcastGameStatus(Integer roomKey, String imageUrl) {
         Map<String, Object> message = new HashMap<>();
 
         if (imageUrl != null) {
             message.put("imageUrl", imageUrl); // 이미지 URLs
-            System.out.println("승리 조건 imageUrl 넘겨짐");
         }
 
         // WebSocket 메시지 브로드캐스트

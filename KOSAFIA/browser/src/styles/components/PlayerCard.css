@@ -8,8 +8,8 @@
 }
 
 .player-card {
-  width: 200px;
-  height: 400px;
+  width: 200px !important;
+  height: 400px !important;
   display: flex;
   flex-direction: column;
   border: 3px solid;
@@ -57,7 +57,14 @@
   background-size: contain; /* 이미지 비율 유지하며 div에 맞춤 */
   background-position: center; /* 중앙에 위치하도록 설정 */
   background-repeat: no-repeat; /* 이미지 반복 방지 */
+  position: relative;
 }
+
+.player-card-clicked {
+  border: 2px solid red; /* 테두리 색을 빨간색으로 변경 */
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
 
 .player-name {
   font-size: 25px;
@@ -77,7 +84,7 @@
   justify-content: center;
   font-weight: bold;
   font-size: 14px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 /* 일반 투표 카운트 */
 .vote-count {
@@ -91,7 +98,7 @@
 .agree-count {
   top: -10px;
   right: -10px;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
 }
 

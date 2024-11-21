@@ -434,6 +434,8 @@ public class GameSocketController {
     @MessageMapping("/game.finalvote.result/{roomKey}")
     public void handleFinalVoteResult(
             @DestinationVariable("roomKey") Integer roomKey) {
+        String imageUrl = null;
+
         try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null)
@@ -461,6 +463,11 @@ public class GameSocketController {
             messagingTemplate.convertAndSend(
                     "/topic/game.finalvote.result." + roomKey,
                     response);
+
+            // 투표로 인한 처형 이미지 전달
+            imageUrl = "/img/dead_by_vote.png";
+            gameService.broadcastGameStatus(roomKey, imageUrl);
+
             // 걍 플레이어 업데이트
             messagingTemplate.convertAndSend("/topic/game.players." + roomKey, room.getPlayers());
 
@@ -473,6 +480,7 @@ public class GameSocketController {
                         roomKey,
                         0,
                         true));
+
             } else {
                 // 시스템 메시지 걍 보내
                 messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
@@ -482,6 +490,10 @@ public class GameSocketController {
                         roomKey,
                         0,
                         true));
+
+                // 투표로 인한 처형 X 이미지 전달
+                imageUrl = "/img/survive_from_vote.png";
+                gameService.broadcastGameStatus(roomKey, imageUrl);
             }
 
         } catch (Exception e) {

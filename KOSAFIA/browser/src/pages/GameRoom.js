@@ -106,6 +106,11 @@ const GameRoom = () => {
 
         //작업이 끝난 뒤 초기화
         targetPlayerNumber = null;
+        console.log(
+          currentPlayer.playerNumber +
+            "의 targetPlayerNumber 초기화 확인 여부 : " +
+            targetPlayerNumber
+        );
       };
 
       handleNightPhase(); // 비동기 작업을 제대로 처리할 수 있도록 함수 내부에서 호출
@@ -159,7 +164,13 @@ const GameRoom = () => {
     const player = players.find((p) => p.playerNumber === targetId);
     if (player) {
       const playerName = `Player ${player.playerNumber} (${player.role})`;
-      handleOpenPopup(playerName);
+
+      // 같은 카드를 클릭하면 선택 상태를 해제
+      if (selectedPlayer === playerName) {
+        handleOpenPopup(null);
+      } else {
+        handleOpenPopup(playerName); // 카드 클릭시 선택 상태로 변경
+      }
     }
   };
 
@@ -295,6 +306,7 @@ const GameRoom = () => {
                 onTimerEnd={handleTimerEnd}
                 onModifyTime={handleModifyTime}
                 canModifyTime={canModifyTime()}
+                currentPlayerIsAlive={currentPlayer.isAlive}
               />
             )}
 
@@ -319,6 +331,7 @@ const GameRoom = () => {
                   isNight={gameStatus === GAME_STATUS.NIGHT}
                   currentPlayerRole={currentPlayer.role}
                   currentPlayerNum={currentPlayer.playerNumber}
+                  currentPlayer={currentPlayer}
                   onTargetChange={handleTargetChange}
                   isAlive={player.isAlive}
                   gameStatus={gameStatus}
@@ -335,22 +348,13 @@ const GameRoom = () => {
                       canFinalVote() &&
                       player.isVoteTarget
                     ) {
-                      // sendFinalVote(player.playerNumber); 플레이어 카드를 클릭하는거로 처리할수가 없겠어..
+                      // sendFinalVote(player.playerNumber);
                     } else {
-                      const playerName = `${player.playerNumber} (${player.role})`;
-                      handleOpenPopup(playerName);
                       handlePlayerSelect(player.playerNumber);
                     }
                   }}
-                  onFinalVoteClick={(isAgreeButtonValue) => {
-                    if (
-                      gameStatus === GAME_STATUS.FINALVOTE &&
-                      canFinalVote() &&
-                      player.isVoteTarget
-                    ) {
-                      sendFinalVote(isAgreeButtonValue);
-                    }
-                  }}
+                  selectedPlayer={selectedPlayer}
+                  setSelectedPlayer={setSelectedPlayer}
                 />
               ))
             ) : (
@@ -372,7 +376,7 @@ const GameRoom = () => {
       )}
 
       {/* 승리 이미지 표시 */}
-      <ResultPopup imageUrl={imageUrl} /> 
+      <ResultPopup imageUrl={imageUrl} />
     </div>
   );
 };

@@ -8,6 +8,8 @@ import com.kosafia.gameapp.models.gameroom.Player;
 
 public interface GameService {
 
+    public void broadcastGameStatus(Integer roomKey, String imageUrl);
+
     public void checkGameEnd(List<Player> players, Integer roomKey);
 
     // 역할 상호작용 결과

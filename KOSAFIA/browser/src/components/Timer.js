@@ -9,6 +9,7 @@ const Timer = ({
   onTimerEnd, // 타이머 종료 콜백
   onModifyTime, // 시간 조절 콜백
   canModifyTime, // 시간 조절 가능 여부
+  currentPlayerIsAlive,
 }) => {
   const [stageInfo, setStageInfo] = useState(GAME_PHASES[gameStatus]);
 
@@ -36,7 +37,7 @@ const Timer = ({
               className="decrease-time"
               src="/img/timer-minus.png" // 이미지 경로 설정
               alt="Decrease Time"
-              onClick={() => onModifyTime(-15)} // 시간 감소
+              onClick={() => currentPlayerIsAlive && onModifyTime(-15)} // 시간 감소
             />
           </>
         )}
@@ -51,7 +52,7 @@ const Timer = ({
               className="increase-time"
               src="/img/timer-plus.png" // 이미지 경로 설정
               alt="Increase Time"
-              onClick={() => onModifyTime(15)} // 시간 증가
+              onClick={() => currentPlayerIsAlive && onModifyTime(15)} // 시간 증가
             />
           </>
         )}
