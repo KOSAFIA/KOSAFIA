@@ -119,7 +119,7 @@ public class RoomController {
 
             // 김남영 수정
             // 4. 방 입장 가능 여부 확인
-            if (room.getMaxPlayers() <= room.getCurrentPlayers() || room.getGameStatus() != GameStatus.NONE) {
+            if (room.getMaxPlayers() <= room.getCurrentPlayers() || room.isPlaying()) {
                 log.warn("입장 불가능한 방 - roomKey: {}, 현재 인원: {}/{}",
                         roomKey, room.getPlayers().size(), room.getMaxPlayers());
                 return ResponseEntity.status(HttpStatus.CONFLICT)

@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 public class Room {
 
-
     private final Integer roomKey; // PK와 로비에 보이는 키 인티저 형식이야 바보야 멍청아 똥아 아 이거 쥐피티 멍청이
     private String roomName; // 방제 //입력받음
     private List<Player> players; // 플레이어 목록
@@ -51,25 +50,29 @@ public class Room {
     // private Integer nextPlayerNumber = 1; // 다음에 부여할 번호
     private Random random = new Random();
 
-    private int currentTime;  // 현재 타이머 시간 (초 단위)
+    private int currentTime; // 현재 타이머 시간 (초 단위)
     private final Map<GameStatus, Integer> defaultTimes = Map.of(
-        GameStatus.NIGHT, 60,     // 밤 60초
-        GameStatus.DELAY, 10,     // 딜레이 10초
-        GameStatus.DAY, 120,      // 낮 120초
-        GameStatus.VOTE, 60,      // 투표 60초
-        GameStatus.FINALVOTE, 30  // 최후 변론 30초
+            GameStatus.NIGHT, 30, // 밤 30초
+            GameStatus.FIRST_DELAY, 5, // 딜레이 5초
+            GameStatus.DAY, 60, // 낮 60초
+            GameStatus.SECOND_DELAY, 1, // 딜레이 1초
+            GameStatus.VOTE, 30, // 투표 30초
+            GameStatus.THIRD_DELAY, 5, // 딜레이 5초
+            GameStatus.FINALVOTE, 15, // 최후 변론 15초
+            GameStatus.FOURTH_DELAY, 5 // 딜레이 5초
     );
+
 
     // 게임 상태 변경 시 타이머 자동 초기화를 위해 setGameStatus 수정
     public void setGameStatus(GameStatus newStatus) {
         if (this.gameStatus != newStatus) {
             this.gameStatus = newStatus;
             // 상태 변경 시 해당 상태의 기본 시간으로 초기화
-            this.currentTime = defaultTimes.getOrDefault(newStatus, 0);
-            
+            this.currentTime = getDefaultTimes().get(newStatus);
+
             // 밤상태 진입시 일차 증가겠지 똘빡아 주석보고 반성해
-            if (newStatus == GameStatus.NIGHT && 
-                (this.gameStatus == GameStatus.FINALVOTE || this.gameStatus == GameStatus.VOTE)) {
+            if (newStatus == GameStatus.NIGHT &&
+                    (this.gameStatus == GameStatus.FINALVOTE || this.gameStatus == GameStatus.VOTE)) {
                 this.turn++;
             }
         }
@@ -94,8 +97,6 @@ public class Room {
         return true;
     }
 
-
-
     public Room(Integer roomKey, String roomName, int maxPlayers, String password, boolean isPrivate) {
         this.roomKey = roomKey;
         this.roomName = roomName;
@@ -106,13 +107,13 @@ public class Room {
         this.turn = 0;
         this.password = password;
         this.isPrivate = isPrivate;
-        this.gameStatus = GameStatus.NONE;
+        this.gameStatus = GameStatus.NIGHT;
 
         // 김남영이 추가함 버그나면 김남영 불러
         this.voteStatus = new HashMap<>();
         this.voterRecords = new HashMap<>();
         this.finalVoteStatus = new HashMap<>();
-        this.currentTime = defaultTimes.get(GameStatus.NIGHT);
+        this.currentTime = 30;
     }
 
     // 투표 매서드: 이전에 이미 등록된 투표자의 타겟은 1만큼 감소시키고 다시 현재 투표 반영
@@ -133,31 +134,35 @@ public class Room {
     // 최다 득표자 반환 그냥 플레이어로 반환하는걸로 고침 멍청한 gpt 동률이면 null 반환
     public Player getMostVotedPlayer() {
         if (voteStatus.isEmpty()) {
+            log.info("투표 기록이 없습니다.");
             return null;
         }
 
-        // 득표수 집계
-        Map<Integer, Long> voteCounts = voteStatus.values().stream()
-                .collect(Collectors.groupingBy(
-                        targetId -> targetId,
-                        Collectors.counting()));
+        // voteStatus에서 직접 최다 득표자 찾기
+        Map.Entry<Integer, Integer> maxEntry = voteStatus.entrySet().stream()
+            .max(Map.Entry.comparingByValue())
+            .orElse(null);
 
-        // 최다 득표수 찾기
-        long maxVotes = voteCounts.values().stream()
-                .mapToLong(count -> count)
-                .max()
-                .orElse(0);
-
-        if (maxVotes == 0) {
+        if (maxEntry == null || maxEntry.getValue() == 0) {
+            log.info("유효한 투표가 없습니다.");
             return null;
-        } else if (voteCounts.values().stream().filter(count -> count == maxVotes).count() > 1) {
-            return null;
-        } else {
-            return getPlayerByPlayerNumber(voteCounts.entrySet().stream()
-                    .filter(entry -> entry.getValue() == maxVotes)
-                    .map(Map.Entry::getKey)
-                    .findFirst().orElse(null));
         }
+
+        // 동률 체크
+        int maxVotes = maxEntry.getValue();
+        long tieCount = voteStatus.values().stream()
+            .filter(votes -> votes == maxVotes)
+            .count();
+
+        if (tieCount > 1) {
+            log.info("동률이 발생했습니다. 최다 득표수: {}", maxVotes);
+            return null;
+        }
+
+        Player targetPlayer = getPlayerByPlayerNumber(maxEntry.getKey());
+        log.info("최다 득표자 선정: Player {}, 득표수: {}", maxEntry.getKey(), maxVotes);
+        
+        return targetPlayer;
     }
 
     // 특정 플레이어의 득표수 확인
@@ -217,6 +222,7 @@ public class Room {
         finalVoteStatus.clear();
     }
 
+    //여기서 서버 플레이어 죽네
     public Player processFinalVoteResult() {
         Player targetPlayer = players.stream()
                 .filter(Player::isVoteTarget)
@@ -226,14 +232,14 @@ public class Room {
         if (targetPlayer != null && getAgreeVotes() > getDisagreeVotes()) {
             targetPlayer.setAlive(false);
             targetPlayer.setVoteTarget(false);
-            setGameStatus(GameStatus.NIGHT);
+            setGameStatus(GameStatus.FOURTH_DELAY);
             return targetPlayer;
         }
 
         if (targetPlayer != null) {
             targetPlayer.setVoteTarget(false);
         }
-        setGameStatus(GameStatus.NIGHT);
+        setGameStatus(GameStatus.FOURTH_DELAY);
         return null;
     }
 
@@ -294,12 +300,12 @@ public class Room {
         if (!isPlaying) {
             this.isPlaying = true;
             this.turn = 1; // 첫 턴 초기화
-            this.gameStatus = GameStatus.NIGHT;
+            this.gameStatus = GameStatus.FOURTH_DELAY;
             // setGameStatus(gameStatus);
             System.out.println("게임 시작 완료 ");
             System.out.println(this.toString());
 
-            this.currentTime = defaultTimes.get(GameStatus.NIGHT); // 게임은 밤부터 시작
+            this.currentTime = 30; // 게임은 밤부터 시작
 
             players.forEach(player -> {
                 player.setAlive(true);
@@ -314,7 +320,7 @@ public class Room {
     public void endGame() {
         this.isPlaying = false;
         this.turn = 0;
-        this.gameStatus = GameStatus.NONE;
+        this.gameStatus = GameStatus.NIGHT;
 
         // 플레이어 상태 초기화
         for (Player player : players) {

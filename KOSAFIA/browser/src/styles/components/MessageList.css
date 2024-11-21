@@ -14,16 +14,18 @@
   max-width: 80%;
 }
 
-.own-message {
-  justify-content: flex-start; /* 본인 메시지는 왼쪽 정렬 */
+.other-message {
+  justify-content: flex-start; /* 본인 메시지는 오른쪽 정렬 */
 }
 
-.other-message {
+.own-message {
   margin-left: 120px;
-  justify-content: flex-end; /* 다른 사람 메시지는 오른쪽 정렬 */
+  justify-content: flex-end; /* 다른 사람 메시지는 왼쪽 정렬 */
 }
 
 .message-icon {
+  position: relative;
+  border-radius: 50%;
   background-color: white;
   display: flex;
   flex-direction: column;
@@ -34,7 +36,22 @@
   background-size: cover; /* 배경 이미지를 요소 크기에 맞게 조절 */
   background-position: center; /* 배경 이미지를 중앙에 배치 */
   background-repeat: no-repeat; /* 배경 이미지 반복 방지 */
-  border-radius: 10px;
+}
+
+.mafia-overlay-0 {
+  background-color: rgba(255, 0, 0, 0.3);
+}
+
+.mafia-overlay-1 {
+  background-color: rgba(128, 0, 0, 0.3);
+}
+
+.mafia-overlay-2 {
+  background-color: rgba(139, 0, 0, 0.3);
+}
+
+.mafia-overlay-3 {
+  background-color: rgba(178, 34, 34, 0.3);
 }
 
 .player-name {
