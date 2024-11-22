@@ -233,7 +233,7 @@ const handleTimerEnd = useCallback(async () => {
           if(mostVotedPlayer == null) {
             console.log("mostVotedPlayer가 null인거 맞아?");
             sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
-            updateGameStatus("NIGHT");
+            updateGameStatus("FOURTHDELAY");
             return; //걍 끝내 포스딜레이로 바꾸고
           }
         }
@@ -367,8 +367,10 @@ const handleTimerEnd = useCallback(async () => {
                       return;
                     }
                     // 투표 단계에서는 팝업을 열지 않고 투표만 처리
-                    if (gameStatus === GAME_STATUS.VOTE && canVote() && player.playerNumber !== currentPlayer.playerNumber) {
-                      handleVote(player.playerNumber);
+                    if (gameStatus === GAME_STATUS.VOTE && canVote()) {
+                      if(player.playerNumber !== currentPlayer.playerNumber) {
+                        handleVote(player.playerNumber);
+                      }
                       return; // 투표 후 함수 종료
                     }else if(gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
                       return;

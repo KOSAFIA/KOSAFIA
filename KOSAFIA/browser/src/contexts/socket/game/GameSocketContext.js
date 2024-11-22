@@ -29,10 +29,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
   const [mostVotedPlayer, setMostVotedPlayer] = useState(null);
   const [isHost, setIsHost] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
-  const [finalVotes, setFinalVotes] = useState({
-    agree: 0,
-    disagree: 0,
-  });
+  const [finalVotes, setFinalVotes] = useState({agree: 0,disagree: 0,});
   const [gameTime, setGameTime] = useState(
     STATUS_DURATION[GAME_STATUS.FOURTH_DELAY]
   );
@@ -598,7 +595,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
   );
 
     const canChat = useCallback(() => {
-        if (!currentPlayer) return false;
+        if (!currentPlayer || !currentPlayer.isAlive) return false;
         // 밤에는 마피아만 채팅 가능
         else if (gameStatus === GAME_STATUS.NIGHT) return currentPlayer.role === 'MAFIA';
         // 낮에는 모든 살아있는 플레이어가 채팅 가능

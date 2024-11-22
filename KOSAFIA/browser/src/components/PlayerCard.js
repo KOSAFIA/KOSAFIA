@@ -159,7 +159,7 @@ const PlayerCard = ({
         <div className="player-name">{name}</div>
         
         {/* 투표 버튼 */}
-        {gameStatus === "VOTE" && isAlive && currentPlayerNum !== index + 1 && (
+        {gameStatus === "VOTE" && isAlive && currentPlayerNum !== index + 1 && currentPlayer.isAlive && (
           <button 
             className={`vote-button ${myVoteTarget === index + 1 ? 'voted' : ''}`}
             onClick={(e) => {
@@ -179,7 +179,7 @@ const PlayerCard = ({
         )}
 
         {/* 찬반 투표 버튼 */}
-        {gameStatus === "FINALVOTE" && isAlive && isVoteTarget && (
+        {gameStatus === "FINALVOTE" && isAlive && isVoteTarget && currentPlayer.isAlive && (
           <div className="final-vote-buttons">
             <button 
               className={`agree-btn ${finalVotes[currentPlayerNum] === true ? 'selected' : ''}`}

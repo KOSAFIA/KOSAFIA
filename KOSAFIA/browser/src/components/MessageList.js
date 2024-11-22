@@ -50,8 +50,8 @@ const MessageList = ({ messages = [], currentPlayer, currentRole }) => {
           );
         }
 
-        // 경찰 메시지의 포맷 처리
-        else if (msg.username === "POLICE" && currentRole === "POLICE") {
+        // 경찰 메시지 처리
+        if (msg.username === "POLICE" && currentRole === "POLICE") {
           return (
             <div key={index} className="police-message">
               <div className="message-box police">
@@ -67,7 +67,7 @@ const MessageList = ({ messages = [], currentPlayer, currentRole }) => {
           : '';
 
         return (
-          <div key={index} className={`message ${isOwnMessage ? "own-message" : "other-message"}`}>
+          <div key={index} className={`message ${isOwnMessage ? "own-message" : "game-other-message"}`}>
             {isOwnMessage ? (
               // 내 메시지 (오른쪽 정렬)
               <>
