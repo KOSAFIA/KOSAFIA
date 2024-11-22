@@ -158,10 +158,10 @@ const GameRoom = () => {
   const handlePlayerSelect = (targetId) => {
     if (gameStatus === GAME_STATUS.NIGHT && currentPlayer?.role === "MAFIA") {
       setTarget(targetId);
-    } else if (gameStatus === GAME_STATUS.VOTE && canVote()) {
-      sendVote(targetId);
-    }
-
+    } 
+    // else if (gameStatus === GAME_STATUS.VOTE && canVote()) {
+    //   sendVote(targetId);
+    // }
     const player = players.find((p) => p.playerNumber === targetId);
     if (player) {
       const playerName = `Player ${player.playerNumber} (${player.role})`;
