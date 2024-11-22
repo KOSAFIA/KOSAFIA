@@ -7,8 +7,6 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import com.kosafia.gameapp.controllers.socket.game.GameSocketController.GameStateResponse;
-import com.kosafia.gameapp.controllers.socket.game.GameSocketController.TimerResponse;
 import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Role;
@@ -33,7 +31,10 @@ public class GameSocketController {
     @Autowired
     private RoomRepository roomRepository;
 
+    @Autowired
     GameService gameService;
+
+    String imageUrl = null;
 
     // 각 방의 타이머를 관리할 Thread Map
     private final Map<Integer, Thread> roomTimers = new ConcurrentHashMap<>();
@@ -247,6 +248,8 @@ public class GameSocketController {
                             true,
                             newStatus.toString() + " 시간이 시작되었습니다."));
 
+            imageUrl = "/img/change_" + newStatus + ".jpeg";
+            gameService.broadcastGameStatus(roomKey, imageUrl);
             startRoomTimer(roomKey);
 
         } catch (Exception e) {

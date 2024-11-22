@@ -60,10 +60,12 @@ const PlayerCard = ({
     const cardElement = cardRef.current;
     if (!isAlive) {
       cardElement.classList.add("player-card-dead");
+      cardElement.classList.remove("player-card-clicked");
     } else {
       cardElement.classList.remove("player-card-dead");
     }
   }, [isAlive]);
+
 
   // 역할 메모 창 열기
   const handleRoleMemoOpen = () => setIsRoleMemoOpen(true);
@@ -76,13 +78,13 @@ const PlayerCard = ({
 
   // 카드 클릭시 타겟 선택
   const handleCardClick = () => {
-    if (!isAlive) {
+    if (!currentPlayer.isAlive) {
       return;
-    } 
+    }
 
-    if (isNight && currentPlayerRole !== "CITIZEN" && isAlive) {
+    if (isNight && currentPlayerRole !== "CITIZEN" && currentPlayer.isAlive) {
       handleTargetSelect(index + 1); // 클릭된 카드의 플레이어 번호를 타겟으로 설정
-    } else if (gameStatus === "VOTE" && isAlive) {
+    } else if (gameStatus === "VOTE" && currentPlayer.isAlive) {
       onClick?.();
     } else {
       handleRoleMemoOpen(); // 조건이 만족되지 않을 경우 역할 메모 열기
@@ -120,7 +122,7 @@ const PlayerCard = ({
           }
           ${!isAlive ? "player-card-dead" : ""}
           ${
-            selectedPlayer === `${index + 1} (${role})`
+            isNight && isAlive && selectedPlayer === `${index + 1} (${role})`
               ? "player-card-clicked"
               : ""
           }

@@ -87,7 +87,7 @@ const GameRoom = () => {
         // 먼저 타겟 정보를 처리
         let targetPlayerNumber = targetSelection[currentPlayer.playerNumber];
 
-        if (targetPlayerNumber !== undefined) {
+        if (targetPlayerNumber !== undefined && currentPlayer.isAlive) {
           await handleTargetsUpdate(
             currentPlayer.playerNumber,
             targetPlayerNumber
@@ -289,6 +289,7 @@ const GameRoom = () => {
         gameStatus === GAME_STATUS.FIRST_DELAY ? "shadow-inset-top" : ""
       }`}
     >
+      {/* 게임 시작시 직업 소개 팝업창 */}
       {currentPlayer && showFirstJobExplainPopup && (
         <FirstJobExplainpopUp
           currentPlayerRole={currentPlayer.role}
@@ -298,6 +299,7 @@ const GameRoom = () => {
       <div className="chat-area">
         <div className="player-area">
           <div className="header">
+            {/* 타이머 */}
             {players.length > 0 && currentPlayer && (
               <Timer
                 time={gameTime}
@@ -319,7 +321,9 @@ const GameRoom = () => {
               currentPhase={gameStatus === GAME_STATUS.NIGHT ? "NIGHT" : "DAY"}
             />
           </div>
+          {/* 직업 소개 아이콘 */}
           {currentPlayer && <JobInfoIcon role={currentPlayer.role} />}
+          {/* 플레이어 카드 */}
           <div className="player-cards">
             {players.length > 0 ? (
               players.map((player, index) => (
@@ -340,6 +344,10 @@ const GameRoom = () => {
                   disagreeCount={finalVotes.disagree || 0}
                   isVoteTarget={player.isVoteTarget}
                   onClick={() => {
+
+                    if(!currentPlayer.isAlive) {
+                      return;
+                    }
                     // 투표 단계에서는 팝업을 열지 않고 투표만 처리
                     if (gameStatus === GAME_STATUS.VOTE && canVote()) {
                       sendVote(player.playerNumber);
@@ -362,6 +370,7 @@ const GameRoom = () => {
             )}
           </div>
         </div>
+        {/* 채팅박스 */}
         <ChatBox
           ref={chatBoxRef}
           gameStatus={gameStatus}
@@ -375,7 +384,7 @@ const GameRoom = () => {
         <Popup onClose={handleClosePopup} selectedPlayer={selectedPlayer} />
       )}
 
-      {/* 승리 이미지 표시 */}
+      {/* 승리시 이미지 표시 */}
       <ResultPopup imageUrl={imageUrl} />
     </div>
   );
