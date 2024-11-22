@@ -20,13 +20,18 @@ const PlayerCard = ({
   currentPlayerNum,
   onTargetChange, // 타겟 선택 업데이트 함수
   isAlive,
-  //이건 하은님이 밖에서 빼내서 매핑한다고 했던거 같고
+  currentPlayer,
   onClick,
-  //이건 내가 추가 필요해
   gameStatus,
   voteCount = 0,
-  isVoteTarget = false,  // 최종 투표 대상자 여부 prop 추가
+  isVoteTarget = false, // 최종 투표 대상자 여부 prop 추가
   onFinalVoteClick,
+  selectedPlayer, // 부모 컴포넌트에서 전달받은 selectedPlayer
+  setSelectedPlayer, // 부모 컴포넌트에서 전달받은 setSelectedPlayer
+  canFinalVote = false,
+  voteStatus,
+  finalVotes,
+  myVoteTarget,
 }) => {
   const [isRoleMemoOpen, setIsRoleMemoOpen] = useState(false);
   const [avatar, setAvatar] = useState("/img/default-avatar.png");
@@ -50,6 +55,7 @@ const PlayerCard = ({
   useEffect(() => {
     if (!isNight) {
       setTarget(null); // 밤이 아니면 타겟 초기화
+      setSelectedPlayer(null); // 밤 시간이 아니면 선택된 플레이어 초기화
     }
   }, [isNight]);
 
@@ -58,11 +64,12 @@ const PlayerCard = ({
     const cardElement = cardRef.current;
     if (!isAlive) {
       cardElement.classList.add("player-card-dead");
-      console.log("player-card-dead 추가됨")
+      cardElement.classList.remove("player-card-clicked");
     } else {
       cardElement.classList.remove("player-card-dead");
     }
   }, [isAlive]);
+
 
   // 역할 메모 창 열기
   const handleRoleMemoOpen = () => setIsRoleMemoOpen(true);
@@ -71,18 +78,30 @@ const PlayerCard = ({
   const handleTargetSelect = (targetPlayerNumber) => {
     setTarget(targetPlayerNumber);
     onTargetChange(currentPlayerNum, targetPlayerNumber); // 타겟 선택 즉시 부모 컴포넌트로 업데이트
-    console.log(currentPlayerNum + "이 " + targetPlayerNumber + "을 클릭했음.");
   };
 
   // 카드 클릭시 타겟 선택
   const handleCardClick = () => {
-    if (isNight && currentPlayerRole !== "CITIZEN" && isAlive) {
+    if (!currentPlayer.isAlive) {
+      return;
+    }
+
+    if (isNight && currentPlayerRole !== "CITIZEN" && currentPlayer.isAlive) {
       handleTargetSelect(index + 1); // 클릭된 카드의 플레이어 번호를 타겟으로 설정
-    } 
-    else if(gameStatus === "VOTE" && isAlive) {
+    } else if (gameStatus === "VOTE" && currentPlayer.isAlive) {
       onClick?.();
-    }else {
+    } else {
       handleRoleMemoOpen(); // 조건이 만족되지 않을 경우 역할 메모 열기
+    }
+
+    // 선택된 플레이어의 상태를 관리하여 클릭된 카드만 선택 상태로 변경
+    const playerName = `${index + 1} (${role})`;
+    if (selectedPlayer === playerName) {
+      // 이미 선택된 카드라면, 선택 해제
+      setSelectedPlayer(null);
+    } else {
+      // 새로운 카드 선택 시, 이전 선택 해제하고 새로 선택
+      setSelectedPlayer(playerName);
     }
   };
 
@@ -94,63 +113,92 @@ const PlayerCard = ({
     <div>
       <div
         className={`player-card ${
-          isNight && currentPlayerRole !== "CITIZEN" && isAlive
-            ? "clickable"
+          // 기본 상태
+          !isAlive ? "player-card-dead" : ""} ${
+          // NIGHT 상태
+          isNight && currentPlayerRole !== "CITIZEN" && isAlive ? "clickable" : ""} ${
+          // VOTE 상태
+          gameStatus === "VOTE" 
+            ? isAlive && currentPlayerNum !== index + 1 
+              ? "vote-clickable" 
+              : "" 
+            : ""} ${
+          // FINALVOTE 상태
+          gameStatus === "FINALVOTE"
+            ? isAlive && isVoteTarget
+              ? "final-vote-target"
+              : ""
+            : ""
+        } ${
+          // 투표 상태에서만 voted-by-me 클래스 적용
+          gameStatus === "VOTE" && voteStatus[currentPlayerNum] === index + 1
+            ? "voted-by-me"
             : ""
         }
-
-          ${(gameStatus === "VOTE" && isAlive) ? "vote-clickable" : ""}
-          ${(gameStatus === "FINALVOTE" && isAlive && isVoteTarget) ? "final-vote-target" : ""}
-          ${!isAlive ? "player-card-dead" : ""}`
-        }
+          ${
+            isNight && isAlive && selectedPlayer === `${index + 1} (${role})`
+              ? "player-card-clicked"
+              : ""
+          }
+        `}
         ref={cardRef}
         onClick={handleCardClick}
         data-index={index + 1}
       >
+        {/* 득표 수 표시 - gameStatus가 VOTE일 때만 표시 */}
+        {gameStatus === "VOTE" && voteCount > 0 && (
+          <div className="vote-count">
+            {voteCount}
+          </div>
+        )}
+
         <div
           className="player-avatar"
-          style={{ backgroundImage: `url(${avatar})` }} // 동적으로 아바타 이미지 설정
+          style={{ backgroundImage: `url(${avatar})` }}
         />
         <div className="player-name">{name}</div>
-        <div className="vote-count">{voteCount} 표</div>
         
-        {/* 최종 투표 대상자인 경우에만 찬반 투표 카운트 표시 */}
-        {gameStatus === "FINALVOTE" && isVoteTarget && (
+        {/* 투표 버튼 */}
+        {gameStatus === "VOTE" && isAlive && currentPlayerNum !== index + 1 && (
+          <button 
+            className={`vote-button ${myVoteTarget === index + 1 ? 'voted' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick?.();
+            }}
+          >
+            {myVoteTarget === index + 1 ? '✓' : '투표하기'}
+          </button>
+        )}
+
+        {/* 득표 수 표시 */}
+        {gameStatus === "VOTE" && voteStatus[index + 1] > 0 && (
+          <div className="vote-count">
+            {voteStatus[index + 1]}
+          </div>
+        )}
+
+        {/* 찬반 투표 버튼 */}
+        {gameStatus === "FINALVOTE" && isAlive && isVoteTarget && (
           <div className="final-vote-buttons">
-            <div className="vote-buttons">
-              <button 
-                className="agree-btn"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  if (true) {
-                    try {
-                      await onFinalVoteClick(true);
-                      console.log('찬성 투표 완료');
-                    } catch (error) {
-                      console.error('찬성 투표 실패:', error);
-                    }
-                  }
-                }}
-              >
-                찬성
-              </button>
-              <button 
-                className="disagree-btn"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  if (true) {
-                    try {
-                      await onFinalVoteClick(false);
-                      console.log('반대 투표 완료');
-                    } catch (error) {
-                      console.error('반대 투표 실패:', error);
-                    }
-                  }
-                }}
-              >
-                반대
-              </button>
-            </div>
+            <button 
+              className={`agree-btn ${finalVotes[currentPlayerNum] === true ? 'selected' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onFinalVoteClick?.(true);
+              }}
+            >
+              찬성
+            </button>
+            <button 
+              className={`disagree-btn ${finalVotes[currentPlayerNum] === false ? 'selected' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onFinalVoteClick?.(false);
+              }}
+            >
+              반대
+            </button>
           </div>
         )}
       </div>

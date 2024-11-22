@@ -22,35 +22,34 @@
   margin-top: 25px;
   margin-right: 20px;
   margin-left: 20px;
-  background-color:transparent;
-  width: 50px; 
+  background-color: transparent;
+  width: 50px;
   height: 50px;
-  border: none; 
+  border: none;
   background-size: cover;
-  cursor: pointer; 
+  cursor: pointer;
 }
 
 .timer-button-wrapper .increase-time {
-  background-image: url('../../../public/img/timer-plus.png'); 
+  background-image: url("../../../public/img/timer-plus.png");
 }
 
 .timer-button-wrapper .decrease-time {
-  background-image: url('../../../public/img/timer-minus.png');
+  background-image: url("../../../public/img/timer-minus.png");
 }
 
 /* //==김남영 CSS 수정 시작== */
 .increase-time {
-  background-image: url('../../../public/img/timer-plus.png'); 
+  background-image: url("../../../public/img/timer-plus.png");
 }
 
 .decrease-time {
-  background-image: url('../../../public/img/timer-minus.png');
+  background-image: url("../../../public/img/timer-minus.png");
 }
 /* //==김남영 CSS 수정 끝== */
 .time-display .button {
   margin-bottom: 24px;
 }
-
 
 .timer .stage-info {
   margin-left: auto; /* 오른쪽 끝으로 위치 */
@@ -61,4 +60,18 @@
   width: 50px; /* 원하는 크기로 조정 */
   height: auto; /* 비율에 맞게 높이 자동 조정 */
   border-radius: 8px; /* 이미지 모서리를 둥글게 */
+}
+
+/* Timer.css */
+.decrease-time,
+.increase-time {
+  width: 30px; /* 이미지 크기 설정 */
+  height: 30px;
+  cursor: pointer; /* 마우스 커서를 클릭할 수 있도록 설정 */
+  margin: 0 10px; /* 여백 설정 */
+}
+
+.decrease-time:hover,
+.increase-time:hover {
+  opacity: 0.7; /* 호버 시 투명도 변화 */
 }

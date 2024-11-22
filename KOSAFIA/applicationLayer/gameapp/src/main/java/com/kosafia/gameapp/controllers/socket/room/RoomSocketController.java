@@ -67,31 +67,15 @@ public class RoomSocketController {
     // 새로운 사람이 방에 들어왔을 때 처리하는 함수에요
     @MessageMapping("/room.players.join/{roomKey}")
     public void handleplayerJoin( @Payload Player player , @DestinationVariable("roomKey") Integer roomKey) {
-        //그지같네 왜 roomKey를 다이렉트로 못받아오지? 짜증나서 세션 쓴다 와..
-        // Integer roomKey = (Integer)session.getAttribute("roomKey");
-        log.debug("Received roomKey: {}", roomKey);
-        log.debug("Received player data: {}", player);
-        log.info("{}님이 방 {}에 들어오려고 해요", player.getUsername(), roomKey);
-
-        // Random rand = new Random();
-
         Room room = roomRepository.getRoom(roomKey);
         List<Player> players = room.getPlayers();
-
         if (room != null) {
             if (!players.contains(player)) {
                 room.addPlayer(player.getUsername(), player.getUserEmail());
-                log.info("{}님이 방 {}에 성공적으로 들어왔어요", player.getUsername(), roomKey);
                 List<Player> updatedPlayers = room.getPlayers();
-                
-                // 디버그 로그 추가
-                log.info("전송할 유저 리스트: {}", updatedPlayers);
-                
                 messagingTemplate.convertAndSend("/topic/room.players." + roomKey, updatedPlayers);
-                log.info("방 {}의 업데이트된 유저 리스트를 전송했어요: {}", roomKey, updatedPlayers);
+
             } else {
-                log.info("{}님은 이미 방 {}에 있어요", player.getUsername(), roomKey);
-                // 이미 있어도 현재 유저 리스트를 다시 보내기
                 messagingTemplate.convertAndSend("/topic/room.players." + roomKey, room.getPlayers());
             }
         } else {

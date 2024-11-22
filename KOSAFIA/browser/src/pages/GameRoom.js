@@ -7,6 +7,7 @@ import Popup from "../components/JobExpectationPopUp";
 import JobInfoIcon from "../components/JobInfoIcon";
 import handleTargetsUpdate from "../hooks/game/HandleTargetsUpdate";
 import handleNightActions from "../hooks/game/HandleNightAction";
+import ResultPopup from "../components/ResultPopup";
 import { useGameContext } from "../contexts/socket/game/GameSocketContext";
 import FirstJobExplainpopUp from "../components/FirstJobExplainPopup";
 
@@ -22,8 +23,8 @@ const GameRoom = () => {
   const [showFirstJobExplainPopup, setFirstJobExplainPopup] = useState(true);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [showResultPopup, setShowResultPopup] = useState(false);
   const [targetSelection, setTargetSelection] = useState({}); // 각 플레이어가 선택한 타겟을 저장
-  const [victoryImage, setVictoryImage] = useState(null); //승리이미지
   const chatBoxRef = useRef();
 
   // GameSocketContext에서 필요한 상태들을 가져옴
@@ -50,7 +51,9 @@ const GameRoom = () => {
     sendFinalVote,
     canFinalVote,
     voteStatus,
-    finalVotes
+    finalVotes,
+    imageUrl,
+    mostVotedPlayer
   } = useGameContext();
 
   // 시간 조절한 플레이어 목록 관리 (새로운 게임 시작 시 초기화 필요)
@@ -64,13 +67,28 @@ const GameRoom = () => {
   }, [gameStatus]);
 
   useEffect(() => {
+    if (imageUrl) {
+      // 이미지가 업데이트되면 팝업을 5초간 보이도록 설정
+      setShowResultPopup(true);
+
+      // 5초 후 팝업 숨기기
+      const timer = setTimeout(() => {
+        setShowResultPopup(false);
+      }, 5000);
+
+      // 타이머 클린업
+      return () => clearTimeout(timer);
+    }
+  }, [imageUrl]);
+
+  useEffect(() => {
     // gameStatus가 NIGHT일 때만 handleStageChange 실행
     if (gameStatus === GAME_STATUS.FIRST_DELAY) {
       const handleNightPhase = async () => {
         // 먼저 타겟 정보를 처리
-        const targetPlayerNumber = targetSelection[currentPlayer.playerNumber];
+        let targetPlayerNumber = targetSelection[currentPlayer.playerNumber];
 
-        if (targetPlayerNumber !== undefined) {
+        if (targetPlayerNumber !== undefined && currentPlayer.isAlive) {
           await handleTargetsUpdate(
             currentPlayer.playerNumber,
             targetPlayerNumber
@@ -78,7 +96,7 @@ const GameRoom = () => {
         }
 
         // 그 후, 밤 동안의 직업별 행동을 처리
-        if(isHost) {
+        if (isHost) {
           await handleNightActions(1);
         }
 
@@ -86,31 +104,20 @@ const GameRoom = () => {
         if (isHost) {
           updateGameStatus(NEXT_STATUS[gameStatus]);
         }
+
+        //작업이 끝난 뒤 초기화
+        targetPlayerNumber = null;
+        console.log(
+          currentPlayer.playerNumber +
+            "의 targetPlayerNumber 초기화 확인 여부 : " +
+            targetPlayerNumber
+        );
       };
 
       handleNightPhase(); // 비동기 작업을 제대로 처리할 수 있도록 함수 내부에서 호출
     }
   }, [gameStatus, targetSelection, currentPlayer, isHost, updateGameStatus]);
 
-  useEffect(() => {
-    if (!roomKey) return;
-  
-    const subscription = chatBoxRef.current.subscribe(
-      `/topic/game.state.${roomKey}`,
-      (message) => {
-        const { imageUrl } = JSON.parse(message.body);
-  
-        // 이미지 URL 상태 업데이트
-        if (imageUrl) {
-          setVictoryImage(imageUrl);
-        }
-      }
-    );
-  
-    return () => subscription.unsubscribe(); // 구독 해제
-  }, [roomKey]);
-
-  
   // 처음 직업설명 팝업창 열기
   const handleOpenFirstJobExplainPopup = () => {
     setFirstJobExplainPopup(true);
@@ -151,14 +158,20 @@ const GameRoom = () => {
   const handlePlayerSelect = (targetId) => {
     if (gameStatus === GAME_STATUS.NIGHT && currentPlayer?.role === "MAFIA") {
       setTarget(targetId);
-    } else if (gameStatus === GAME_STATUS.VOTE && canVote()) {
-      sendVote(targetId);
-    }
-
+    } 
+    // else if (gameStatus === GAME_STATUS.VOTE && canVote()) {
+    //   sendVote(targetId);
+    // }
     const player = players.find((p) => p.playerNumber === targetId);
     if (player) {
       const playerName = `Player ${player.playerNumber} (${player.role})`;
-      handleOpenPopup(playerName);
+
+      // 같은 카드를 클릭하면 선택 상태를 해제
+      if (selectedPlayer === playerName) {
+        handleOpenPopup(null);
+      } else {
+        handleOpenPopup(playerName); // 카드 클릭시 선택 상태로 변경
+      }
     }
   };
 
@@ -216,12 +229,19 @@ const handleTimerEnd = useCallback(async () => {
         //김남영 추가 구문부
         if(gameStatus === GAME_STATUS. VOTE) processVoteResult();
         else if(gameStatus === GAME_STATUS.FINALVOTE) processFinalVoteResult();
-        
+        else if(gameStatus === GAME_STATUS.THIRDDELAY) {
+          if(mostVotedPlayer == null) {
+            console.log("mostVotedPlayer가 null인거 맞아?");
+            sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
+            updateGameStatus("NIGHT");
+            return; //걍 끝내 포스딜레이로 바꾸고
+          }
+        }
         //김남영 추가 구문부 끝
           sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
           updateGameStatus(NEXT_STATUS[gameStatus]);
       }
-  }, [isHost, gameStatus, updateGameStatus, sendGameSystemMessage]);
+  }, [isHost, gameStatus, updateGameStatus, sendGameSystemMessage, mostVotedPlayer]);
 
 
   const [customIdx, setCustomIdx] = useState(0);
@@ -232,30 +252,27 @@ const handleTimerEnd = useCallback(async () => {
 
       // 1. 먼저 타겟 정보 전송
       if (targetPlayerNumber !== undefined) {
-        await handleTargetsUpdate(currentPlayer.playerNumber, targetPlayerNumber);
+        await handleTargetsUpdate(
+          currentPlayer.playerNumber,
+          targetPlayerNumber
+        );
       }
       // 2. 밤 액션 처리
-      await handleNightActions(1); 
-    }else if (gameStatus === GAME_STATUS.DAY) {
+      await handleNightActions(1);
+    } else if (gameStatus === GAME_STATUS.DAY) {
       // await handleDayActions(1);
-    }else if (gameStatus === GAME_STATUS.VOTE) {
-      if(isHost) {
+    } else if (gameStatus === GAME_STATUS.VOTE) {
+      if (isHost) {
         processVoteResult();
       }
-    }else if (gameStatus === GAME_STATUS.FINALVOTE) {
-      if(isHost) {
+    } else if (gameStatus === GAME_STATUS.FINALVOTE) {
+      if (isHost) {
         processFinalVoteResult();
       }
-    }else if(gameStatus === GAME_STATUS.FIRSTDELAY) {
-
-    }
-    else if(gameStatus === GAME_STATUS.SECONDDELAY) {
-    }
-    else if(gameStatus === GAME_STATUS.THIRDDELAY) {
-
-    }
-    else if(gameStatus === GAME_STATUS.FOURTHDELAY) {
-
+    } else if (gameStatus === GAME_STATUS.FIRSTDELAY) {
+    } else if (gameStatus === GAME_STATUS.SECONDDELAY) {
+    } else if (gameStatus === GAME_STATUS.THIRDDELAY) {
+    } else if (gameStatus === GAME_STATUS.FOURTHDELAY) {
     }
 
     if (isHost) {
@@ -263,18 +280,25 @@ const handleTimerEnd = useCallback(async () => {
       // 다음 상태로 업데이트
       updateGameStatus(NEXT_STATUS[gameStatus]);
     }
-
   }, [isHost, gameStatus, updateGameStatus, sendGameSystemMessage]);
 
   // messages 상태 디버깅을 위한 useEffect 추가
   useEffect(() => {
-    console.log('Messages updated:', messages);
+    console.log("Messages updated:", messages);
   }, [messages]);
 
   // currentPlayer 상태 디버깅을 위한 useEffect 추가
   useEffect(() => {
-    console.log('Current player updated:', currentPlayer);
+    console.log("Current player updated:", currentPlayer);
   }, [currentPlayer]);
+
+  
+  const [myVoteTarget, setMyVoteTarget] = useState(null);  // 내가 투표한 플레이어 번호
+  // 투표 처리 함수
+  const handleVote = (targetPlayerNum) => {
+    setMyVoteTarget(targetPlayerNum);
+    sendVote(targetPlayerNum);
+  };
 
   return (
     <div
@@ -282,6 +306,7 @@ const handleTimerEnd = useCallback(async () => {
         gameStatus === GAME_STATUS.FIRST_DELAY ? "shadow-inset-top" : ""
       }`}
     >
+      {/* 게임 시작시 직업 소개 팝업창 */}
       {currentPlayer && showFirstJobExplainPopup && (
         <FirstJobExplainpopUp
           currentPlayerRole={currentPlayer.role}
@@ -291,6 +316,7 @@ const handleTimerEnd = useCallback(async () => {
       <div className="chat-area">
         <div className="player-area">
           <div className="header">
+            {/* 타이머 */}
             {players.length > 0 && currentPlayer && (
               <Timer
                 time={gameTime}
@@ -299,20 +325,22 @@ const handleTimerEnd = useCallback(async () => {
                 onTimerEnd={handleTimerEnd}
                 onModifyTime={handleModifyTime}
                 canModifyTime={canModifyTime()}
+                currentPlayerIsAlive={currentPlayer.isAlive}
               />
             )}
 
             {isHost && !isHost && (
-                <button 
-                  className="next-phase-btn"
-                  onClick={handleNextPhase}
-                >
-                  다음 단계
-                </button>
+              <button className="next-phase-btn" onClick={handleNextPhase}>
+                다음 단계
+              </button>
             )}
-            <DayIndicator currentPhase={gameStatus === GAME_STATUS.NIGHT ? "NIGHT" : "DAY"} />
+            <DayIndicator
+              currentPhase={gameStatus === GAME_STATUS.NIGHT ? "NIGHT" : "DAY"}
+            />
           </div>
+          {/* 직업 소개 아이콘 */}
           {currentPlayer && <JobInfoIcon role={currentPlayer.role} />}
+          {/* 플레이어 카드 */}
           <div className="player-cards">
             {players.length > 0 ? (
               players.map((player, index) => (
@@ -324,30 +352,40 @@ const handleTimerEnd = useCallback(async () => {
                   isNight={gameStatus === GAME_STATUS.NIGHT}
                   currentPlayerRole={currentPlayer.role}
                   currentPlayerNum={currentPlayer.playerNumber}
+                  currentPlayer={currentPlayer}
                   onTargetChange={handleTargetChange}
                   isAlive={player.isAlive}
                   gameStatus={gameStatus}
                   voteCount={voteStatus[player.playerNumber] || 0}
-                  agreeCount={finalVotes.agree || 0}
-                  disagreeCount={finalVotes.disagree || 0}
                   isVoteTarget={player.isVoteTarget}
+                  canFinalVote={canFinalVote()}
+                  voteStatus={voteStatus}
+                  myVoteTarget={myVoteTarget}
                   onClick={() => {
+
+                    if(!currentPlayer.isAlive) {
+                      return;
+                    }
                     // 투표 단계에서는 팝업을 열지 않고 투표만 처리
-                    if (gameStatus === GAME_STATUS.VOTE && canVote()) {
-                      sendVote(player.playerNumber);
-                    } else if (gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
-                      // sendFinalVote(player.playerNumber); 플레이어 카드를 클릭하는거로 처리할수가 없겠어..
-                    } else {
-                      const playerName = `Player ${player.playerNumber} (${player.role})`;
-                      handleOpenPopup(playerName);
+                    if (gameStatus === GAME_STATUS.VOTE && canVote() && player.playerNumber !== currentPlayer.playerNumber) {
+                      handleVote(player.playerNumber);
+                      return; // 투표 후 함수 종료
+                    }else if(gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
+                      return;
+                    }else {
                       handlePlayerSelect(player.playerNumber);
                     }
                   }}
-                  onFinalVoteClick={(isAgreeButtonValue) => {
+                  onFinalVoteClick={(isAgree) => {
                     if (gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
-                      sendFinalVote(isAgreeButtonValue);
+                      sendFinalVote(isAgree);
                     }
                   }}
+                  finalVotes={{
+                    myVote: finalVotes[currentPlayer.playerNumber]
+                  }}
+                  selectedPlayer={selectedPlayer}
+                  setSelectedPlayer={setSelectedPlayer}
                 />
               ))
             ) : (
@@ -355,6 +393,7 @@ const handleTimerEnd = useCallback(async () => {
             )}
           </div>
         </div>
+        {/* 채팅박스 */}
         <ChatBox
           ref={chatBoxRef}
           gameStatus={gameStatus}
@@ -368,17 +407,8 @@ const handleTimerEnd = useCallback(async () => {
         <Popup onClose={handleClosePopup} selectedPlayer={selectedPlayer} />
       )}
 
-      {/* 승리 이미지 표시 */}
-      {victoryImage && (
-        <div className="victory-image">
-          <img  
-            id="game-status-image"
-            src={victoryImage}
-            alt="게임 상태 이미지"
-            style={{ width: 300, height: "auto" }}
-          />
-        </div>
-      )}
+      {/* 승리시 이미지 표시 */}
+      <ResultPopup imageUrl={imageUrl} />
     </div>
   );
 };

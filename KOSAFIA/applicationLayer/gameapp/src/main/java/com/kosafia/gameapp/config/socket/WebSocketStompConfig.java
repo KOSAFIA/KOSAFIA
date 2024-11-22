@@ -22,54 +22,54 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Configuration
-@EnableWebSocketMessageBroker
+@EnableWebSocketMessageBroker  // WebSocket 메시지 브로커 활성화
 public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // 메시지를 구독할 때 사용할 경로를 설정합니다.
+        // 1. 메시지 브로커 설정
+        // /topic: 일대다 메시징(브로드캐스트)
+        // /queue: 일대일 메시징(개인간 통신)
         registry.enableSimpleBroker("/topic", "/queue");
-        // 클라이언트가 메시지를 보낼 때 사용할 경로를 설정합니다.
+        
+        // 2. 클라이언트->서버 메시지 라우팅 prefix 설정
+        // 클라이언트가 "/fromapp"으로 시작하는 주소로 메시지를 보내면 해당 메시지는 @MessageMapping이 붙은 메서드로 라우팅됨
         registry.setApplicationDestinationPrefixes("/fromapp");
-        log.info("Message broker configured with prefixes: /topic, /queue, /fromapp");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // 클라이언트가 연결할 수 있는 WebSocket 엔드포인트를 설정합니다.
+        // 3. WebSocket 연결 엔드포인트 설정
+        // 클라이언트는 "ws://도메인/wstomp"로 WebSocket 연결을 초기화할 수 있음
         registry.addEndpoint("/wstomp")
-                .setAllowedOriginPatterns("*") // 모든 도메인에서의 요청을 허용합니다.
-                .withSockJS();  // SockJS를 사용하여 WebSocket을 지원합니다.
-        log.info("STOMP endpoint registered at /wstomp with SockJS support");
+                .setAllowedOriginPatterns("*")  // CORS 설정: 모든 도메인 허용
+                .withSockJS();  // WebSocket을 지원하지 않는 브라우저를 위한 폴백 메커니즘 제공
     }
 
-    @Bean
+    
+    @Bean // 4. WebSocket 전송 제한 설정 //커스텀 컴포넌트. 오버라이딩 대상은 아님.
     public WebSocketTransportRegistration webSocketTransportRegistration() {
-        // WebSocket 전송 설정을 구성합니다.
-        WebSocketTransportRegistration registration = new WebSocketTransportRegistration()
-                .setMessageSizeLimit(128 * 1024) // 메시지 크기 제한을 설정합니다.
-                .setSendTimeLimit(20 * 1000) // 메시지 전송 시간 제한을 설정합니다.
-                .setSendBufferSizeLimit(512 * 1024); // 전송 버퍼 크기 제한을 설정합니다.
-        log.info("WebSocket transport registration configured with message size limit: 128KB, send time limit: 20s, buffer size limit: 512KB");
-        return registration;
+        return new WebSocketTransportRegistration()
+                .setMessageSizeLimit(128 * 1024)  // 최대 메시지 크기: 128KB
+                .setSendTimeLimit(20 * 1000)      // 최대 전송 시간: 20초
+                .setSendBufferSizeLimit(512 * 1024); // 버퍼 크기: 512KB
     }
 
-    @Override
+    @Override // 5. JSON 메시지 변환기 설정
     public boolean configureMessageConverters(List<MessageConverter> messageConverters) {
-        // 메시지 변환기를 설정합니다.
+        
         DefaultContentTypeResolver resolver = new DefaultContentTypeResolver();
         resolver.setDefaultMimeType(MimeTypeUtils.APPLICATION_JSON);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());  // Java 8 날짜/시간 모듈을 등록합니다.
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);  // 날짜를 ISO-8601 형식으로 직렬화합니다.
+        objectMapper.registerModule(new JavaTimeModule());  // Java 8 시간 타입 지원
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);  // ISO-8601 날짜 형식 사용
 
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
         converter.setObjectMapper(objectMapper);
         converter.setContentTypeResolver(resolver);
 
         messageConverters.add(converter);
-        log.info("Message converters configured with JSON support");
         return false;
     }
 }
