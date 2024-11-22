@@ -26,6 +26,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
   const [currentPlayer, setCurrentPlayer] = useState(null);
   const [mafiaTarget, setMafiaTarget] = useState(null);
   const [voteStatus, setVoteStatus] = useState({});
+  const [mostVotedPlayer, setMostVotedPlayer] = useState(null);
   const [isHost, setIsHost] = useState(false);
   const [finalVotes, setFinalVotes] = useState({
     agree: 0,
@@ -340,8 +341,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
             subscriptions.push(
                 clientRef.current.subscribe(`/topic/game.vote.result.${roomKey}`, (socketMsg) => {
                     const result = JSON.parse(socketMsg.body);
-                    console.log('투표 결과 수신:', result);
-                    
+                    console.log('투표 결과 수신:', result);     
                     if (result.success) {
                         setPlayers(prevPlayers => 
                             prevPlayers.map(player => 
@@ -351,6 +351,8 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                             )
                         );
                         setVoteStatus(result.voteResult);
+                        setMostVotedPlayer(result.targetPlayer);
+                        //여까지 된거에서 투표 결과에따라 상태 전환 로직이 다르게 돌아가야겠네. 일단 보트 스테이터스는 게임룸으로 넘어가니까
                     }
                 })
             );
@@ -568,22 +570,13 @@ export const GameSocketProvider = ({ roomKey, children }) => {
 
     const canChat = useCallback(() => {
         if (!currentPlayer) return false;
-        
-        // 낮에는 모든 살아있는 플레이어가 채팅 가능
-        if (gameStatus === GAME_STATUS.DAY) {
-            return currentPlayer.isAlive;
-        }
         // 밤에는 마피아만 채팅 가능
-        if (gameStatus === GAME_STATUS.NIGHT) {
-            return currentPlayer.isAlive && currentPlayer.role === 'MAFIA';
-        }
-        
+        else if (gameStatus === GAME_STATUS.NIGHT) return currentPlayer.role === 'MAFIA';
+        // 낮에는 모든 살아있는 플레이어가 채팅 가능
+        else if (gameStatus === GAME_STATUS.DAY || gameStatus === GAME_STATUS.VOTE) return true;
         // 투표 시간에는 모든 살아있는 플레이어가 채팅 가능
-        if (gameStatus === GAME_STATUS.VOTE || gameStatus === GAME_STATUS.FINALVOTE) {
-            return currentPlayer.isAlive;
-        }
-
-    return false;
+        else if (gameStatus === GAME_STATUS.FINALVOTE) return currentPlayer.isVoteTarget;
+        else return false;
       }, [currentPlayer, gameStatus]);
 
   const canVote = useCallback(() => {
@@ -654,6 +647,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         dayCount,
         sendSystemMessage,
         modifyGameTime,
+        mostVotedPlayer,
     };
 
   return (

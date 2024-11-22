@@ -52,10 +52,8 @@ public class GameSocketController {
 
     // 채팅 메시지 처리 - @Payload 어노테이션 추가 및 디버그 로그 추가
     @MessageMapping("/game.chat.send/{roomKey}")
-    public void handleGameChat(
-            @DestinationVariable("roomKey") Integer roomKey,
-            @Payload ChatMessage message) {
-        log.info("게임 채팅 메시지 수신 - 방: {}, 메시지: {}", roomKey, message);
+    public void handleGameChat(@DestinationVariable("roomKey") Integer roomKey,
+        @Payload ChatMessage message) {
         try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null) {
@@ -369,6 +367,9 @@ public class GameSocketController {
     public void handleVoteResult(
             @DestinationVariable("roomKey") Integer roomKey,
             @Payload VoteResultRequest request) {
+
+        String resultMsg = null;
+
        try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null)
@@ -379,11 +380,13 @@ public class GameSocketController {
             //최다 득표자가 있으면 최종 투표 대상으로 설정
             if (mostVotedPlayer != null) {
                 mostVotedPlayer.setVoteTarget(true);
+                resultMsg = "최다 득표자인 " + mostVotedPlayer.getUsername() + " 님이 최후 변론을 시작합니다";
                 log.info("최종 투표 대상자로 설정됨: {}", mostVotedPlayer);
             }
             else{
                 //없으면 최종 투표 대상 초기화
                 room.getPlayers().forEach(player -> player.setVoteTarget(false));
+                resultMsg = "투표 결과 최다 득표자는 없습니다. 다음날 밤으로 넘어갑니다";
             }
             // 투표 결과 브로드캐스트
             VoteResultResponse response = new VoteResultResponse(
@@ -396,6 +399,7 @@ public class GameSocketController {
                 "/topic/game.vote.result." + roomKey,
                 response
             );
+            //이거 받은 쪽에서 결과 처리로 게임 스테이트 업데이트 처리를 다르게 하자. 그게 맞다 
 
             messagingTemplate.convertAndSend(
                 "/topic/game.players." + roomKey,
@@ -405,7 +409,7 @@ public class GameSocketController {
             //시스템 메시지 보내기 전에 음... 
             messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
                 "SYSTEM",
-                mostVotedPlayer.getUsername() + "님이 최후 변론을 시작합니다.",
+                resultMsg,
                 room.getGameStatus().toString(),
                 roomKey,
                 0,

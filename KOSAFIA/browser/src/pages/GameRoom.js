@@ -50,7 +50,8 @@ const GameRoom = () => {
     sendFinalVote,
     canFinalVote,
     voteStatus,
-    finalVotes
+    finalVotes,
+    mostVotedPlayer
   } = useGameContext();
 
   // 시간 조절한 플레이어 목록 관리 (새로운 게임 시작 시 초기화 필요)
@@ -216,12 +217,19 @@ const handleTimerEnd = useCallback(async () => {
         //김남영 추가 구문부
         if(gameStatus === GAME_STATUS. VOTE) processVoteResult();
         else if(gameStatus === GAME_STATUS.FINALVOTE) processFinalVoteResult();
-        
+        else if(gameStatus === GAME_STATUS.THIRDDELAY) {
+          if(mostVotedPlayer == null) {
+            console.log("mostVotedPlayer가 null인거 맞아?");
+            sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
+            updateGameStatus("NIGHT");
+            return; //걍 끝내 포스딜레이로 바꾸고
+          }
+        }
         //김남영 추가 구문부 끝
           sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
           updateGameStatus(NEXT_STATUS[gameStatus]);
       }
-  }, [isHost, gameStatus, updateGameStatus, sendGameSystemMessage]);
+  }, [isHost, gameStatus, updateGameStatus, sendGameSystemMessage, mostVotedPlayer]);
 
 
   const [customIdx, setCustomIdx] = useState(0);
@@ -276,6 +284,14 @@ const handleTimerEnd = useCallback(async () => {
     console.log('Current player updated:', currentPlayer);
   }, [currentPlayer]);
 
+  
+  const [myVoteTarget, setMyVoteTarget] = useState(null);  // 내가 투표한 플레이어 번호
+  // 투표 처리 함수
+  const handleVote = (targetPlayerNum) => {
+    setMyVoteTarget(targetPlayerNum);
+    sendVote(targetPlayerNum);
+  };
+
   return (
     <div
       className={`game-room ${
@@ -328,25 +344,30 @@ const handleTimerEnd = useCallback(async () => {
                   isAlive={player.isAlive}
                   gameStatus={gameStatus}
                   voteCount={voteStatus[player.playerNumber] || 0}
-                  agreeCount={finalVotes.agree || 0}
-                  disagreeCount={finalVotes.disagree || 0}
                   isVoteTarget={player.isVoteTarget}
+                  canFinalVote={canFinalVote()}
+                  voteStatus={voteStatus}
+                  myVoteTarget={myVoteTarget}
                   onClick={() => {
-                    // 투표 단계에서는 팝업을 열지 않고 투표만 처리
-                    if (gameStatus === GAME_STATUS.VOTE && canVote()) {
-                      sendVote(player.playerNumber);
-                    } else if (gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
-                      // sendFinalVote(player.playerNumber); 플레이어 카드를 클릭하는거로 처리할수가 없겠어..
-                    } else {
-                      const playerName = `Player ${player.playerNumber} (${player.role})`;
-                      handleOpenPopup(playerName);
+                    if (gameStatus === GAME_STATUS.VOTE && canVote() && player.playerNumber !== currentPlayer.playerNumber) {
+                      handleVote(player.playerNumber);
+                      return; // 투표 후 함수 종료
+                    }
+                    else if(gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
+                      return;
+                    }
+                    else {
+                      handleOpenPopup(`Player ${player.playerNumber} (${player.role})`);
                       handlePlayerSelect(player.playerNumber);
                     }
                   }}
-                  onFinalVoteClick={(isAgreeButtonValue) => {
+                  onFinalVoteClick={(isAgree) => {
                     if (gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
-                      sendFinalVote(isAgreeButtonValue);
+                      sendFinalVote(isAgree);
                     }
+                  }}
+                  finalVotes={{
+                    myVote: finalVotes[currentPlayer.playerNumber]
                   }}
                 />
               ))

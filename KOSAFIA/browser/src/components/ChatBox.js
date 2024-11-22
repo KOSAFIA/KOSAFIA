@@ -42,10 +42,9 @@ const ChatBox = forwardRef(({
 
   const filteredMessages = messages.filter(msg => {
     if (!msg) return false;
-    
+    if(!msg.content) return false;
     // 시스템 메시지 허용
     if (msg.isSystemMessage) return true;
-    
     // 경찰 전용 메시지는 경찰에게만 표시
     if (msg.username === "POLICE") {
       return currentPlayer?.role === "POLICE";
