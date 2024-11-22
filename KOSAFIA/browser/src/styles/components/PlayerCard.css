@@ -8,8 +8,8 @@
 }
 
 .player-card {
-  width: 200px;
-  height: 400px;
+  width: 200px !important;
+  height: 400px !important;
   display: flex;
   flex-direction: column;
   border: 3px solid;
@@ -57,7 +57,14 @@
   background-size: contain; /* 이미지 비율 유지하며 div에 맞춤 */
   background-position: center; /* 중앙에 위치하도록 설정 */
   background-repeat: no-repeat; /* 이미지 반복 방지 */
+  position: relative;
 }
+
+.player-card-clicked {
+  border: 2px solid red; /* 테두리 색을 빨간색으로 변경 */
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
 
 .player-name {
   font-size: 25px;
@@ -289,19 +296,9 @@
   box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
-.vote-button.voted {
-  background-color: #2E7D32;
-}
+.final-vote-clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(128, 0, 128, 0.5);
 
-/* 투표된 카드 스타일 */
-.voted-by-me {
-  border: 2px solid #4CAF50 !important;
-  box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
-}
 
-/* 투표 가능한 카드에 호버 효과 */
-.vote-clickable:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
 }

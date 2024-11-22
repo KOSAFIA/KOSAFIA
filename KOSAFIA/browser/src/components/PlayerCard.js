@@ -20,13 +20,14 @@ const PlayerCard = ({
   currentPlayerNum,
   onTargetChange, // 타겟 선택 업데이트 함수
   isAlive,
-  //이건 하은님이 밖에서 빼내서 매핑한다고 했던거 같고
+  currentPlayer,
   onClick,
-  //이건 내가 추가 필요해
   gameStatus,
   voteCount = 0,
-  isVoteTarget = false,  // 최종 투표 대상자 여부 prop 추가
+  isVoteTarget = false, // 최종 투표 대상자 여부 prop 추가
   onFinalVoteClick,
+  selectedPlayer, // 부모 컴포넌트에서 전달받은 selectedPlayer
+  setSelectedPlayer, // 부모 컴포넌트에서 전달받은 setSelectedPlayer
   canFinalVote = false,
   voteStatus,
   finalVotes,
@@ -54,6 +55,7 @@ const PlayerCard = ({
   useEffect(() => {
     if (!isNight) {
       setTarget(null); // 밤이 아니면 타겟 초기화
+      setSelectedPlayer(null); // 밤 시간이 아니면 선택된 플레이어 초기화
     }
   }, [isNight]);
 
@@ -62,11 +64,12 @@ const PlayerCard = ({
     const cardElement = cardRef.current;
     if (!isAlive) {
       cardElement.classList.add("player-card-dead");
-      console.log("player-card-dead 추가됨")
+      cardElement.classList.remove("player-card-clicked");
     } else {
       cardElement.classList.remove("player-card-dead");
     }
   }, [isAlive]);
+
 
   // 역할 메모 창 열기
   const handleRoleMemoOpen = () => setIsRoleMemoOpen(true);
@@ -75,18 +78,30 @@ const PlayerCard = ({
   const handleTargetSelect = (targetPlayerNumber) => {
     setTarget(targetPlayerNumber);
     onTargetChange(currentPlayerNum, targetPlayerNumber); // 타겟 선택 즉시 부모 컴포넌트로 업데이트
-    console.log(currentPlayerNum + "이 " + targetPlayerNumber + "을 클릭했음.");
   };
 
   // 카드 클릭시 타겟 선택
   const handleCardClick = () => {
-    if (isNight && currentPlayerRole !== "CITIZEN" && isAlive) {
+    if (!currentPlayer.isAlive) {
+      return;
+    }
+
+    if (isNight && currentPlayerRole !== "CITIZEN" && currentPlayer.isAlive) {
       handleTargetSelect(index + 1); // 클릭된 카드의 플레이어 번호를 타겟으로 설정
-    } 
-    else if(gameStatus === "VOTE" && isAlive) {
+    } else if (gameStatus === "VOTE" && currentPlayer.isAlive) {
       onClick?.();
-    }else {
+    } else {
       handleRoleMemoOpen(); // 조건이 만족되지 않을 경우 역할 메모 열기
+    }
+
+    // 선택된 플레이어의 상태를 관리하여 클릭된 카드만 선택 상태로 변경
+    const playerName = `${index + 1} (${role})`;
+    if (selectedPlayer === playerName) {
+      // 이미 선택된 카드라면, 선택 해제
+      setSelectedPlayer(null);
+    } else {
+      // 새로운 카드 선택 시, 이전 선택 해제하고 새로 선택
+      setSelectedPlayer(playerName);
     }
   };
 
@@ -119,7 +134,13 @@ const PlayerCard = ({
           gameStatus === "VOTE" && voteStatus[currentPlayerNum] === index + 1
             ? "voted-by-me"
             : ""
-        }`}
+        }
+          ${
+            isNight && isAlive && selectedPlayer === `${index + 1} (${role})`
+              ? "player-card-clicked"
+              : ""
+          }
+        `}
         ref={cardRef}
         onClick={handleCardClick}
         data-index={index + 1}
