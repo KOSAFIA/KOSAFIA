@@ -320,7 +320,9 @@ public class Room {
     public void endGame() {
         this.isPlaying = false;
         this.turn = 0;
-        this.gameStatus = GameStatus.NIGHT;
+        // this.gameStatus = GameStatus.NIGHT;
+        this.gameStatus = GameStatus.FOURTH_DELAY;
+
 
         // 플레이어 상태 초기화
         for (Player player : players) {
