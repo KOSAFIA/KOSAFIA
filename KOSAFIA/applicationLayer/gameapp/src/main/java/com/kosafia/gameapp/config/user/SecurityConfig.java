@@ -38,7 +38,7 @@ public class SecurityConfig {
         private ClientRegistrationRepository clientRegistrationRepository;
 
         // 비밀번호 암호화에 사용할 BCryptPasswordEncoder를 빈으로 등록
-        // 필요할 때마다 컨테이너에서 주입하여 @Bean이 붙은 메서드가 반환하는 객체는 Spring 컨테이너에 의해 관리되는 빈이 됩니다.
+        // 필요할 때마다 컨테이너에서 주입하여 @Bean이 붙은 메서드가 반환하는 객체는 Spring 컨테이너에 의해 관리되는 빈이 됨
         @Bean
         public PasswordEncoder passwordEncoder() {
                 return new BCryptPasswordEncoder(); // 비밀번호를 BCrypt 방식으로 암호화하여 보안 강화
@@ -98,9 +98,7 @@ public class SecurityConfig {
                                                         HttpSession session = request.getSession();
                                                         UserData userData = userService
                                                                         .processOAuth2User(userAttributes, session); // OAuth2
-                                                        // 사용자
-                                                        // 정보 처리
-                                                        // 세션에 사용자 데이터 저장
+                                                        // 사용자 정보 처리 세션에 사용자 데이터 저장
                                                         session.setAttribute("userData", userData);
                                                         // response.sendRedirect("/TestLobby"); // 성공 시 리디렉션
                                                         response.sendRedirect("/TestLobby"); // 성공 시 리디렉션
@@ -162,6 +160,7 @@ public class SecurityConfig {
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
                 configuration.addAllowedOrigin("https://definite-grackle-centrally.ngrok-free.app");
+                configuration.addAllowedOrigin("https://viable-ringtail-strangely.ngrok-free.app");
                 configuration.addAllowedOrigin("http://localhost:3000");
                 // configuration.addAllowedOriginPattern("*"); // 모든 도메인 허용 (특정 도메인으로 제한하려면 수정)
                 configuration.addAllowedMethod("*"); // 모든 HTTP 메서드 허용
