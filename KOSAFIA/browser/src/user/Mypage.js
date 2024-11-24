@@ -145,7 +145,7 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
       setPasswordMessage("setPasswordMessage 새 비밀번호가 일치하지 않습니다.");
       setMessage("setMessage 새 비밀번호가 일치하지 않습니다.");
       setIsPasswordChangeSuccess(false); // 비밀번호 변경 실패 상태 설정
-      return; // 함수 종료
+      return; // 함수 종료 
     }
 
     try {
