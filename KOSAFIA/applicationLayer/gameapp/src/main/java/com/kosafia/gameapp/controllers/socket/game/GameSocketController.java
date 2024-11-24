@@ -486,6 +486,8 @@ public class GameSocketController {
             messagingTemplate.convertAndSend("/topic/game.finalvote.result." + roomKey, response);
             log.info("최종 투표 결과 전송 완료 - 방: {}, 현재 상태: {}", roomKey, room.getGameStatus());
 
+            gameService.stageBroadcastGameStatus(roomKey, imageUrl);
+
         } catch (Exception e) {
             log.error("최종 투표 결과 처리 실패:", e);
         }
