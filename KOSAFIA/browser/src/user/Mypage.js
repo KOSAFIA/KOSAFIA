@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react"; // React에서 제공하는 
 import Modal from "react-modal"; // 모달을 구현하기 위한 라이브러리 Modal을 임포트
 import { useNavigate } from "react-router-dom"; // 로그인 화면으로  페이지 이동을 위해 useNavigate 사용
 import "../styles/components/Mypage.css";
-Modal.setAppElement("#root");
+
+Modal.setAppElement("#root"); // Modal 라이브러리가 접근할 앱 루트를 설정
 
 function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   // isOAuthUser를 상위 컴포넌트에서 props로 전달받아 사용}) {
@@ -10,17 +11,27 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   const [userEmail, setUserEmail] = useState(""); // 사용자 이메일 상태 관리
   const [username, setLocalUsername] = useState(""); // 로컬에서 사용하는 닉네임 상태 관리
   const [isEditingUsername, setIsEditingUsername] = useState(false); // 닉네임 편집 모드 여부 상태 관리
+
+  const [message, setMessage] = useState(""); // 메시지 상태 (성공/오류 메시지 표시)
+  const [nicknameMessage, setNicknameMessage] = useState(""); // 닉네임 변경 메시지
+  const [passwordMessage, setPasswordMessage] = useState(""); // 비밀번호 변경 메시지
+  const [accountMessage, setAccountMessage] = useState(""); // 회원탈퇴 메시지
+
+  const [isNicknameSuccessPopupOpen, setIsNicknameSuccessPopupOpen] =
+    useState(false); // 닉네임 변경 성공 팝업 상태
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false); // 비밀번호 변경 모달 열림 여부
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // 회원탈퇴 모달 열림 여부
+  const [isOAuthDeleteModalOpen, setIsOAuthDeleteModalOpen] = useState(false); // OAuth 사용자를 위한 회원탈퇴 모달 열림 여부
+
+  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false); // 성공 팝업 모달 열림 여부
+  const [isPasswordChangeSuccess, setIsPasswordChangeSuccess] = useState(false); // 비밀번호 변경 성공 여부
+
   const [currentPassword, setCurrentPassword] = useState(""); // 현재 비밀번호 상태
   const [newPassword, setNewPassword] = useState(""); // 새 비밀번호 상태
   const [confirmNewPassword, setConfirmNewPassword] = useState(""); // 새 비밀번호 확인 상태
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false); // 비밀번호 변경 모달 열림 여부
-  const [message, setMessage] = useState(""); // 메시지 상태 (성공/오류 메시지 표시)
-  const [isPasswordChangeSuccess, setIsPasswordChangeSuccess] = useState(false); // 비밀번호 변경 성공 여부
-  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false); // 성공 팝업 모달 열림 여부
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // 회원탈퇴 모달 열림 여부
   const [deletePassword, setDeletePassword] = useState(""); // 회원탈퇴 시 입력할 비밀번호
-  const [isOAuthDeleteModalOpen, setIsOAuthDeleteModalOpen] = useState(false); // OAuth 사용자를 위한 회원탈퇴 모달 열림 여부
   const [confirmDeletionInput, setConfirmDeletionInput] = useState(""); // 회원탈퇴 확인 입력 상태
+
   const BASE_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate(); // 로그인 화면으로 이동하기 위해 navigate 설정
 
@@ -84,23 +95,31 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
       );
 
       if (response.ok) {
-        setMessage("닉네임이 성공적으로 변경되었습니다.");
+        setMessage("setMessage 닉네임이 성공적으로 변경되었습니다.");
         setIsEditingUsername(false); // 편집 모드 종료
         setUsername(username); // 상위 컴포넌트에서 전달된 setUsername 함수로 상태 업데이트
+        setIsNicknameSuccessPopupOpen(true); // 닉네임 변경 성공 팝업 열기
       } else {
-        setMessage("닉네임 변경에 실패했습니다.");
+        setNicknameMessage("setNicknameMessage:닉네임 변경에 실패했습니다."); // 실패 메시지 설정
+        setMessage("setMessage:닉네임 변경에 실패했습니다.");
       }
     } catch (error) {
       console.error("닉네임 수정 오류:", error);
-      setMessage("닉네임 변경 중 오류가 발생했습니다.");
+      setMessage("setMessage닉네임 변경 중 오류가 발생했습니다.");
+      setNicknameMessage(
+        "setNicknameMessage닉네임 변경 중 오류가 발생했습니다."
+      );
     }
   };
-
+  useEffect(() => {
+    console.log("isNicknameSuccessPopupOpen 상태:", isNicknameSuccessPopupOpen);
+  }, [isNicknameSuccessPopupOpen]);
   // 비밀번호 변경 함수
   const handlePasswordChange = async () => {
     if (newPassword !== confirmNewPassword) {
       // 새 비밀번호와 확인 비밀번호가 다를 때
-      setMessage("새 비밀번호가 일치하지 않습니다.");
+      setPasswordMessage("setPasswordMessage 새 비밀번호가 일치하지 않습니다.");
+      setMessage("setMessage 새 비밀번호가 일치하지 않습니다.");
       setIsPasswordChangeSuccess(false); // 비밀번호 변경 실패 상태 설정
       return; // 함수 종료
     }
@@ -114,18 +133,25 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
       });
 
       if (response.ok) {
-        setMessage("비밀번호가 성공적으로 변경되었습니다."); // 성공 메시지 설정
-        setIsPasswordChangeSuccess(true); // 비밀번호 변경 성공 상태 설정
+        setMessage("setMessage비밀번호가 성공적으로 변경되었습니다."); // 성공 메시지 설정
+        setPasswordMessage(
+          "setPasswordMessage비밀번호가 성공적으로 변경되었습니다."
+        );
+        //   setIsPasswordChangeSuccess(true); // 비밀번호 변경 성공 상태 설정
         setIsPasswordModalOpen(false); // 비밀번호 변경 모달 닫기
         setIsSuccessPopupOpen(true); // 성공 팝업 열기
       } else {
-        setMessage("비밀번호 변경에 실패했습니다."); // 실패 메시지 설정
-        setIsPasswordChangeSuccess(false); // 비밀번호 변경 실패 상태 설정
+        setPasswordMessage("setPasswordMessage비밀번호 변경에 실패했습니다.");
+        //   setMessage("setMessage비밀번호 변경에 실패했습니다."); // 실패 메시지 설정
+        //   setIsPasswordChangeSuccess(false); // 비밀번호 변경 실패 상태 설정
       }
     } catch (error) {
       console.error("비밀번호 변경 오류:", error); // 네트워크 오류 등 예외 처리
-      setMessage("비밀번호 변경 중 오류가 발생했습니다."); // 오류 메시지 설정
-      setIsPasswordChangeSuccess(false); // 비밀번호 변경 실패 상태 설정
+      setPasswordMessage(
+        "setPasswordMessage 비밀번호 변경 중 오류가 발생했습니다."
+      );
+      //  setMessage("setMessage 비밀번호 변경 중 오류가 발생했습니다."); // 오류 메시지 설정
+      // setIsPasswordChangeSuccess(false); // 비밀번호 변경 실패 상태 설정
     }
   };
 
@@ -144,16 +170,24 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
       });
 
       if (response.ok) {
+        setAccountMessage(
+          "setAccountMessage회원탈퇴가 성공적으로 완료되었습니다."
+        );
         setMessage("회원탈퇴가 성공적으로 완료되었습니다.");
         setIsDeleteModalOpen(false);
         setIsOAuthDeleteModalOpen(false);
         setIsSuccessPopupOpen(true);
+        navigate("/custom-login");
       } else {
-        setMessage("회원탈퇴에 실패했습니다. 다시 시도해주세요.");
+        setAccountMessage(
+          "setAccountMessage 회원탈퇴에 실패했습니다. 다시 시도해주세요."
+        );
+        setMessage("setMessage 회원탈퇴에 실패했습니다. 다시 시도해주세요.");
       }
     } catch (error) {
       console.error("회원탈퇴 오류:", error);
-      setMessage("회원탈퇴 중 오류가 발생했습니다.");
+      setAccountMessage("setAccountMessage 회원탈퇴 중 오류가 발생했습니다.");
+      setMessage("setMessage 회원탈퇴 중 오류가 발생했습니다.");
     }
   };
 
@@ -186,9 +220,10 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   // 성공 팝업 닫기
   const closeSuccessPopup = () => {
     setIsSuccessPopupOpen(false); // 성공 팝업 모달 닫기
-    setIsPasswordChangeSuccess(false); // 비밀번호 변경 성공 초기화
-    setMessage(""); // 메시지 초기화
     navigate("/custom-login"); // 성공 팝업 닫을 때 로그인 화면으로 이동
+    //setIsPasswordChangeSuccess(false); // 비밀번호 변경 성공 초기화
+    //  setMessage(""); // 메시지 초기화
+    // navigate("/custom-login"); // 성공 팝업 닫을 때 로그인 화면으로 이동
   };
 
   // OAuth 사용자를 위한 회원탈퇴 모달 열기
@@ -205,7 +240,10 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
 
     setMessage(""); // 메시지 초기화
   };
-
+  // 닉네임 성공 팝업 닫기
+  const closeNicknameSuccessPopup = () => {
+    setIsNicknameSuccessPopupOpen(false); // 닉네임 성공 팝업 닫기
+  };
   return (
     <div>
       <h1>Mapage</h1>
@@ -220,145 +258,199 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
               type="text"
               value={username} // 현재 닉네임 값 표시
               onChange={(e) => setLocalUsername(e.target.value)} // 사용자가 입력한 값을 로컬 상태에 저장
-              className="username-edit"
+              className="username-text"
+              required
             />
-            <div>
-              <button onClick={handleUsernameSave}>저장</button>
-              <button onClick={() => setIsEditingUsername(false)}>취소</button>
+            <div className="username-button-container">
+              <button
+                className="username-save-button"
+                onClick={handleUsernameSave}
+              >
+                저장
+              </button>
+              <button
+                className="username-cancel-button"
+                onClick={() => setIsEditingUsername(false)}
+              >
+                취소
+              </button>
             </div>
           </>
         ) : (
           // 닉네임 보기 모드일 때
           <>
             <span>{username}</span> {/* 현재 닉네임 표시 */}
-            <button onClick={() => setIsEditingUsername(true)}>수정</button>
+            <button
+              className="username-edit-button"
+              onClick={() => setIsEditingUsername(true)}
+            >
+              수정
+            </button>
           </>
         )}
+        {nicknameMessage && <p>{nicknameMessage}</p>}
+        <Modal
+          isOpen={isNicknameSuccessPopupOpen} // 닉네임 변경 성공 팝업 열림 여부
+          onRequestClose={closeNicknameSuccessPopup} // 팝업 닫기 함수
+          contentLabel="닉네임 변경 성공" // 팝업 설명
+          className="success-popup-modal" // 팝업 스타일 클래스
+          overlayClassName="success-popup-modal-overlay" // 팝업 오버레이 스타일 클래스
+        >
+          <h2>닉네임 변경 성공!</h2>
+          <p>{message}</p> {/* 성공 메시지 표시 */}
+          <button onClick={closeNicknameSuccessPopup}>닫기</button>
+        </Modal>
       </div>
+
       {/* 비밀번호 수정 버튼: OAuth 사용자에게는 비활성화됨 */}
-      {!isOAuthUser && (
-        <div>
-          <button onClick={() => setIsPasswordModalOpen(true)}>
-            비밀번호 수정
-          </button>
-        </div>
-      )}
-      {/* 회원탈퇴 버튼: OAuth 사용자에게는 보이지 않음 */}
       <div>
-        <button
-          type="button"
-          onClick={isOAuthUser ? openOAuthDeleteModal : openDeleteModal}
-        >
-          회원탈퇴
-        </button>
-      </div>
-
-      {/* 비밀번호 변경 모달 */}
-      <Modal
-        isOpen={isPasswordModalOpen} // 모달이 열려 있는지 여부
-        onRequestClose={closePasswordModal} // 모달 닫기 함수
-        contentLabel="비밀번호 변경" // 모달 내용 설명
-        className="mypage-password-modal" // 모달의 스타일 지정 클래스
-        overlayClassName="mypage-password-modal-overlay" // 모달 오버레이의 스타일 지정 클래스
-        portalClassName="ReactModalPortal" // 최상단 계층에서 렌더링
-      >
-        <h2>비밀번호 변경</h2>
-        <form>
-          {/* 비밀번호 변경 성공 여부에 따른 화면 분기 */}
-          {!isPasswordChangeSuccess ? (
-            // 비밀번호 변경 폼
-            <>
-              <input
-                type="password"
-                placeholder="현재 비밀번호"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)} // 현재 비밀번호 입력값 업데이트
-                required
-              />
-              <br></br>
-              <input
-                type="password"
-                placeholder="새 비밀번호"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)} // 새 비밀번호 입력값 업데이트
-                required
-              />
-              <input
-                type="password"
-                placeholder="새 비밀번호 확인"
-                value={confirmNewPassword}
-                onChange={(e) => setConfirmNewPassword(e.target.value)} // 새 비밀번호 확인 입력값 업데이트
-                required
-              />
-              <br></br>
-              <button type="button" onClick={handlePasswordChange}>
-                {/* 비밀번호 변경 요청 버튼 */}
-                비밀번호 변경
+        <div className="mypage-password-action-button-container">
+          {!isOAuthUser && (
+            <div>
+              <button
+                className="mypage-password-action-button"
+                onClick={() => setIsPasswordModalOpen(true)}
+              >
+                비밀번호 수정
               </button>
-            </>
-          ) : (
-            // 비밀번호 변경 성공 시 메시지 표시
-            <p>{message}</p>
+            </div>
           )}
-          {!isPasswordChangeSuccess && message && (
-            // 비밀번호 변경 실패 시 메시지 표시
-            <p className="modal-message">{message}</p>
-          )}
-          <button type="button" onClick={closePasswordModal}>
-            취소
-          </button>
-        </form>
-      </Modal>
-      {/* 회원탈퇴 모달 */}
-      <Modal
-        isOpen={isDeleteModalOpen || isOAuthDeleteModalOpen} // 모달이 열려 있는지 여부
-        onRequestClose={isOAuthUser ? closeOAuthDeleteModal : closeDeleteModal} // 모달 닫기 함수
-        contentLabel="회원탈퇴" // 모달 내용 설명
-        className="password-delete-modal" // 모달의 스타일 지정 클래스
-        overlayClassName="password-delete-modal-overlay" // 모달 오버레이의 스타일 지정 클래스
-        portalClassName="ReactModalPortal" // 최상단 계층에서 렌더링
-      >
-        <h2>회원탈퇴</h2>
-        {isOAuthUser ? (
-          // OAuth 사용자 탈퇴 모달
-          <>
-            <p>계정을 삭제하려면 "탈퇴 원합니다"를 입력하세요.</p>
-            <input
-              type="text"
-              placeholder="탈퇴 원합니다"
-              value={confirmDeletionInput}
-              onChange={(e) => setConfirmDeletionInput(e.target.value)} // 확인 입력 업데이트
-              required
-            />
-          </>
-        ) : (
-          // 일반 사용자 탈퇴 모달
-          <>
-            <p>계정을 삭제하려면 비밀번호를 입력하세요.</p>
-            <input
-              type="password"
-              placeholder="비밀번호"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)} // 회원탈퇴 시 비밀번호 입력값 업데이트
-              required
-            />
-          </>
-        )}
-        <button type="button" onClick={handleAccountDeletion}>
-          {" "}
-          {/* 회원탈퇴 요청 버튼 */}
-          회원탈퇴
-        </button>
-        <button
-          type="button"
-          onClick={isOAuthUser ? closeOAuthDeleteModal : closeDeleteModal}
-        >
-          취소
-        </button>
-        {message && <p className="modal-message">{message}</p>}
-        {/* 상태 메시지 표시 */}
-      </Modal>
+          {/* 회원탈퇴 버튼: OAuth 사용자에게는 보이지 않음 */}
+          <div>
+            <button
+              type="button"
+              onClick={isOAuthUser ? openOAuthDeleteModal : openDeleteModal}
+            >
+              회원탈퇴
+            </button>
+          </div>
 
+          {/* 비밀번호 변경 모달 */}
+          <Modal
+            isOpen={isPasswordModalOpen} // 모달이 열려 있는지 여부
+            // onRequestClose={closePasswordModal} // 모달 닫기 함수
+            onRequestClose={() => setIsPasswordModalOpen(false)} // 모달 닫기
+            contentLabel="비밀번호 변경" // 모달 내용 설명
+            className="mypage-password-modal" // 모달의 스타일 지정 클래스
+            overlayClassName="mypage-password-modal-overlay" // 모달 오버레이의 스타일 지정 클래스
+            portalClassName="ReactModalPortal" // 최상단 계층에서 렌더링
+          >
+            <h2>비밀번호 변경</h2>
+            <form>
+              {/* 비밀번호 변경 성공 여부에 따른 화면 분기 */}
+              {!isPasswordChangeSuccess ? (
+                // 비밀번호 변경 폼
+                <>
+                  <input
+                    type="password"
+                    placeholder="현재 비밀번호"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)} // 현재 비밀번호 입력값 업데이트
+                    required
+                  />
+                  <br></br>
+                  <input
+                    type="password"
+                    placeholder="새 비밀번호"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)} // 새 비밀번호 입력값 업데이트
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="새 비밀번호 확인"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)} // 새 비밀번호 확인 입력값 업데이트
+                    required
+                  />
+                  <br></br>
+                  <button type="button" onClick={handlePasswordChange}>
+                    {/* 비밀번호 변경 요청 버튼 */}
+                    비밀번호 변경
+                  </button>
+                  {passwordMessage && <p>{passwordMessage}</p>}
+                </>
+              ) : (
+                // 비밀번호 변경 성공 시 메시지 표시
+                <p>{message}</p>
+              )}
+              <Modal
+                isOpen={isSuccessPopupOpen} // 성공 팝업 열림 여부
+                onRequestClose={closeSuccessPopup} // 팝업 닫기
+                contentLabel="성공 메시지"
+                className="success-popup-modal"
+                overlayClassName="success-popup-modal-overlay"
+              >
+                <h2>비밀번호 변경이 완료되었습니다!</h2> {/* 성공 메시지 */}
+                <button type="button" onClick={closeSuccessPopup}>
+                  확인
+                </button>
+              </Modal>
+
+              {!isPasswordChangeSuccess && message && (
+                // 비밀번호 변경 실패 시 메시지 표시
+                <p className="modal-message">{message}</p>
+              )}
+              <button type="button" onClick={closePasswordModal}>
+                취소
+              </button>
+            </form>
+          </Modal>
+          {/* 회원탈퇴 모달 */}
+          <Modal
+            isOpen={isDeleteModalOpen || isOAuthDeleteModalOpen} // 모달이 열려 있는지 여부
+            onRequestClose={
+              isOAuthUser ? closeOAuthDeleteModal : closeDeleteModal
+            } // 모달 닫기 함수
+            contentLabel="회원탈퇴" // 모달 내용 설명
+            className="password-delete-modal" // 모달의 스타일 지정 클래스
+            overlayClassName="password-delete-modal-overlay" // 모달 오버레이의 스타일 지정 클래스
+            portalClassName="ReactModalPortal" // 최상단 계층에서 렌더링
+          >
+            <h2>회원탈퇴</h2>
+            {isOAuthUser ? (
+              // OAuth 사용자 탈퇴 모달
+              <>
+                <p>계정을 삭제하려면 "탈퇴 원합니다"를 입력하세요.</p>
+                <input
+                  type="text"
+                  placeholder="탈퇴 원합니다"
+                  value={confirmDeletionInput}
+                  onChange={(e) => setConfirmDeletionInput(e.target.value)} // 확인 입력 업데이트
+                  required
+                />
+              </>
+            ) : (
+              // 일반 사용자 탈퇴 모달
+              <>
+                <p>계정을 삭제하려면 비밀번호를 입력하세요.</p>
+                <input
+                  type="password"
+                  placeholder="비밀번호"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)} // 회원탈퇴 시 비밀번호 입력값 업데이트
+                  required
+                />
+              </>
+            )}
+            <button type="button" onClick={handleAccountDeletion}>
+              {" "}
+              {/* 회원탈퇴 요청 버튼 */}
+              회원탈퇴
+            </button>
+            {accountMessage && <p>{accountMessage}</p>}
+            <button
+              type="button"
+              onClick={isOAuthUser ? closeOAuthDeleteModal : closeDeleteModal}
+            >
+              취소
+            </button>
+
+            {message && <p className="modal-message">{message}</p>}
+            {/* 상태 메시지 표시 */}
+          </Modal>
+        </div>
+      </div>
       {/* 성공 팝업 모달 */}
       <Modal
         isOpen={isSuccessPopupOpen} // 성공 팝업 모달 열림 여부
@@ -368,7 +460,11 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
         overlayClassName="password-modal-overlay" // 모달 오버레이의 스타일 지정 클래스
       >
         <h2>{message}</h2> {/* 성공 메시지 표시 */}
-        <button type="button" onClick={closeSuccessPopup}>
+        <button
+          className="all-close-button"
+          type="button"
+          onClick={closeSuccessPopup}
+        >
           닫기
         </button>
       </Modal>
