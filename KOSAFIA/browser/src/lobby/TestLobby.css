@@ -16,16 +16,19 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+  gap: 20px; /* 버튼과 필터 박스, 검색창 간 기본 간격 */
+
 }
 
 .create-room-button {
-  background-color: #f5a623;
-  color: #fff;
-  padding: 10px 20px;
+  background-color: #efb659;
+  color: #212121;
+  padding: 10px 80px;
   border: none;
   cursor: pointer;
   font-size: 16px;
-  border-radius: 5px;
+  border-radius: 4px;
+  
 }
 
 .room-list {
@@ -101,8 +104,8 @@
 }
 
 .enter-button {
-  background-color: #f5a623;
-  color: #fff;
+  background-color: #efb659;
+  color: #212121;
   padding: 5px 80px;
   border: none;
   border-radius: 5px;
@@ -177,8 +180,8 @@
 }
 
 .modal-buttons button:last-child {
-  background: #f5a623;
-  color: #fff;
+  background-color: #efb659;
+  color: #212121;
 }
 
 .password-section {
@@ -224,4 +227,76 @@
   border: 1px solid #555;
   background: #222;
   color: #fff;
+}
+
+
+
+/* 검색창 스타일 */
+.search-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-left: auto;
+  position: relative;
+  left: -30px; /* 왼쪽으로 이동 */
+}
+
+.search-bar input {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background-color: #222;
+  color: #fff;
+  width: 250px;
+  transition: border-color 0.3s ease;
+}
+
+.search-bar input::placeholder {
+  color: #888;
+}
+
+.search-bar input:focus {
+  border-color: #f5a623;
+  outline: none;
+}
+
+/* 필터 박스 스타일 */
+.filter-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #555; /* 테두리 색상 */
+  border-radius: 5px; /* 둥근 모서리 */
+  padding: 10px 15px;
+  background-color: #2a2a2a; /* 박스 배경색 */
+  color: #ffffffad; /* 텍스트 색상 */
+  cursor: pointer;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.filter-box:hover {
+  background-color: #333; /* 호버 시 배경색 */
+  border-color: #f5a623; /* 호버 시 테두리 강조 */
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  gap: 35px; /* 체크박스와 텍스트 간격 */
+  cursor: pointer;
+  font-size: 14px; /* 텍스트 크기 */
+}
+
+.filter-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #f5a623; /* 체크박스 색상 */
+  cursor: pointer;
+}
+
+.room-no-results {
+  text-align: center;
+  color: #888;
+  font-size: 16px;
+  margin-top: 20px;
 }

@@ -34,8 +34,6 @@ public class GameSocketController {
     @Autowired
     GameService gameService;
 
-    String imageUrl = null;
-
     // 각 방의 타이머를 관리할 Thread Map
     private final Map<Integer, Thread> roomTimers = new ConcurrentHashMap<>();
 
@@ -58,7 +56,7 @@ public class GameSocketController {
     // 채팅 메시지 처리 - @Payload 어노테이션 추가 및 디버그 로그 추가
     @MessageMapping("/game.chat.send/{roomKey}")
     public void handleGameChat(@DestinationVariable("roomKey") Integer roomKey,
-        @Payload ChatMessage message) {
+            @Payload ChatMessage message) {
         try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null) {
@@ -236,6 +234,14 @@ public class GameSocketController {
             int initialTime = room.getDefaultTimes().get(newStatus);
             room.setCurrentTime(initialTime);
 
+
+            String imageUrl = null;
+            
+            if (newStatus.toString() == "NIGHT" || newStatus.toString() == "DAY") {
+                imageUrl = "/img/change_" + newStatus + ".jpeg";
+            }
+            // gameService.broadcastGameStatus(roomKey, imageUrl);
+
             // 상태 변경 알림
             messagingTemplate.convertAndSend("/topic/game.state." + roomKey,
                     new GameStateResponse(
@@ -244,10 +250,11 @@ public class GameSocketController {
                             initialTime,
                             room.getTurn(),
                             true,
-                            newStatus.toString() + " 시간이 시작되었습니다."));
+                            newStatus.toString() + " 시간이 시작되었습니다.", imageUrl));
 
-            imageUrl = "/img/change_" + newStatus + ".jpeg";
-            gameService.broadcastGameStatus(roomKey, imageUrl);
+
+
+
             startRoomTimer(roomKey);
 
         } catch (Exception e) {
@@ -324,7 +331,8 @@ public class GameSocketController {
             Integer currentTime, // 타이머 정보 추가
             Integer turn, // 일차 정보 추가
             boolean success,
-            String message) {
+            String message,
+            String imageUrl) {
     }
 
     @MessageMapping("/game.vote/{roomKey}")
@@ -377,7 +385,7 @@ public class GameSocketController {
 
         String resultMsg = null;
 
-       try {
+        try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null)
                 return;
@@ -399,13 +407,12 @@ public class GameSocketController {
                     mostVotedPlayer,
                     room.getVoteStatus(),
                     true,
-                    "투표 결과가 처리되었습니다.");
+                    null);
 
             messagingTemplate.convertAndSend(
-                "/topic/game.vote.result." + roomKey,
-                response
-            );
-            //이거 받은 쪽에서 결과 처리로 게임 스테이트 업데이트 처리를 다르게 하자. 그게 맞다 
+                    "/topic/game.vote.result." + roomKey,
+                    response);
+            // 이거 받은 쪽에서 결과 처리로 게임 스테이트 업데이트 처리를 다르게 하자. 그게 맞다
 
             messagingTemplate.convertAndSend(
                     "/topic/game.players." + roomKey,
@@ -413,13 +420,12 @@ public class GameSocketController {
 
             // 시스템 메시지 보내기 전에 음...
             messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
-                "SYSTEM",
-                resultMsg,
-                room.getGameStatus().toString(),
-                roomKey,
-                0,
-                true
-            ));
+                    "SYSTEM",
+                    resultMsg,
+                    room.getGameStatus().toString(),
+                    roomKey,
+                    0,
+                    true));
 
             room.clearVotes();
 
@@ -447,63 +453,38 @@ public class GameSocketController {
 
         try {
             Room room = roomRepository.getRoom(roomKey);
-            if (room == null)
-                return;
+            if (room == null) return;
 
-            // 밤으로 변경
-            room.setGameStatus(GameStatus.FOURTH_DELAY);
-            // 최종 투표 결과 처리
+            log.info("최종 투표 결과 처리 시작 - 방: {}, 현재 상태: {}", roomKey, room.getGameStatus());
+            
             Player executedPlayer = room.processFinalVoteResult();
-
-            // 일반 투표 초기화
+            log.info("processFinalVoteResult 완료 - 방: {}, 처형된 플레이어: {}", roomKey, 
+                executedPlayer != null ? executedPlayer.getUsername() : "없음");
+            
             room.clearVotes();
-            messagingTemplate.convertAndSend("/topic/game.vote.result." + roomKey, room.getVoteStatus());
+            log.info("투표 초기화 완료 - 방: {}, 현재 상태: {}", roomKey, room.getGameStatus());
+            
+            String resultMessage = executedPlayer != null ? 
+                executedPlayer.getUsername() + "님이 처형되었습니다." : 
+                "투표 결과 처형되지 않았습니다.";
+            
+            imageUrl = executedPlayer != null ? 
+                "/img/dead_by_vote.png" : 
+                "/img/survive_from_vote.png";
 
-            gameService.checkGameEnd(roomRepository.getRoom(roomKey).getPlayers(), roomKey);
-
-            // 클라에 뿌리기
+            // 하나의 응답으로 통합
             FinalVoteResultResponse response = new FinalVoteResultResponse(
-                    room.getGameStatus().toString(),
-                    room.getPlayers(),
-                    room.getAgreeVotes(),
-                    room.getDisagreeVotes(),
-                    executedPlayer != null,
-                    executedPlayer != null ? executedPlayer.getUsername() + "님이 처형되었습니다." : "투표 결과 처형되지 않았습니다.");
-            messagingTemplate.convertAndSend(
-                    "/topic/game.finalvote.result." + roomKey,
-                    response);
-
-            // 투표로 인한 처형 이미지 전달
-            imageUrl = "/img/dead_by_vote.png";
-            gameService.broadcastGameStatus(roomKey, imageUrl);
-
-            // 걍 플레이어 업데이트
-            messagingTemplate.convertAndSend("/topic/game.players." + roomKey, room.getPlayers());
-
-            if (executedPlayer != null) {
-                // 시스템 메시지 걍 보내
-                messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
-                        "SYSTEM",
-                        executedPlayer.getUsername() + "님이 처형되었습니다.",
-                        room.getGameStatus().toString(),
-                        roomKey,
-                        0,
-                        true));
-
-            } else {
-                // 시스템 메시지 걍 보내
-                messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
-                        "SYSTEM",
-                        "투표 결과 처형되지 않았습니다.",
-                        room.getGameStatus().toString(),
-                        roomKey,
-                        0,
-                        true));
-
-                // 투표로 인한 처형 X 이미지 전달
-                imageUrl = "/img/survive_from_vote.png";
-                gameService.broadcastGameStatus(roomKey, imageUrl);
-            }
+                room.getGameStatus().toString(),
+                room.getPlayers(),
+                room.getAgreeVotes(),
+                room.getDisagreeVotes(),
+                executedPlayer != null,
+                resultMessage,
+                imageUrl  // 이미지 URL도 포함
+            );
+            
+            messagingTemplate.convertAndSend("/topic/game.finalvote.result." + roomKey, response);
+            log.info("최종 투표 결과 전송 완료 - 방: {}, 현재 상태: {}", roomKey, room.getGameStatus());
 
         } catch (Exception e) {
             log.error("최종 투표 결과 처리 실패:", e);
@@ -517,7 +498,8 @@ public class GameSocketController {
             int agreeVotes,
             int disagreeVotes,
             boolean isExecuted,
-            String message) {
+            String message,
+            String imageUrl) {
     }
 
     // 타이머 관련 메시지 처리
@@ -558,7 +540,22 @@ public class GameSocketController {
                             Math.abs(request.adjustment()),
                             request.adjustment() > 0 ? "증가" : "감소"));
 
+            // 타이머 수정 후 시스템 메시지도 함께 전송
             messagingTemplate.convertAndSend("/topic/game.timer." + roomKey, response);
+            
+            // 시스템 메시지 전송
+            SystemMessage systemMessage = new SystemMessage(
+                "System",
+                String.format("%s 님이 시간을 %d초 %s시켰습니다.",
+                    player.getUsername(),
+                    Math.abs(request.adjustment()),
+                    request.adjustment() > 0 ? "증가" : "감소"),
+                room.getGameStatus().toString(),
+                roomKey,
+                0,
+                true
+            );
+            messagingTemplate.convertAndSend("/topic/game.system." + roomKey, systemMessage);
 
         } catch (Exception e) {
             log.error("타이머 수정 실패:", e);
@@ -593,6 +590,7 @@ public class GameSocketController {
             @Payload Player playerData) {
         log.info("플레이어 입장 - 방: {}, 플레이어: {}", roomKey, playerData);
 
+        String imageUrl = null;
         try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null) {
@@ -618,7 +616,8 @@ public class GameSocketController {
                                 room.getCurrentTime(),
                                 room.getTurn(),
                                 true,
-                                "게임이 시작되었습니다." + room.getGameStatus().toString() + "시간입니다."));
+                                "게임이 시작되었습니다." + room.getGameStatus().toString() + "시간입니다.",
+                                imageUrl));
 
                 // 타이머 시작
                 startRoomTimer(roomKey);

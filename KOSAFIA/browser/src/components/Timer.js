@@ -10,25 +10,37 @@ const Timer = ({
   onModifyTime, // 시간 조절 콜백
   canModifyTime, // 시간 조절 가능 여부
   currentPlayerIsAlive,
+  isHost,
 }) => {
-  const [stageInfo, setStageInfo] = useState(GAME_PHASES[gameStatus]);
+    // gameStatus가 없을 때의 기본값 처리
+    const defaultStageInfo = {
+      name: "대기중",
+      image: "/img/discussion.png",  // 기본 이미지 경로
+      duration: 5
+    };
+  const [stageInfo, setStageInfo] = useState(defaultStageInfo);
 
   // gameStatus 변경 시 초기화
   useEffect(() => {
-    setStageInfo(GAME_PHASES[gameStatus] || { name: "알 수 없음", image: "" });
+    if (gameStatus && GAME_PHASES[gameStatus]) {
+      setStageInfo(GAME_PHASES[gameStatus]);
+    }
   }, [gameStatus]);
 
   // 타이머가 0이 되면 종료 처리
   useEffect(() => {
-    if (time <= 0) {
+    if (time <= 0 && onTimerEnd && isHost) {
       onTimerEnd();
     }
-  }, [time, onTimerEnd]);
+  }, [time, onTimerEnd, isHost]);
 
   return (
     <div className="timer">
       <div className="stage-image">
-        <img src={stageInfo.image} alt={stageInfo.name} />
+        <img 
+          src={stageInfo?.image || defaultStageInfo.image} 
+          alt={stageInfo?.name || defaultStageInfo.name} 
+        />
       </div>
       <div className="time-display">
         {gameStatus === "DAY" && canModifyTime && (
@@ -58,7 +70,7 @@ const Timer = ({
         )}
       </div>
       <div className="stage-info">
-        {dayCount}일차 {stageInfo.name}
+        {dayCount}일차 {stageInfo?.name || defaultStageInfo.name}
       </div>
     </div>
   );

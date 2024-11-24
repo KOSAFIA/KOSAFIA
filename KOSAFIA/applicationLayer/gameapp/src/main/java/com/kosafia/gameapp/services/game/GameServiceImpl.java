@@ -30,7 +30,7 @@ public class GameServiceImpl implements GameService {
         String totalMessage = null;
         String policeMessage = null;
         String resultCase = "none";
-        String imageUrl = null;
+        String stageImageUrl = null;
 
         for (Player player : players) {
             // 1. 마피아, 경찰, 의사의 행동을 정리
@@ -100,24 +100,25 @@ public class GameServiceImpl implements GameService {
 
         // 여기에 소켓 추가해야. players 반복문 횟수만큼 쏘는 현상을 방지함.
 
+        String interactionImageUrl = null;
+
         switch (resultCase) {
             case "heal":
                 messagingTemplate.convertAndSend(
                         "/topic/game.sound." + roomKey,
                         Map.of("sound", "heal"));
 
-                imageUrl = "/img/survive_from_doctor.png";
-                broadcastGameStatus(roomKey, imageUrl);
+                interactionImageUrl = "/img/survive_from_doctor.png";
+                interactionBroadcastGameStatus(roomKey, interactionImageUrl);
                 break;
             case "dead":
                 messagingTemplate.convertAndSend(
                         "/topic/game.sound." + roomKey,
                         Map.of("sound", "gun"));
 
-                if (imageUrl != "/img/mafia_win") {
-                    imageUrl = "/img/dead_by_mafia.png";
-                    broadcastGameStatus(roomKey, imageUrl);
-                }
+                interactionImageUrl = "/img/dead_by_mafia.png";
+                interactionBroadcastGameStatus(roomKey, interactionImageUrl);
+
                 break;
             default:
                 break;
@@ -131,8 +132,7 @@ public class GameServiceImpl implements GameService {
                 roomKey,
                 0,
                 true));
-
-        // 김남영 경찰 조사 결과 메시지 추가
+        
         messagingTemplate.convertAndSend("/topic/game.police." + roomKey, new SystemMessage(
                 "POLICE",
                 policeMessage,
@@ -146,6 +146,9 @@ public class GameServiceImpl implements GameService {
     // 게임 승리 조건을 체크하는 함수
     @Override
     public void checkGameEnd(List<Player> players, Integer roomKey) {
+
+        String endingImageUrl = null;
+
         long mafiaCount = players.stream()
                 .filter(player -> player.getRole() == Role.MAFIA && player.isAlive())
                 .count();
@@ -153,31 +156,16 @@ public class GameServiceImpl implements GameService {
                 .filter(player -> player.getRole() != Role.MAFIA && player.isAlive())
                 .count();
 
-        String imageUrl = null;
-
         // 마피아 승리 조건
         if (mafiaCount >= otherCount) {
-            imageUrl = "/img/mafia_win.png";
+            endingImageUrl = "/img/mafia_win.png";
         }
         // 시민 승리 조건
         else if (mafiaCount == 0) {
-            imageUrl = "/img/citizen_win.png";
+            endingImageUrl = "/img/citizen_win.png";
         }
-
         // 브로드캐스트
-        broadcastGameStatus(roomKey, imageUrl);
-    }
-
-    @Override
-    public void broadcastGameStatus(Integer roomKey, String imageUrl) {
-        Map<String, Object> message = new HashMap<>();
-
-        if (imageUrl != null) {
-            message.put("imageUrl", imageUrl); // 이미지 URLs
-        }
-
-        // WebSocket 메시지 브로드캐스트
-        messagingTemplate.convertAndSend("/topic/game.state." + roomKey, message);
+        endingBroadcastGameStatus(roomKey, endingImageUrl);
     }
 
     // ===============김남영 추가=============
@@ -197,4 +185,40 @@ public class GameServiceImpl implements GameService {
         messagingTemplate.convertAndSend("/topic/game.players." + roomKey, players);
     }
     // =========================================
+
+    @Override
+    public void interactionBroadcastGameStatus(Integer roomKey, String interactionImageUrl) {
+        Map<String, Object> message = new HashMap<>();
+
+        if (interactionImageUrl != null) {
+            message.put("interactionImageUrl", interactionImageUrl);
+        }
+
+        // WebSocket 메시지 브로드캐스트
+        messagingTemplate.convertAndSend("/topic/game.state." + roomKey, message);
+    }
+
+    @Override
+    public void stageBroadcastGameStatus(Integer roomKey, String stageImageUrl) {
+        Map<String, Object> message = new HashMap<>();
+
+        if (stageImageUrl != null) {
+            message.put("stageImageUrl", stageImageUrl);
+        }
+
+        // WebSocket 메시지 브로드캐스트
+        messagingTemplate.convertAndSend("/topic/game.state." + roomKey, message);
+    }
+
+    @Override
+    public void endingBroadcastGameStatus(Integer roomKey, String endingImageUrl) {
+        Map<String, Object> message = new HashMap<>();
+
+        if (endingImageUrl != null) {
+            message.put("endingImageUrl", endingImageUrl);
+        }
+
+        // WebSocket 메시지 브로드캐스트
+        messagingTemplate.convertAndSend("/topic/game.state." + roomKey, message);
+    }
 }

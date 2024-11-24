@@ -14,7 +14,7 @@
   max-width: 80%;
 }
 
-.other-message {
+.game-other-message {
   justify-content: flex-start; /* 본인 메시지는 오른쪽 정렬 */
 }
 

@@ -9,6 +9,7 @@ const TestLobby = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [rooms, setRooms] = useState([]);
+  const [filteredRooms, setFilteredRooms] = useState([]); // 필터링된 방 리스트
   const [roomDetails, setRoomDetails] = useState({
     roomName: "",
     maxPlayers: 8,
@@ -17,6 +18,8 @@ const TestLobby = () => {
   });
   const [selectedRoomKey, setSelectedRoomKey] = useState(null);
   const [inputPassword, setInputPassword] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState(""); // 검색 키워드
+  const [showWaitingOnly, setShowWaitingOnly] = useState(false); // 대기방만 보기 상태
 
   // 방 목록 조회
   const fetchRooms = async () => {
@@ -29,6 +32,8 @@ const TestLobby = () => {
 
       //   setRooms(response.data);
       setRooms(roomsArray); // rooms 상태에 배열로 저장
+      setFilteredRooms(roomsArray); // 필터 초기화
+
     } catch (error) {
       console.error("방 목록 조회 실패 - 오류:", error);
     }
@@ -37,6 +42,33 @@ const TestLobby = () => {
   useEffect(() => {
     fetchRooms();
   }, []);
+
+  useEffect(() => {
+    filterRooms(); // 검색어 변경 시 필터링 실행
+  }, [ showWaitingOnly, rooms]);
+
+  // 함수 정의
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      filterRooms(); // Enter 키가 눌렸을 때 필터링 로직 실행
+    }
+  };
+
+  // 방 필터링
+  const filterRooms = () => {
+    let filtered = rooms;
+
+    if (showWaitingOnly) {
+      filtered = filtered.filter(room => !room.isPlaying); // 게임 중인 방 제외
+    }
+
+    if (searchKeyword) {
+      filtered = filtered.filter(room => room.roomName.includes(searchKeyword)); // 검색어 필터링
+    }
+
+    setFilteredRooms(filtered);
+  };
+
 
   // Input 값이 변경될 때 호출되는 함수
   const handleInputChange = (e) => {
@@ -149,10 +181,30 @@ const TestLobby = () => {
     <div className="room-list-container">
       <header className="header">
         <button className="create-room-button" onClick={openModal}>방 만들기</button>
+        <div className="filter-box">
+          <label className="filter-label">
+          대기방만 보기
+            <input
+              type="checkbox"
+              checked={showWaitingOnly}
+              onChange={() => setShowWaitingOnly(!showWaitingOnly)}
+            />
+          </label>
+        </div>
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="검색어를 입력하세요"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)} // 검색어 상태 업데이트
+            onKeyDown={(e) => handleKeyDown(e)} // Enter 키 입력 처리
+          />
+        </div>
       </header>
 
       <div className="room-list">
-        {rooms.map(room => (
+      {filteredRooms.length > 0 ? (
+        filteredRooms.map(room => (
           <div className="room-item" key={room.roomKey}>
             <div className="room-title-container">
              
@@ -178,7 +230,11 @@ const TestLobby = () => {
               입장
             </button>
           </div>
-        ))}
+        ))
+      ) : (
+        <div className="room-no-results">검색 결과가 없습니다.</div>
+      )}
+      
       </div>
 
       {/* 방 생성 모달 */}

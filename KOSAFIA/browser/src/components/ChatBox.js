@@ -1,5 +1,4 @@
-// ChatBox.js
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } from "react";
 import "../styles/components/ChatBox.css";
 import SendButton from "./SendButton";
 import MessageList from "./MessageList";
@@ -13,8 +12,21 @@ const ChatBox = forwardRef(({
 }, ref) => {
   const [localMessages, setLocalMessages] = useState([]);
   const [input, setInput] = useState("");
+  const messageListRef = useRef(null);
 
-  // Hook은 조건문 이전에 호출
+  const scrollToBottom = () => {
+    if (messageListRef.current) {
+      const scrollElement = messageListRef.current.querySelector('.message-list');
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, localMessages]);
+
   useImperativeHandle(ref, () => ({
     receiveMessage: (message) => {
       const formattedMessage = {
@@ -59,15 +71,17 @@ const ChatBox = forwardRef(({
   });
 
   return (
-    <div className="chat-box">
+    <div className="chat-box" ref={messageListRef}>
       {gameStatus === 'NIGHT' && (
         <img src="/img/light.png" alt="Night Effect" className="night-image" />
       )}
-      <MessageList 
-        messages={filteredMessages}
-        currentPlayer={currentPlayer}
-        currentRole={currentPlayer?.role}
-      />
+      <div className="messages-container">
+        <MessageList 
+          messages={filteredMessages}
+          currentPlayer={currentPlayer}
+          currentRole={currentPlayer?.role}
+        />
+      </div>
       <div className="input-area">
         <input
           type="text"
