@@ -77,6 +77,8 @@ public class RoomSocketController {
 
             } else {
                 messagingTemplate.convertAndSend("/topic/room.players." + roomKey, room.getPlayers());
+
+                messagingTemplate.convertAndSend("/topic/room.chat." + roomKey, new ChatMessage("JOIN", player.getUsername() + " 님께서 입장하셨습니다", roomKey));
             }
         } else {
             log.warn("앗! 방 {}을 찾을 수 없어요", roomKey);

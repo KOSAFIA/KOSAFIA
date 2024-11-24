@@ -159,6 +159,7 @@
 
 /* 채팅 전체 래퍼 */
 .chat-wrapper {
+  margin: 4px 0;
   display: flex;
   flex-direction: column; /* 닉네임과 채팅을 세로로 배치 */
   align-items: flex-start; /* 기본적으로 왼쪽 정렬 */
@@ -177,7 +178,8 @@
 
 /* 채팅 메시지 */
 .chat-message {
-  display: inline-block;
+  /* display: inline-block; */
+  display: flex;
   max-width: 60%; /* 최대 너비 제한 */
   word-break: break-word; /* 긴 단어 줄바꿈 */
   padding: 10px;
@@ -193,6 +195,7 @@
   border-bottom-right-radius: 0;
   text-align: left;
   margin-right: 10px;
+  justify-content: flex-end;
 }
 
 /* 상대방 메시지 */
@@ -203,6 +206,7 @@
   border-bottom-left-radius: 0;
   text-align: left;
   margin-left: 10px;
+  justify-content: flex-start;
 }
 
 /* 채팅 글자 수에 따라 크기 조정 */
@@ -318,3 +322,20 @@
     letter-spacing: 1px;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   }
+
+/* JOIN 메시지 스타일 */
+.room-system-message {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 4px 0;  /* 마진 축소 */
+}
+
+.room-system-content {
+    background-color: rgba(0, 0, 0, 0.5);  /* 까만 배경 */
+    color: #ff4444;  /* 빨간 글씨 */
+    padding: 4px 8px;  /* 패딩 축소 */
+    border-radius: 4px;
+    font-size: 0.9em;
+    text-align: center;
+}

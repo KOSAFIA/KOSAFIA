@@ -32,6 +32,7 @@ const PlayerCard = ({
   voteStatus,
   finalVotes,
   myVoteTarget,
+  myFinalVote,
 }) => {
   const [isRoleMemoOpen, setIsRoleMemoOpen] = useState(false);
   const [avatar, setAvatar] = useState("/img/default-avatar.png");
@@ -59,6 +60,7 @@ const PlayerCard = ({
     }
   }, [isNight]);
 
+
   // 죽은 경우(isAlive = false) playercard에 이팩트 추가
   useEffect(() => {
     const cardElement = cardRef.current;
@@ -70,7 +72,7 @@ const PlayerCard = ({
     }
   }, [isAlive]);
 
-
+  
   // 역할 메모 창 열기
   const handleRoleMemoOpen = () => setIsRoleMemoOpen(true);
 
@@ -109,6 +111,21 @@ const PlayerCard = ({
     setIsRoleMemoOpen(false);
   };
 
+  // gameStatus가 VOTE로 변경될 때마다 투표 관련 상태 초기화
+  useEffect(() => {
+    if (gameStatus === "VOTE") {
+      // 부모 컴포넌트의 상태도 함께 초기화
+      if (typeof voteStatus === 'object') {
+        Object.keys(voteStatus).forEach(key => {
+          voteStatus[key] = 0;
+        });
+      }
+      if (typeof myVoteTarget === 'number') {
+        myVoteTarget = null;
+      }
+    }
+  }, [gameStatus]);
+
   return (
     <div>
       <div
@@ -119,7 +136,7 @@ const PlayerCard = ({
           isNight && currentPlayerRole !== "CITIZEN" && isAlive ? "clickable" : ""} ${
           // VOTE 상태
           gameStatus === "VOTE" 
-            ? isAlive && currentPlayerNum !== index + 1 
+            ? isAlive 
               ? "vote-clickable" 
               : "" 
             : ""} ${
@@ -159,7 +176,7 @@ const PlayerCard = ({
         <div className="player-name">{name}</div>
         
         {/* 투표 버튼 */}
-        {gameStatus === "VOTE" && isAlive && currentPlayerNum !== index + 1 && (
+        {gameStatus === "VOTE" && isAlive && currentPlayer.isAlive && (
           <button 
             className={`vote-button ${myVoteTarget === index + 1 ? 'voted' : ''}`}
             onClick={(e) => {
@@ -179,25 +196,25 @@ const PlayerCard = ({
         )}
 
         {/* 찬반 투표 버튼 */}
-        {gameStatus === "FINALVOTE" && isAlive && isVoteTarget && (
+        {gameStatus === "FINALVOTE" && isAlive && isVoteTarget && currentPlayer.isAlive && (
           <div className="final-vote-buttons">
             <button 
-              className={`agree-btn ${finalVotes[currentPlayerNum] === true ? 'selected' : ''}`}
+              className={`agree-btn ${myFinalVote === true ? 'selected' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
-                onFinalVoteClick?.(true);
+                onFinalVoteClick(true);
               }}
             >
-              찬성
+              {myFinalVote === true ? '✓ 찬성' : '찬성'}
             </button>
             <button 
-              className={`disagree-btn ${finalVotes[currentPlayerNum] === false ? 'selected' : ''}`}
+              className={`disagree-btn ${myFinalVote === false ? 'selected' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
-                onFinalVoteClick?.(false);
+                onFinalVoteClick(false);
               }}
             >
-              반대
+              {myFinalVote === false ? '✓ 반대' : '반대'}
             </button>
           </div>
         )}

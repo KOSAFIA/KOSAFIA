@@ -128,16 +128,26 @@ const handleLeaveRoom = async () => {
 
                             return (
                                 <div key={index} className="chat-wrapper">
-                                    {msg.username !== currentUsername && (
-                                        <div className="chat-username">{msg.username}</div> /* 닉네임을 바깥에 표시   */
+                                    {msg.username === 'JOIN' ? (
+                                        // 시스템 메시지 (입장)
+                                        <div className="chat-message room-system-message">
+                                            <div className="chat-content room-system-content">
+                                                {msg.content}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        // 일반 유저 메시지
+                                        <>
+                                            {msg.username !== currentUsername && (
+                                                <div className="chat-username">{msg.username}</div>
+                                            )}
+                                            <div className={`chat-message ${
+                                                msg.username === currentUsername ? 'my-message' : 'other-message'
+                                            }`}>
+                                                <div className="chat-content">{msg.content}</div>
+                                            </div>
+                                        </>
                                     )}
-                                    <div
-                                        className={`chat-message ${
-                                            msg.username === currentUsername ? 'my-message' : 'other-message'
-                                        }`}
-                                    >
-                                        <div className="chat-content">{msg.content}</div>
-                                    </div>
                                 </div>
                             );
                         })}
