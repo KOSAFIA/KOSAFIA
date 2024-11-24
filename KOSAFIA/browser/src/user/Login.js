@@ -19,10 +19,6 @@ function Login() {
   const [error, setError] = useState(""); // 오류 메시지를 저장하는 상태
   const navigate = useNavigate(); // 페이지 이동을 위한 navigate 함수
   const BASE_URL = process.env.REACT_APP_API_URL;
-  // 서버 URL 환경 변수
-  // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
-  // const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
-  //const BASE_URL = process.env.REACT_APP_API_URL || "https://ba09-115-90-99-121.ngrok-free.app";
 
   // 로그인 처리 함수
   const handleLogin = async (e) => {
@@ -57,13 +53,13 @@ function Login() {
 
   return (
     <MDBContainer className="my-login-background">
-      {" "}
+  
       {/* 로그인 배경 컨테이너 */}
       <MDBCard className="common-card login-card d-flex flex-row">
-        {" "}
+      
         {/* 로그인 카드 스타일 */}
         <MDBCol md="6">
-          {" "}
+         
           {/* 왼쪽 이미지 영역 */}
           <MDBCardImage
             src={`${process.env.PUBLIC_URL}/img/loginmain.png`} // 이미지 경로 설정
@@ -72,18 +68,18 @@ function Login() {
           />
         </MDBCol>
         <MDBCol md="6" className="my-login-card-body">
-          {" "}
+       
           {/* 오른쪽 로그인 폼 영역 */}
           <MDBCardBody className="d-flex flex-column align-items-center">
-            {" "}
+      
             {/* 카드 내부 스타일 */}
-            <div className="d-flex flex-row mt-2">
-              {" "}
+            <div className="login-icon">
+             
               {/* 로고와 제목 영역 */}
-              <MDBIcon
-                fas
-                icon="cubes fa-3x me-3"
-                style={{ color: "#ff6219" }} // 아이콘 스타일
+              <img
+                src="/img/mafia_icon.png" // `public` 폴더 기준 경로
+                alt="Mafia Icon"
+                style={{ width: "100px", height: "100px"}}
               />
               <span className="h1 fw-bold">Login</span> {/* 로그인 제목 */}
             </div>

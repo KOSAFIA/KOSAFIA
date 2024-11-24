@@ -17,10 +17,6 @@ function LoginOk() {
   const [isOAuthUser, setIsOAuthUser] = useState(false); // OAuth 사용자 여부를 저장하는 상태 정의
   const BASE_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate(); // 페이지 이동을 위한 navigate 함수입니다.
-  // 서버 URL 환경 변수
-  // const BASE_URL = process.env.REACT_APP_API_URL || "http://192.168.1.119:8080";
-  // const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
-  //const BASE_URL = process.env.REACT_APP_API_URL || "https://ba09-115-90-99-121.ngrok-free.app";
 
   // Google API 초기화
   useEffect(() => {
@@ -96,43 +92,11 @@ function LoginOk() {
     fetchUserData(); // 사용자 데이터를 가져오는 함수를 호출합니다.
   }, [navigate]); // navigate가 변경될 때 이 효과가 다시 실행됩니다.
 
-  // // 컴포넌트가 처음 렌더링될 때 사용자 정보를 가져오는 함수입니다.
-  // useEffect(() => {
-  //   // 로그인한 사용자 정보 가져오기와 CORS 확인
-  //   const fetchUserInfo = async () => {
-  //     try {
-  //       await CheckCors(); // CORS 확인을 위해 CheckCors 호출
-
-  //       const response = await fetch(
-  //         `${BASE_URL}/api/user/profile`,
-
-  //         //"http://192.168.1.119:8080/api/user/profile",
-  //         {
-  //           method: "GET",
-  //           headers: { "Content-Type": "application/json" },
-  //           credentials: "include", // 세션 쿠키를 포함하여 서버에 요청
-  //         }
-  //       );
-
-  //       if (response.ok) {
-  //         const data = await response.json(); // 서버로부터 받은 데이터를 JSON 형태로 파싱
-  //         console.log("받은 사용자 데이터:", data); // 데이터 확인 로그 추가
-  //         setUserEmail(data.useremail); // 사용자 이메일 상태 업데이트
-  //         setUsername(data.username); // 사용자 닉네임 상태를 업데이트합니다.
-  //         setIsOAuthUser(!!data.provider); // provider 필드가 있으면 OAuth 사용자임을 true로 설정
-  //       } else {
-  //         console.error("사용자 정보를 불러오는 데 실패했습니다.");
-  //         navigate("/custom-login"); // 로그인 실패 시 로그인 페이지로 리디렉션
-  //       }
-  //     } catch (error) {
-  //       console.error("사용자 정보 로드 오류:", error);
-  //       navigate("/custom-login"); // 오류 발생 시 로그인 페이지로 리디렉션
-  //     }
-  //   };
   // 사용자 정보를 가져오는 함수 (fetchUserInfo)
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
+        // await CheckCors();
         const response = await axios.get(`${BASE_URL}/api/user/profile`, {
           withCredentials: true, // 쿠키 포함
         });
@@ -211,12 +175,12 @@ function LoginOk() {
           <button className="mypage-button" onClick={openMypageModal}>
             마이페이지
           </button>
-          <button className="GameRoombutton" onClick={goToGameRoom}>
+          {/* <button className="GameRoombutton" onClick={goToGameRoom}>
             게임방
-          </button>
-          <button className="TestLobbybutton" onClick={goToTestLobby}>
+          </button> */}
+          {/* <button className="TestLobbybutton" onClick={goToTestLobby}>
             테스트로비
-          </button>
+          </button> */}
           <button className="logout-button" onClick={handleLogout}>
             로그아웃
           </button>
