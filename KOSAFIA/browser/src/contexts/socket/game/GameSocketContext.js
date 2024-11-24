@@ -300,8 +300,8 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         clientRef.current.subscribe(
           `/topic/game.state.${roomKey}`,
           (socketMsg) => {
-            const {gameStatus, players, currentTime, turn: dayCount, success, message: systemMessage, imageUrl} = JSON.parse(socketMsg.body);
-            if (success) {setGameStatus(gameStatus);setPlayers(players);setGameTime(currentTime);setDayCount(dayCount);setImageUrl(imageUrl);
+            const {gameStatus, players, currentTime, turn: dayCount, success, message: systemMessage} = JSON.parse(socketMsg.body);
+            if (success) {setGameStatus(gameStatus);setPlayers(players);setGameTime(currentTime);setDayCount(dayCount);
               // 시스템 메시지가 있다면 추가
               if (systemMessage) {
                 setMessages((prev) => [
@@ -433,10 +433,10 @@ export const GameSocketProvider = ({ roomKey, children }) => {
               setMessages(prev => [...prev, systemMessage]);
             }
 
-            // 이미지 URL 업데이트
-            if (result.imageUrl) {
-              setImageUrl(result.imageUrl);
-            }
+            // // 이미지 URL 업데이트
+            // if (result.imageUrl) {
+            //   setImageUrl(result.imageUrl);
+            // }
           }
         )
       );

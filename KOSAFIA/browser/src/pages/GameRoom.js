@@ -196,7 +196,27 @@ const GameRoom = () => {
   // 게임 상태 변경 시 시스템 메시지 전송
   useEffect(() => {
     if (gameStatus && isHost) {
-      sendGameSystemMessage(`${gameStatus} 시간이 시작되었습니다.`);
+      let message = null;
+      switch(gameStatus) {
+        case GAME_STATUS.DAY:
+          message = `${gameStatus} 시간이 시작되었습니다.`;
+          break;
+        case GAME_STATUS.NIGHT:
+          message = `${gameStatus} 시간이 시작되었습니다.`;
+          break;
+        case GAME_STATUS.VOTE:
+          message = `${gameStatus} 시간이 시작되었습니다.`;
+          break;
+        case GAME_STATUS.FINALVOTE:
+          message = `${gameStatus} 시간이 시작되었습니다.`;
+          break;
+        default:
+          message = null;
+          break;
+      }
+      if (message) {
+        sendGameSystemMessage(message);
+      }
     }
   }, [gameStatus]);
 
@@ -254,7 +274,7 @@ const GameRoom = () => {
         }
 
         // 방장만 시스템 메시지와 상태 업데이트를 전송
-        sendGameSystemMessage(`${currentStatus} 시간이 종료되었습니다.`);
+        // sendGameSystemMessage(`${currentStatus} 시간이 종료되었습니다.`);
         await updateGameStatus(nextStatus);
         
         console.log("방장의 타이머 종료 처리 완료", {
