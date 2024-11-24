@@ -131,8 +131,7 @@ public class GameServiceImpl implements GameService {
                 roomKey,
                 0,
                 true));
-
-        // 김남영 경찰 조사 결과 메시지 추가
+        
         messagingTemplate.convertAndSend("/topic/game.police." + roomKey, new SystemMessage(
                 "POLICE",
                 policeMessage,
@@ -163,7 +162,6 @@ public class GameServiceImpl implements GameService {
         else if (mafiaCount == 0) {
             imageUrl = "/img/citizen_win.png";
         }
-
         // 브로드캐스트
         broadcastGameStatus(roomKey, imageUrl);
     }

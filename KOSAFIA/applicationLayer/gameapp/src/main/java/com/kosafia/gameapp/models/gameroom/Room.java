@@ -55,7 +55,7 @@ public class Room {
             GameStatus.NIGHT, 30, // 밤 30초
             GameStatus.FIRST_DELAY, 5, // 딜레이 5초
             GameStatus.DAY, 60, // 낮 60초
-            GameStatus.SECOND_DELAY, 1, // 딜레이 1초
+            GameStatus.SECOND_DELAY, 5, // 딜레이 1초
             GameStatus.VOTE, 30, // 투표 30초
             GameStatus.THIRD_DELAY, 5, // 딜레이 5초
             GameStatus.FINALVOTE, 15, // 최후 변론 15초
@@ -69,10 +69,7 @@ public class Room {
             this.gameStatus = newStatus;
             // 상태 변경 시 해당 상태의 기본 시간으로 초기화
             this.currentTime = getDefaultTimes().get(newStatus);
-
-            // 밤상태 진입시 일차 증가겠지 똘빡아 주석보고 반성해
-            if (newStatus == GameStatus.NIGHT &&
-                    (this.gameStatus == GameStatus.FINALVOTE || this.gameStatus == GameStatus.VOTE)) {
+            if (newStatus == GameStatus.NIGHT){
                 this.turn++;
             }
         }
@@ -107,7 +104,7 @@ public class Room {
         this.turn = 0;
         this.password = password;
         this.isPrivate = isPrivate;
-        this.gameStatus = GameStatus.NIGHT;
+        this.gameStatus = GameStatus.FOURTH_DELAY;
 
         // 김남영이 추가함 버그나면 김남영 불러
         this.voteStatus = new HashMap<>();
@@ -232,14 +229,12 @@ public class Room {
         if (targetPlayer != null && getAgreeVotes() > getDisagreeVotes()) {
             targetPlayer.setAlive(false);
             targetPlayer.setVoteTarget(false);
-            setGameStatus(GameStatus.FOURTH_DELAY);
             return targetPlayer;
         }
 
         if (targetPlayer != null) {
             targetPlayer.setVoteTarget(false);
         }
-        setGameStatus(GameStatus.FOURTH_DELAY);
         return null;
     }
 
@@ -320,7 +315,7 @@ public class Room {
     public void endGame() {
         this.isPlaying = false;
         this.turn = 0;
-        this.gameStatus = GameStatus.NIGHT;
+        this.gameStatus = GameStatus.FOURTH_DELAY;
 
         // 플레이어 상태 초기화
         for (Player player : players) {

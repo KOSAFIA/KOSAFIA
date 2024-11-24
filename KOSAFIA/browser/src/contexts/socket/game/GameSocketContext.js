@@ -22,7 +22,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
   const [messages, setMessages] = useState([]);
   const [players, setPlayers] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [gameStatus, setGameStatus] = useState(GAME_STATUS.FOURTH_DELAY);
+  const [gameStatus, setGameStatus] = useState();
   const [currentPlayer, setCurrentPlayer] = useState(null);
   const [mafiaTarget, setMafiaTarget] = useState(null);
   const [voteStatus, setVoteStatus] = useState({});
@@ -71,24 +71,24 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     [currentPlayer]
   );
 
- // WebSocket을 통해 imageUrl을 수신하고 상태를 업데이트
-  useEffect(() => {
-    if (!isConnected || !clientRef.current || !roomKey) return;
+//  // WebSocket을 통해 imageUrl을 수신하고 상태를 업데이트
+//   useEffect(() => {
+//     if (!isConnected || !clientRef.current || !roomKey) return;
 
-    const gameStateSubscription = clientRef.current.subscribe(
-      `/topic/game.state.${roomKey}`,
-      (message) => {
-        const { imageUrl } = JSON.parse(message.body);
-        console.log(imageUrl);
+//     const gameStateSubscription = clientRef.current.subscribe(
+//       `/topic/game.state.${roomKey}`,
+//       (message) => {
+//         const { imageUrl } = JSON.parse(message.body);
+//         console.log(imageUrl);
 
-        if (imageUrl) {
-          setImageUrl(imageUrl);  // imageUrl을 받아서 상태 업데이트
-        }
-      }
-    );
+//         if (imageUrl) {
+//           setImageUrl(imageUrl);  // imageUrl을 받아서 상태 업데이트
+//         }
+//       }
+//     );
 
-    return () => gameStateSubscription.unsubscribe();  // 컴포넌트 언마운트 시 구독 해제
-  }, [isConnected, roomKey]);
+//     return () => gameStateSubscription.unsubscribe();  // 컴포넌트 언마운트 시 구독 해제
+//   }, [isConnected, roomKey]);
 
   // 게임 사운드 부분
   useEffect(() => {
@@ -265,25 +265,14 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         );
       }
 
+      //하은님꺼 여기에 추가
       // 4. 게임 상태 구독
       subscriptions.push(
         clientRef.current.subscribe(
           `/topic/game.state.${roomKey}`,
           (socketMsg) => {
-            const {
-              gameStatus,
-              players,
-              currentTime,
-              turn: dayCount,
-              success,
-              message: systemMessage,
-            } = JSON.parse(socketMsg.body);
-            if (success) {
-              setGameStatus(gameStatus);
-              setPlayers(players);
-              setGameTime(currentTime);
-              setDayCount(dayCount);
-
+            const {gameStatus, players, currentTime, turn: dayCount, success, message: systemMessage, imageUrl} = JSON.parse(socketMsg.body);
+            if (success) {setGameStatus(gameStatus);setPlayers(players);setGameTime(currentTime);setDayCount(dayCount);setImageUrl(imageUrl);
               // 시스템 메시지가 있다면 추가
               if (systemMessage) {
                 setMessages((prev) => [
@@ -391,15 +380,30 @@ export const GameSocketProvider = ({ roomKey, children }) => {
           `/topic/game.finalvote.result.${roomKey}`,
           (socketMsg) => {
             const result = JSON.parse(socketMsg.body);
-            if (result.gameStatus) {
-              setGameStatus(result.gameStatus);
-            }
+            console.log("최종 투표 결과 수신:", result);
+
+            // 플레이어 정보 업데이트
             if (result.players) {
               setPlayers(result.players);
               updateCurrentPlayer(result.players);
             }
+
+            // 시스템 메시지 추가
             if (result.message) {
-              console.log("최종 투표 결과 메시지:", result.message);
+              const systemMessage = {
+                username: "SYSTEM",
+                content: result.message,
+                gameStatus: result.gameStatus,
+                roomKey: roomKey,
+                playerNumber: 0,
+                isSystemMessage: true
+              };
+              setMessages(prev => [...prev, systemMessage]);
+            }
+
+            // 이미지 URL 업데이트
+            if (result.imageUrl) {
+              setImageUrl(result.imageUrl);
             }
           }
         )
@@ -407,19 +411,17 @@ export const GameSocketProvider = ({ roomKey, children }) => {
 
       // 시스템 메시지 구독 -> 채팅창에 등록해야겠지
       subscriptions.push(
-        clientRef.current.subscribe(
-          `/topic/game.system.${roomKey}`,
-          (socketMsg) => {
-            const systemMsg = JSON.parse(socketMsg.body);
-            setMessages((prev) => [
-              ...prev,
-              {
-                ...systemMsg,
-                isSystemMessage: true,
-              },
-            ]);
+        clientRef.current.subscribe(`/topic/game.system.${roomKey}`, (message) => {
+          console.log("시스템 메시지 수신:", message.body);
+          const systemMessage = JSON.parse(message.body);
+          // 중복 메시지 체크
+          if (!messages.some(msg => 
+            msg.content === systemMessage.content && 
+            msg.timestamp === systemMessage.timestamp
+          )) {
+            setMessages(prev => [...prev, systemMessage]);
           }
-        )
+        })
       );
       //경찰만 받는 비밀 시스템 메시지 구독.
       if (currentPlayer.role === "POLICE") {
@@ -513,17 +515,28 @@ export const GameSocketProvider = ({ roomKey, children }) => {
   );
 
   const processVoteResult = useCallback(async () => {
+    console.log("투표 결과 처리 시작", { isHost, roomKey, voteStatus });
+
     if (!isHost) {
+      console.error("방장 권한 없음");
       throw new Error("방장만 투표 결과를 처리할 수 있습니다.");
     }
 
     try {
+      console.log("투표 결과 전송 시도", {
+        destination: `/fromapp/game.vote.result/${roomKey}`,
+        voteStatus
+      });
+
       clientRef.current?.publish({
         destination: `/fromapp/game.vote.result/${roomKey}`,
         body: JSON.stringify({ voteStatus }),
       });
+
+      console.log("투표 결과 전송 성공");
       return { success: true };
     } catch (error) {
+      console.error("투표 결과 처리 중 오류:", error);
       return { success: false, error };
     }
   }, [roomKey, isHost, voteStatus]);
@@ -549,7 +562,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
           // 투표 상태 업데이트를 위한 소켓 구독은 유지
         }
       } catch (error) {
-        console.error("최종 투표 실패:", error);
+        console.error("최종 투표 실패:", error); 
         throw error;
       }
     },
@@ -557,18 +570,32 @@ export const GameSocketProvider = ({ roomKey, children }) => {
   );
 
   const processFinalVoteResult = useCallback(() => {
+    console.log("최종 투표 결과 처리 시작", {
+        isHost,
+        roomKey,
+        currentPlayer: currentPlayer?.playerNumber
+    });
+
     if (!isHost || !clientRef.current) {
-      throw new Error("방장만 최종 투표 결과를 요청할 수 있습니다.");
+        console.log("방장 권한 없음, 처리 중단");
+        return;  // throw 대신 조용히 리턴
     }
 
     try {
-      clientRef.current.publish({
-        destination: `/fromapp/game.finalvote.result/${roomKey}`,
-      });
+        console.log("최종 투표 결과 요청 전송");
+        clientRef.current.publish({
+            destination: `/fromapp/game.finalvote.result/${roomKey}`,
+            body: JSON.stringify({
+                roomKey: roomKey,
+                playerNumber: currentPlayer?.playerNumber
+            })
+        });
+        setVoteStatus({});
+        console.log("최종 투표 결과 요청 완료");
     } catch (error) {
-      throw error;
+        console.error("최종 투표 결과 처리 중 오류:", error);
     }
-  }, [roomKey, isHost]);
+  }, [roomKey, isHost, currentPlayer]);
 
   const updateGameStatus = useCallback(
     (newStatus) => {
