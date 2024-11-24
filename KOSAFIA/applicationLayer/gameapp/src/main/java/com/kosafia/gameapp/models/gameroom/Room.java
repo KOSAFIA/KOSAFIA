@@ -208,7 +208,7 @@ public class Room {
 
     public void processFinalVote(Integer playerNumber, boolean isAgree) {
         Player voter = getPlayerByPlayerNumber(playerNumber);
-        if (voter == null || !voter.isAlive() || voter.isVoteTarget()) {
+        if (voter == null || !voter.isAlive()) {
             throw new IllegalArgumentException("유효하지 않은 투표자");
         }
         finalVoteStatus.put(playerNumber, isAgree);

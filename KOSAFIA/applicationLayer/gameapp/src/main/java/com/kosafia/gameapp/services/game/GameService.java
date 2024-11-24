@@ -16,7 +16,7 @@ public interface GameService {
 
     public void endingBroadcastGameStatus(Integer roomKey, String endingImageUrl);
 
-    public void checkGameEnd(List<Player> players, Integer roomKey);
+    public String checkGameEnd(List<Player> players, Integer roomKey);
 
     // 역할 상호작용 결과
     public void handleNightActions(List<Player> players, Integer roomKey);
