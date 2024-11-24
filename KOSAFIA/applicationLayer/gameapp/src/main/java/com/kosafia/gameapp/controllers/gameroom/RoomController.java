@@ -1,5 +1,8 @@
 package com.kosafia.gameapp.controllers.gameroom;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,7 +122,7 @@ public class RoomController {
 
             // 김남영 수정
             // 4. 방 입장 가능 여부 확인
-            if (room.getMaxPlayers() <= room.getCurrentPlayers() || room.getGameStatus() != GameStatus.NONE) {
+            if (room.getMaxPlayers() <= room.getCurrentPlayers() || room.isPlaying()) {
                 log.warn("입장 불가능한 방 - roomKey: {}, 현재 인원: {}/{}",
                         roomKey, room.getPlayers().size(), room.getMaxPlayers());
                 return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -228,12 +231,42 @@ public class RoomController {
 
             // 4. 김남영 테스트용 시작 나중에 날려도 됨.
             Random random = new Random();
-            room.getPlayers().forEach(player -> {
-                int randomNumber = random.nextInt(1, 5);
-                System.out.println(player.getUsername());
-                // 플레이어 랜덤으로 직업 지정
-                player.setRole(Role.values()[randomNumber]);
-            });
+            List<Player> players = room.getPlayers();
+            int playerCount = players.size();
+
+            // 역할을 미리 지정
+            List<Role> roles = new ArrayList<>();
+
+            switch (playerCount) {
+                case 3:
+                    // 3명일 경우: 의사, 경찰, 마피아
+                    roles = Arrays.asList(Role.DOCTOR, Role.POLICE, Role.MAFIA);
+                    break;
+                case 4:
+                    // 4명일 경우: 마피아, 의사, 경찰, 시민
+                    roles = Arrays.asList(Role.MAFIA, Role.DOCTOR, Role.POLICE, Role.CITIZEN);
+                    break;
+                case 6:
+                    // 6명일 경우: 마피아, 마피아, 의사, 경찰, 시민, 시민
+                    roles = Arrays.asList(Role.MAFIA, Role.MAFIA, Role.DOCTOR, Role.POLICE, Role.CITIZEN, Role.CITIZEN);
+                    break;
+                case 8:
+                    // 8명일 경우: 마피아, 마피아, 의사, 경찰, 시민, 시민, 시민, 시민
+                    roles = Arrays.asList(Role.MAFIA, Role.MAFIA, Role.DOCTOR, Role.POLICE, Role.CITIZEN, Role.CITIZEN,
+                            Role.CITIZEN, Role.CITIZEN);
+                    break;
+                default:
+                    // 그 외 플레이어 수가 맞지 않으면 예외 처리
+                    log.error("지원되지 않는 플레이어 수: {}", playerCount);
+                    return ResponseEntity.badRequest().body("지원되지 않는 플레이어 수입니다.");
+            }
+
+            // 플레이어에 역할 배분
+            Collections.shuffle(roles); // 역할을 무작위로 섞기
+            for (int i = 0; i < players.size(); i++) {
+                players.get(i).setRole(roles.get(i));
+                System.out.println(players.get(i).getUsername() + " 역할: " + players.get(i).getRole());
+            }
 
             // 5. 방 상태 변경 : 로직내용은 턴=1 세팅 게임 진행중 상태 세팅
 
@@ -262,7 +295,6 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("플레이어 정보가 없습니다.");
         }
 
-       
         // 방 정보 가져오기
         Room room = roomService.getRoomById(roomKey);
         if (room == null) {
@@ -276,9 +308,9 @@ public class RoomController {
         // 초기화된 방 정보 반환
         log.info("방 상태 초기화 및 반환. roomKey: {}", roomKey);
         return ResponseEntity.ok(Map.of(
-            "message", "게임 종료",
-            "players", room.getPlayers(), // 초기화된 플레이어 목록
-            "gameStatus", room.getGameStatus() // 게임 상태
+                "message", "게임 종료",
+                "players", room.getPlayers(), // 초기화된 플레이어 목록
+                "gameStatus", room.getGameStatus() // 게임 상태
         ));
     }
 

@@ -14,16 +14,18 @@
   max-width: 80%;
 }
 
-.own-message {
-  justify-content: flex-start; /* 본인 메시지는 왼쪽 정렬 */
+.other-message {
+  justify-content: flex-start; /* 본인 메시지는 오른쪽 정렬 */
 }
 
-.other-message {
+.own-message {
   margin-left: 120px;
-  justify-content: flex-end; /* 다른 사람 메시지는 오른쪽 정렬 */
+  justify-content: flex-end; /* 다른 사람 메시지는 왼쪽 정렬 */
 }
 
 .message-icon {
+  position: relative;
+  border-radius: 50%;
   background-color: white;
   display: flex;
   flex-direction: column;
@@ -34,7 +36,22 @@
   background-size: cover; /* 배경 이미지를 요소 크기에 맞게 조절 */
   background-position: center; /* 배경 이미지를 중앙에 배치 */
   background-repeat: no-repeat; /* 배경 이미지 반복 방지 */
-  border-radius: 10px;
+}
+
+.mafia-overlay-0 {
+  background-color: rgba(255, 0, 0, 0.3);
+}
+
+.mafia-overlay-1 {
+  background-color: rgba(128, 0, 0, 0.3);
+}
+
+.mafia-overlay-2 {
+  background-color: rgba(139, 0, 0, 0.3);
+}
+
+.mafia-overlay-3 {
+  background-color: rgba(178, 34, 34, 0.3);
 }
 
 .player-name {
@@ -69,12 +86,59 @@
   display: flex;
   justify-content: center;
   margin: 8px 0;
+  padding: 0 10px;
+}
+.message-box.system {
+  background-color: #424242;  /* 다크 그레이 */
+  color: #f5f5f5;  /* 살짝 어두운 흰색 */
+  padding: 8px 15px;
+  border-radius: 8px;
+  max-width: 85%;
+  word-wrap: break-word;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-weight: 500;  /* 글자 약간 두껍게 */
+  text-align: center;
+  animation: systemFadeIn 0.3s ease-in;
+}
+@keyframes systemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.message-box.system {
-  background-color: rgba(0, 0, 0, 0.1);
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-style: italic;
-  color: #666;
+
+/* 경찰 블록 */
+.police-message {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+  padding: 0 10px;
 }
+
+.message-box.police {
+  background-color: #1a237e;  /* 어두운 파란색 */
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  max-width: 80%;
+  word-wrap: break-word;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* 경찰 블록 끝 */

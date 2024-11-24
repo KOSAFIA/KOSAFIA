@@ -1,7 +1,5 @@
 package com.kosafia.gameapp.services.game;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import com.kosafia.gameapp.models.gameroom.FinishGame;
+import com.kosafia.gameapp.controllers.socket.game.GameSocketController.SystemMessage;
 import com.kosafia.gameapp.models.gameroom.GameStatus;
 import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Role;
@@ -29,6 +27,10 @@ public class GameServiceImpl implements GameService {
     public void handleNightActions(List<Player> players, Integer roomKey) {
         Integer doctorTarget = null;
         Integer mafiaTarget = null;
+        String totalMessage = null;
+        String policeMessage = null;
+        String resultCase = "none";
+        String imageUrl = null;
 
         for (Player player : players) {
             // 1. 마피아, 경찰, 의사의 행동을 정리
@@ -52,17 +54,29 @@ public class GameServiceImpl implements GameService {
                                 + "은 "
                                 + (isMafia ? "마피아입니다." : "마피아가 아닙니다."));
 
-                // 경찰 조사 결과 나타내는 채팅? 팝업?
+                // // 마피아 발견 이미지 전달
+                // imageUrl = "/img/find_mafia.png";
+                // broadcastGameStatus(roomKey, imageUrl);
+
+                // 김남영 경찰 조사 결과 나타내는 채팅 일단 추가
+                policeMessage = "경찰 조사 결과: "
+                        + roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(investigatedPlayer)
+                                .getUsername()
+                        + "은 "
+                        + (isMafia ? "마피아입니다." : "마피아가 아닙니다.");
             }
 
             // 2. 의사가 마피아의 타겟을 보호하는지 확인
             if (mafiaTarget != null && doctorTarget != null &&
                     mafiaTarget.equals(doctorTarget)) {
                 System.out.println("의사가 마피아의 타겟을 보호했습니다!");
+                roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).setAlive(true);
 
-                messagingTemplate.convertAndSend(
-                        "/topic/game.sound." + roomKey,
-                        Map.of("sound", "heal"));
+                // 여기에 사운드 결과 추가
+                resultCase = "heal";
+
+                // 김남영 전체 시스템 메시지 추가
+                totalMessage = "의사가 마피아로부터 보호했습니다!";
 
             } else if (mafiaTarget != null) {
                 // 마피아의 타겟이 보호받지 못했다면 사망 처리
@@ -70,60 +84,100 @@ public class GameServiceImpl implements GameService {
                 System.out
                         .println(roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).getPlayerNumber()
                                 + "은(는) 마피아에게 살해당했습니다.");
-                // 클라이언트에게 비명 사운드 재생 요청
-                messagingTemplate.convertAndSend(
-                        "/topic/game.sound." + roomKey,
-                        Map.of("sound", "gun"));
 
-                // System.out.println("Alive 된지 확인 여부 : "
-                // +
-                // roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).isAlive());
-                // 마피아 살해당한 이미지 나타내기
+                // 김남영 시스템 메시지 추가
+                totalMessage = roomRepository.getRoom(roomKey).getPlayerByPlayerNumber(mafiaTarget).getUsername()
+                        + "은(는) 마피아에게 살해당했습니다.";
 
-                // 클라이언트에게 비명 사운드 재생 요청
-                messagingTemplate.convertAndSend(
-                        "/topic/game.sound." + roomKey,
-                        Map.of("sound", "gun"));
-
-                // 승리조건 확인
-                checkGameEnd(players, roomKey);
+                // 여기에 사운드 결과 추가
+                resultCase = "dead";
             }
+
+            player.setTarget(null);
         }
+        // 승리조건 확인도 여기서 해야지 맞을듯요.
+        checkGameEnd(players, roomKey);
+
+        // 여기에 소켓 추가해야. players 반복문 횟수만큼 쏘는 현상을 방지함.
+
+        switch (resultCase) {
+            case "heal":
+                messagingTemplate.convertAndSend(
+                        "/topic/game.sound." + roomKey,
+                        Map.of("sound", "heal"));
+
+                imageUrl = "/img/survive_from_doctor.png";
+                broadcastGameStatus(roomKey, imageUrl);
+                break;
+            case "dead":
+                messagingTemplate.convertAndSend(
+                        "/topic/game.sound." + roomKey,
+                        Map.of("sound", "gun"));
+
+                if (imageUrl != "/img/mafia_win") {
+                    imageUrl = "/img/dead_by_mafia.png";
+                    broadcastGameStatus(roomKey, imageUrl);
+                }
+                break;
+            default:
+                break;
+        }
+
+        // 김남영 전체 시스템 메시지 추가
+        messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
+                "SYSTEM",
+                totalMessage,
+                roomRepository.getRoom(roomKey).getGameStatus().toString(),
+                roomKey,
+                0,
+                true));
+
+        // 김남영 경찰 조사 결과 메시지 추가
+        messagingTemplate.convertAndSend("/topic/game.police." + roomKey, new SystemMessage(
+                "POLICE",
+                policeMessage,
+                roomRepository.getRoom(roomKey).getGameStatus().toString(),
+                roomKey,
+                0,
+                false));
+
     }
 
     // 게임 승리 조건을 체크하는 함수
-    private void checkGameEnd(List<Player> players, Integer roomKey) {
-        long mafiaCount = players.stream().filter(player -> player.getRole() == Role.MAFIA && player.isAlive()).count();
-        long otherCount = players.stream().filter(player -> player.getRole() != Role.MAFIA && player.isAlive()).count();
+    @Override
+    public void checkGameEnd(List<Player> players, Integer roomKey) {
+        long mafiaCount = players.stream()
+                .filter(player -> player.getRole() == Role.MAFIA && player.isAlive())
+                .count();
+        long otherCount = players.stream()
+                .filter(player -> player.getRole() != Role.MAFIA && player.isAlive())
+                .count();
 
-        // 1. 마피아의 인원수가 다른 직업들 이상일 경우 마피아 승리
+        String imageUrl = null;
+
+        // 마피아 승리 조건
         if (mafiaCount >= otherCount) {
-            System.out.println("마피아 승리");
-            // 승리 상태와 이미지 URL을 포함하여 브로드캐스트
-            broadcastGameStatus(roomKey, players, "mafia_win_image_url");
-            return;
+            imageUrl = "/img/mafia_win.png";
+        }
+        // 시민 승리 조건
+        else if (mafiaCount == 0) {
+            imageUrl = "/img/citizen_win.png";
         }
 
-        // 2. 마피아가 모두 사망하면 마피아 승리
-        if (mafiaCount == 0) {
-            System.out.println("마피아 전멸!");
-            // 시민 승리 상태와 이미지 URL을 포함하여 브로드캐스트
-            broadcastGameStatus(roomKey, players, "citizen_win_image_url");
-            return;
-        }
-
-        // 게임이 종료되지 않으면 게임 상태를 업데이트하여 계속 진행
-        broadcastGameStatus(roomKey, players, null);
+        // 브로드캐스트
+        broadcastGameStatus(roomKey, imageUrl);
     }
 
-    public void broadcastGameStatus(Integer roomKey, List<Player> players, String imageUrl) {
+    @Override
+    public void broadcastGameStatus(Integer roomKey, String imageUrl) {
         Map<String, Object> message = new HashMap<>();
-        message.put("players", players);
+
         if (imageUrl != null) {
-            message.put("imageUrl", imageUrl); // 이미지 URL 포함
+            message.put("imageUrl", imageUrl); // 이미지 URLs
         }
 
-        // messagingTemplate.convertAndSend("/topic/game.state." + roomKey, message);
+        // WebSocket 메시지 브로드캐스트
+        messagingTemplate.convertAndSend("/topic/game.state." + roomKey, message);
     }
 
     // ===============김남영 추가=============
