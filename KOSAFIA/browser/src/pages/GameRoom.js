@@ -52,8 +52,8 @@ const GameRoom = () => {
     canFinalVote,
     voteStatus,
     finalVotes,
-    imageUrl,
-    mostVotedPlayer
+    currentImage,
+    mostVotedPlayer,
   } = useGameContext();
 
   // 시간 조절한 플레이어 목록 관리 (새로운 게임 시작 시 초기화 필요)
@@ -66,20 +66,18 @@ const GameRoom = () => {
     }
   }, [gameStatus]);
 
+  // 엔딩용 팝업 로직
   useEffect(() => {
-    if (imageUrl) {
-      // 이미지가 업데이트되면 팝업을 5초간 보이도록 설정
+    if (currentImage ) {
       setShowResultPopup(true);
 
-      // 5초 후 팝업 숨기기
       const timer = setTimeout(() => {
         setShowResultPopup(false);
-      }, 5000);
+      }, 5000); // 5초 후 팝업 숨기기
 
-      // 타이머 클린업
       return () => clearTimeout(timer);
     }
-  }, [imageUrl]);
+  }, [currentImage ]);
 
   useEffect(() => {
     // gameStatus가 NIGHT일 때만 handleStageChange 실행
@@ -158,7 +156,7 @@ const GameRoom = () => {
   const handlePlayerSelect = (targetId) => {
     if (gameStatus === GAME_STATUS.NIGHT && currentPlayer?.role === "MAFIA") {
       setTarget(targetId);
-    } 
+    }
     // else if (gameStatus === GAME_STATUS.VOTE && canVote()) {
     //   sendVote(targetId);
     // }
@@ -223,26 +221,31 @@ const GameRoom = () => {
     [canModifyTime, modifyGameTime, currentPlayer, sendGameSystemMessage]
   );
 
-// handleTimerEnd와 nextPhase 함수 합침
-const handleTimerEnd = useCallback(async () => {
-      if (isHost) {
-        //김남영 추가 구문부
-        if(gameStatus === GAME_STATUS. VOTE) processVoteResult();
-        else if(gameStatus === GAME_STATUS.FINALVOTE) processFinalVoteResult();
-        else if(gameStatus === GAME_STATUS.THIRDDELAY) {
-          if(mostVotedPlayer == null) {
-            console.log("mostVotedPlayer가 null인거 맞아?");
-            sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
-            updateGameStatus("NIGHT");
-            return; //걍 끝내 포스딜레이로 바꾸고
-          }
-        }
-        //김남영 추가 구문부 끝
+  // handleTimerEnd와 nextPhase 함수 합침
+  const handleTimerEnd = useCallback(async () => {
+    if (isHost) {
+      //김남영 추가 구문부
+      if (gameStatus === GAME_STATUS.VOTE) processVoteResult();
+      else if (gameStatus === GAME_STATUS.FINALVOTE) processFinalVoteResult();
+      else if (gameStatus === GAME_STATUS.THIRDDELAY) {
+        if (mostVotedPlayer == null) {
+          console.log("mostVotedPlayer가 null인거 맞아?");
           sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
-          updateGameStatus(NEXT_STATUS[gameStatus]);
+          updateGameStatus("NIGHT");
+          return; //걍 끝내 포스딜레이로 바꾸고
+        }
       }
-  }, [isHost, gameStatus, updateGameStatus, sendGameSystemMessage, mostVotedPlayer]);
-
+      //김남영 추가 구문부 끝
+      sendGameSystemMessage(`${gameStatus} 시간이 종료되었습니다.`);
+      updateGameStatus(NEXT_STATUS[gameStatus]);
+    }
+  }, [
+    isHost,
+    gameStatus,
+    updateGameStatus,
+    sendGameSystemMessage,
+    mostVotedPlayer,
+  ]);
 
   const [customIdx, setCustomIdx] = useState(0);
   // 다음 페이즈로 넘어가는 핸들러 추가
@@ -292,8 +295,7 @@ const handleTimerEnd = useCallback(async () => {
     console.log("Current player updated:", currentPlayer);
   }, [currentPlayer]);
 
-  
-  const [myVoteTarget, setMyVoteTarget] = useState(null);  // 내가 투표한 플레이어 번호
+  const [myVoteTarget, setMyVoteTarget] = useState(null); // 내가 투표한 플레이어 번호
   // 투표 처리 함수
   const handleVote = (targetPlayerNum) => {
     setMyVoteTarget(targetPlayerNum);
@@ -362,27 +364,38 @@ const handleTimerEnd = useCallback(async () => {
                   voteStatus={voteStatus}
                   myVoteTarget={myVoteTarget}
                   onClick={() => {
-
-                    if(!currentPlayer.isAlive) {
+                    if (!currentPlayer.isAlive) {
                       return;
                     }
                     // 투표 단계에서는 팝업을 열지 않고 투표만 처리
-                    if (gameStatus === GAME_STATUS.VOTE && canVote() && player.playerNumber !== currentPlayer.playerNumber) {
+                    if (
+                      gameStatus === GAME_STATUS.VOTE &&
+                      canVote() &&
+                      player.playerNumber !== currentPlayer.playerNumber
+                    ) {
                       handleVote(player.playerNumber);
                       return; // 투표 후 함수 종료
-                    }else if(gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
+                    } else if (
+                      gameStatus === GAME_STATUS.FINALVOTE &&
+                      canFinalVote() &&
+                      player.isVoteTarget
+                    ) {
                       return;
-                    }else {
+                    } else {
                       handlePlayerSelect(player.playerNumber);
                     }
                   }}
                   onFinalVoteClick={(isAgree) => {
-                    if (gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
+                    if (
+                      gameStatus === GAME_STATUS.FINALVOTE &&
+                      canFinalVote() &&
+                      player.isVoteTarget
+                    ) {
                       sendFinalVote(isAgree);
                     }
                   }}
                   finalVotes={{
-                    myVote: finalVotes[currentPlayer.playerNumber]
+                    myVote: finalVotes[currentPlayer.playerNumber],
                   }}
                   selectedPlayer={selectedPlayer}
                   setSelectedPlayer={setSelectedPlayer}
@@ -407,8 +420,7 @@ const handleTimerEnd = useCallback(async () => {
         <Popup onClose={handleClosePopup} selectedPlayer={selectedPlayer} />
       )}
 
-      {/* 승리시 이미지 표시 */}
-      <ResultPopup imageUrl={imageUrl} />
+      <>{currentImage && <ResultPopup imageUrl={currentImage} />}</>
     </div>
   );
 };
