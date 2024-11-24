@@ -105,16 +105,16 @@ function Register() {
         </MDBCol>
         <MDBCol md="6" className="register-card-body">
           <MDBCardBody className="d-flex flex-column align-items-center">
-            <div className="d-flex flex-row mt-2">
-              <MDBIcon
-                fas
-                icon="user-plus fa-3x me-3"
-                style={{ color: "#ff6219" }}
+            <div className="register-icon">
+              <img
+                src="/img/register-icon.png" // `public` 폴더 기준 경로
+                alt="Mafia Icon"
+                style={{ width: "60px", height: "50px" }}
               />
-              <span className="h1 fw-bold">회원가입</span>
+              <span className="register-icon-text">회원가입</span>
             </div>
             <h5
-              className="fw-normal my-4 pb-3"
+              className="register-icon-subtext"
               style={{ letterSpacing: "1px" }}
             >
               양식을 작성해주세요
@@ -180,10 +180,7 @@ function Register() {
               />
 
               {error && <p className="text-danger mb-3">{error}</p>}
-              <button
-                type="submit"
-                className="register-btn"
-              >
+              <button type="submit" className="register-btn">
                 회원가입
               </button>
             </form>
