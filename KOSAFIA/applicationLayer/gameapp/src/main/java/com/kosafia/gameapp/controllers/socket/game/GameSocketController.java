@@ -449,7 +449,7 @@ public class GameSocketController {
     @MessageMapping("/game.finalvote.result/{roomKey}")
     public void handleFinalVoteResult(
             @DestinationVariable("roomKey") Integer roomKey) {
-        String stageImageUrl = null;
+        String imageUrl = null;
 
         try {
             Room room = roomRepository.getRoom(roomKey);
@@ -468,7 +468,7 @@ public class GameSocketController {
                 executedPlayer.getUsername() + "님이 처형되었습니다." : 
                 "투표 결과 처형되지 않았습니다.";
             
-            String imageUrl = executedPlayer != null ? 
+            imageUrl = executedPlayer != null ? 
                 "/img/dead_by_vote.png" : 
                 "/img/survive_from_vote.png";
 
@@ -590,6 +590,7 @@ public class GameSocketController {
             @Payload Player playerData) {
         log.info("플레이어 입장 - 방: {}, 플레이어: {}", roomKey, playerData);
 
+        String imageUrl = null;
         try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null) {
