@@ -34,8 +34,6 @@ public class GameSocketController {
     @Autowired
     GameService gameService;
 
-    String imageUrl = null;
-
     // 각 방의 타이머를 관리할 Thread Map
     private final Map<Integer, Thread> roomTimers = new ConcurrentHashMap<>();
 
@@ -58,7 +56,7 @@ public class GameSocketController {
     // 채팅 메시지 처리 - @Payload 어노테이션 추가 및 디버그 로그 추가
     @MessageMapping("/game.chat.send/{roomKey}")
     public void handleGameChat(@DestinationVariable("roomKey") Integer roomKey,
-        @Payload ChatMessage message) {
+            @Payload ChatMessage message) {
         try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null) {
@@ -236,7 +234,12 @@ public class GameSocketController {
             int initialTime = room.getDefaultTimes().get(newStatus);
             room.setCurrentTime(initialTime);
 
-            imageUrl = "/img/change_" + newStatus + ".jpeg";
+
+            String imageUrl = null;
+            
+            if (newStatus.toString() == "NIGHT" || newStatus.toString() == "DAY") {
+                imageUrl = "/img/change_" + newStatus + ".jpeg";
+            }
             // gameService.broadcastGameStatus(roomKey, imageUrl);
 
             // 상태 변경 알림
@@ -248,6 +251,8 @@ public class GameSocketController {
                             room.getTurn(),
                             true,
                             newStatus.toString() + " 시간이 시작되었습니다.", imageUrl));
+
+
 
 
             startRoomTimer(roomKey);
@@ -380,7 +385,7 @@ public class GameSocketController {
 
         String resultMsg = null;
 
-       try {
+        try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null)
                 return;
@@ -405,10 +410,9 @@ public class GameSocketController {
                     null);
 
             messagingTemplate.convertAndSend(
-                "/topic/game.vote.result." + roomKey,
-                response
-            );
-            //이거 받은 쪽에서 결과 처리로 게임 스테이트 업데이트 처리를 다르게 하자. 그게 맞다 
+                    "/topic/game.vote.result." + roomKey,
+                    response);
+            // 이거 받은 쪽에서 결과 처리로 게임 스테이트 업데이트 처리를 다르게 하자. 그게 맞다
 
             messagingTemplate.convertAndSend(
                     "/topic/game.players." + roomKey,
@@ -416,13 +420,12 @@ public class GameSocketController {
 
             // 시스템 메시지 보내기 전에 음...
             messagingTemplate.convertAndSend("/topic/game.system." + roomKey, new SystemMessage(
-                "SYSTEM",
-                resultMsg,
-                room.getGameStatus().toString(),
-                roomKey,
-                0,
-                true
-            ));
+                    "SYSTEM",
+                    resultMsg,
+                    room.getGameStatus().toString(),
+                    roomKey,
+                    0,
+                    true));
 
             room.clearVotes();
 
@@ -444,7 +447,10 @@ public class GameSocketController {
 
     // 최종 투표 결과 처리
     @MessageMapping("/game.finalvote.result/{roomKey}")
-    public void handleFinalVoteResult(@DestinationVariable("roomKey") Integer roomKey) {
+    public void handleFinalVoteResult(
+            @DestinationVariable("roomKey") Integer roomKey) {
+        String stageImageUrl = null;
+
         try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null) return;

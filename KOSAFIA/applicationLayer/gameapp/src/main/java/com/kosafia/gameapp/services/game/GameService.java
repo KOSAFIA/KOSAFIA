@@ -1,6 +1,5 @@
 package com.kosafia.gameapp.services.game;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -11,7 +10,11 @@ import com.kosafia.gameapp.models.gameroom.Player;
 @Service
 public interface GameService {
 
-    public void broadcastGameStatus(Integer roomKey, String imageUrl);
+    public void interactionBroadcastGameStatus(Integer roomKey, String interactionImageUrl);
+
+    public void stageBroadcastGameStatus(Integer roomKey, String stageImageUrl);
+
+    public void endingBroadcastGameStatus(Integer roomKey, String endingImageUrl);
 
     public void checkGameEnd(List<Player> players, Integer roomKey);
 

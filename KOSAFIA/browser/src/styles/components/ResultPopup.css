@@ -1,46 +1,48 @@
-/* ResultPopup.css */
 .Resultpopup-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: rgba(0, 0, 0, 0.7);  /* 배경을 살짝 어둡게 */
-    z-index: 9999;
-    animation: fadeIn 0.3s ease-in-out, fadeOut 0.3s ease-in-out 4.7s;
-  }
-  
-  .Resultpopup-content {
-    text-align: center;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
-  }
-  
-  .Resultpopup-image {
-    max-width: 100%;
-    height: auto;
-  }
-  
-  /* 애니메이션 */
-  @keyframes fadeIn {
-    0% {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7); /* 배경을 살짝 어둡게 */
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in-out, fadeOut 0.3s ease-in-out 4.7s;
+}
+
+.Resultpopup-content {
+  text-align: center;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  background-color: white; /* 팝업 배경색 추가 */
+}
+
+.Resultpopup-image {
+  width: 300px; /* 고정된 너비 */
+  height: 300px; /* 고정된 높이 */
+  object-fit: contain; /* 이미지 비율 유지 */
+  border-radius: 8px; /* 이미지 모서리 둥글게 */
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3); /* 이미지에 그림자 추가 */
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  0% {
       opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
   }
-  
-  @keyframes fadeOut {
-    0% {
+  100% {
       opacity: 1;
-    }
-    100% {
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+      opacity: 1;
+  }
+  100% {
       opacity: 0;
-    }
   }
-  
+}

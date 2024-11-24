@@ -28,8 +28,12 @@ export const GameSocketProvider = ({ roomKey, children }) => {
   const [voteStatus, setVoteStatus] = useState({});
   const [mostVotedPlayer, setMostVotedPlayer] = useState(null);
   const [isHost, setIsHost] = useState(false);
-  const [imageUrl, setImageUrl] = useState(null);
-  const [finalVotes, setFinalVotes] = useState({agree: 0,disagree: 0,});
+  const [currentImage, setCurrentImage] = useState(null); // 현재 표시 중인 이미지
+  const [queue, setQueue] = useState([]); // 이미지 표시 대기열
+  const [finalVotes, setFinalVotes] = useState({
+    agree: 0,
+    disagree: 0,
+  });
   const [gameTime, setGameTime] = useState(
     STATUS_DURATION[GAME_STATUS.FOURTH_DELAY]
   );
@@ -71,24 +75,49 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     [currentPlayer]
   );
 
-//  // WebSocket을 통해 imageUrl을 수신하고 상태를 업데이트
-//   useEffect(() => {
-//     if (!isConnected || !clientRef.current || !roomKey) return;
+  useEffect(() => {
+    if (!isConnected || !clientRef.current || !roomKey) return;
 
-//     const gameStateSubscription = clientRef.current.subscribe(
-//       `/topic/game.state.${roomKey}`,
-//       (message) => {
-//         const { imageUrl } = JSON.parse(message.body);
-//         console.log(imageUrl);
+    const gameStateSubscription = clientRef.current.subscribe(
+      `/topic/game.state.${roomKey}`,
+      (message) => {
+        const { stageImageUrl, interactionImageUrl, endingImageUrl } =
+          JSON.parse(message.body);
 
-//         if (imageUrl) {
-//           setImageUrl(imageUrl);  // imageUrl을 받아서 상태 업데이트
-//         }
-//       }
-//     );
+        if (endingImageUrl) {
+          setQueue([{ type: "ending", imageUrl: endingImageUrl }]); // 엔딩은 항상 최우선, 기존 큐를 대체
+        } else {
+          setQueue((prevQueue) => [
+            ...prevQueue,
+            ...(stageImageUrl
+              ? [{ type: "stage", imageUrl: stageImageUrl }]
+              : []),
+            ...(interactionImageUrl
+              ? [{ type: "interaction", imageUrl: interactionImageUrl }]
+              : []),
+          ]);
+        }
+      }
+    );
 
-//     return () => gameStateSubscription.unsubscribe();  // 컴포넌트 언마운트 시 구독 해제
-//   }, [isConnected, roomKey]);
+    return () => gameStateSubscription.unsubscribe();
+  }, [isConnected, roomKey]);
+
+  useEffect(() => {
+    if (currentImage || queue.length === 0) return; // 현재 이미지가 표시 중이면 대기
+
+    const nextImage = queue[0];
+    setCurrentImage(nextImage.imageUrl);
+
+    const displayTime = nextImage.type === "stage" ? 2000 : 3000; // 스테이지는 2초, 인터랙션은 3초
+
+    const timer = setTimeout(() => {
+      setQueue((prevQueue) => prevQueue.slice(1)); // 큐에서 다음 이미지로 이동
+      setCurrentImage(null); // 현재 이미지 해제
+    }, displayTime);
+
+    return () => clearTimeout(timer);
+  }, [currentImage, queue]);
 
   // 게임 사운드 부분
   useEffect(() => {
@@ -343,25 +372,28 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         )
       );
 
-            // 8. 투표 결과 구독
-            subscriptions.push(
-                clientRef.current.subscribe(`/topic/game.vote.result.${roomKey}`, (socketMsg) => {
-                    const result = JSON.parse(socketMsg.body);
-                    console.log('투표 결과 수신:', result);     
-                    if (result.success) {
-                        setPlayers(prevPlayers => 
-                            prevPlayers.map(player => 
-                                player.playerNumber === result.targetPlayer?.playerNumber
-                                    ? { ...player, isVoteTarget: true }
-                                    : { ...player, isVoteTarget: false }
-                            )
-                        );
-                        setVoteStatus(result.voteResult);
-                        setMostVotedPlayer(result.targetPlayer);
-                        //여까지 된거에서 투표 결과에따라 상태 전환 로직이 다르게 돌아가야겠네. 일단 보트 스테이터스는 게임룸으로 넘어가니까
-                    }
-                })
-            );
+      // 8. 투표 결과 구독
+      subscriptions.push(
+        clientRef.current.subscribe(
+          `/topic/game.vote.result.${roomKey}`,
+          (socketMsg) => {
+            const result = JSON.parse(socketMsg.body);
+            console.log("투표 결과 수신:", result);
+            if (result.success) {
+              setPlayers((prevPlayers) =>
+                prevPlayers.map((player) =>
+                  player.playerNumber === result.targetPlayer?.playerNumber
+                    ? { ...player, isVoteTarget: true }
+                    : { ...player, isVoteTarget: false }
+                )
+              );
+              setVoteStatus(result.voteResult);
+              setMostVotedPlayer(result.targetPlayer);
+              //여까지 된거에서 투표 결과에따라 상태 전환 로직이 다르게 돌아가야겠네. 일단 보트 스테이터스는 게임룸으로 넘어가니까
+            }
+          }
+        )
+      );
 
       // 9. 찬반 투표 구독
       subscriptions.push(
@@ -703,7 +735,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     dayCount,
     sendSystemMessage,
     modifyGameTime,
-    imageUrl,
+    currentImage,
     mostVotedPlayer,
   };
 

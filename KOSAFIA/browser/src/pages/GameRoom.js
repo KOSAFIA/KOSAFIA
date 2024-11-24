@@ -52,8 +52,8 @@ const GameRoom = () => {
     canFinalVote,
     voteStatus,
     finalVotes,
-    imageUrl,
-    mostVotedPlayer
+    currentImage,
+    mostVotedPlayer,
   } = useGameContext();
 
   // 시간 조절한 플레이어 목록 관리 (새로운 게임 시작 시 초기화 필요)
@@ -66,20 +66,18 @@ const GameRoom = () => {
     }
   }, [gameStatus]);
 
+  // 엔딩용 팝업 로직
   useEffect(() => {
-    if (imageUrl) {
-      // 이미지가 업데이트되면 팝업을 5초간 보이도록 설정
+    if (currentImage ) {
       setShowResultPopup(true);
 
-      // 5초 후 팝업 숨기기
       const timer = setTimeout(() => {
         setShowResultPopup(false);
-      }, 5000);
+      }, 5000); // 5초 후 팝업 숨기기
 
-      // 타이머 클린업
       return () => clearTimeout(timer);
     }
-  }, [imageUrl]);
+  }, [currentImage ]);
 
   useEffect(() => {
     // gameStatus가 NIGHT일 때만 handleStageChange 실행
@@ -158,7 +156,7 @@ const GameRoom = () => {
   const handlePlayerSelect = (targetId) => {
     if (gameStatus === GAME_STATUS.NIGHT && currentPlayer?.role === "MAFIA") {
       setTarget(targetId);
-    } 
+    }
     // else if (gameStatus === GAME_STATUS.VOTE && canVote()) {
     //   sendVote(targetId);
     // }
@@ -396,23 +394,26 @@ const GameRoom = () => {
                   voteStatus={voteStatus}
                   myVoteTarget={myVoteTarget}
                   onClick={() => {
-
-                    if(!currentPlayer.isAlive) {
+                    if (!currentPlayer.isAlive) {
                       return;
                     }
                     // 투표 단계에서는 팝업을 열지 않고 투표만 처리
                     if (gameStatus === GAME_STATUS.VOTE && canVote()) {
                       handleVote(player.playerNumber);
                       return; // 투표 후 함수 종료
-                    }else if(gameStatus === GAME_STATUS.FINALVOTE && canFinalVote() && player.isVoteTarget) {
+                    } else if (
+                      gameStatus === GAME_STATUS.FINALVOTE &&
+                      canFinalVote() &&
+                      player.isVoteTarget
+                    ) {
                       return;
-                    }else {
+                    } else {
                       handlePlayerSelect(player.playerNumber);
                     }
                   }}
                   onFinalVoteClick={handleFinalVote}
                   finalVotes={{
-                    myVote: finalVotes[currentPlayer.playerNumber]
+                    myVote: finalVotes[currentPlayer.playerNumber],
                   }}
                   selectedPlayer={selectedPlayer}
                   setSelectedPlayer={setSelectedPlayer}
@@ -438,8 +439,7 @@ const GameRoom = () => {
         <Popup onClose={handleClosePopup} selectedPlayer={selectedPlayer} />
       )}
 
-      {/* 승리시 이미지 표시 */}
-      <ResultPopup imageUrl={imageUrl} />
+      <>{currentImage && <ResultPopup imageUrl={currentImage} />}</>
     </div>
   );
 };
