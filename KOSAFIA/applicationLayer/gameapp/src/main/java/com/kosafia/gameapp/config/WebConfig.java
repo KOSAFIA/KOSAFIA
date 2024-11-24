@@ -16,8 +16,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/static/");
     }
 
-    // CORS(Cross-Origin Resource Sharing) 설정 - 다른 도메인(React 프론트엔드)에서 서버에 접근할 수 있도록
-    // 허용
+    // CORS(Cross-Origin Resource Sharing) 설정 - 다른 도메인(React 프론트엔드)에서 서버에 접근할 수 있도록허용
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // addMapping("/**")는 모든 경로에 대해 CORS 설정을 적용
