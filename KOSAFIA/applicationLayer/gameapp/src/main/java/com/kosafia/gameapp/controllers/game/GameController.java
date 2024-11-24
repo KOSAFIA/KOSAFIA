@@ -41,7 +41,6 @@ public class GameController {
     @Autowired
     private RoomRepository roomRepository;
 
-
     @PostMapping("/update-targets-at-night")
     public ResponseEntity<Object> updatePlayerTargetAtNight(@RequestBody Map<String, Object> requestData,
             HttpSession session) {
@@ -96,7 +95,8 @@ public class GameController {
     }
 
     // PlayersUpdateResponse 레코드 추가
-    record PlayersUpdateResponse(List<Player> players) {}
+    record PlayersUpdateResponse(List<Player> players) {
+    }
 
     // -----------------김남영 추가 시작 리스트-----------------
     // 1. 방장 지정
@@ -253,9 +253,14 @@ public class GameController {
     }
 
     @PostMapping("/finalvote/{roomKey}")
-    public ResponseEntity<?> handleFinalVote(@PathVariable("roomKey") Integer roomKey,
-            @RequestBody FinalVoteRequest request) {
+    public ResponseEntity<?> handleFinalVote(
+        @PathVariable("roomKey") Integer roomKey,
+        @RequestBody FinalVoteRequest request
+    ) {
         try {
+            log.info("최종 투표 요청 수신 - 방: {}, 플레이어: {}, 찬성여부: {}", 
+                roomKey, request.playerNumber(), request.isAgree());
+                
             Room room = roomRepository.getRoom(request.roomKey());
             if (room == null) {
                 return ResponseEntity.badRequest().body("방을 찾을 수 없습니다.");
@@ -263,8 +268,8 @@ public class GameController {
 
             room.processFinalVote(request.playerNumber(), request.isAgree());
             return ResponseEntity.ok(true);
-
         } catch (Exception e) {
+            log.error("최종 투표 처리 실패", e);
             return ResponseEntity.badRequest().body("투표 처리 실패: " + e.getMessage());
         }
     }
