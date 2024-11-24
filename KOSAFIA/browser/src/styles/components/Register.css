@@ -85,12 +85,12 @@
 .register-icon {
   display: flex; /* 아이콘과 텍스트를 한 줄로 배치 */
   align-items: center; /* 세로 방향으로 중앙 정렬 */
-  gap: 10px; /* 아이콘과 텍스트 사이의 간격을 줄임 (필요에 따라 값 조정) */
+  gap: 13px; /* 아이콘과 텍스트 사이의 간격을 줄임 (필요에 따라 값 조정) */
   margin-bottom: 20px;
 }
 
 .register-icon-text {
-  font-size: 1.8rem; /* 텍스트 크기 (필요에 따라 조정) */
+  font-size: 2rem; /* 텍스트 크기 (필요에 따라 조정) */
   margin-top: 20px;
   font-family: "establishRetrosansOTF";
 }

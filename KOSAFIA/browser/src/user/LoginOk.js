@@ -62,7 +62,7 @@ function LoginOk() {
         // withCredentials: true를 설정하여 쿠키와 함께 요청을 보냅니다
         const response = await axios.get(
           `${BASE_URL}/api/user/response-userData`,
-          // "http://192.168.1.119:8080/api/user/response-userData",
+
           {
             withCredentials: true,
           }
@@ -130,10 +130,10 @@ function LoginOk() {
         await fetch(`${BASE_URL}/api/user/google-logout`, { method: "POST" });
       }
       sessionStorage.clear();
-      alert("로그아웃 되었습니다.77");
+      alert("로그아웃 되었습니다.");
       navigate("/custom-login");
     } catch (error) {
-      console.error("로그아웃 오류:77", error);
+      console.error("로그아웃 오류:", error);
       alert("로그아웃 중 오류가 발생했습니다.77");
     }
   };

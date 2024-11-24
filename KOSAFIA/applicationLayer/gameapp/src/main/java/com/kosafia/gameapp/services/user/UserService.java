@@ -99,7 +99,10 @@ public class UserService {
         User user = (User) session.getAttribute("user");
         if (user == null)
             return "로그인이 필요합니다.";// 로그인 상태가 아니면 메시지 반환
-
+        // 닉네임 중복 체크
+        if (!isUsernameAvailable(newUsername)) {
+            return "이미 사용 중인 닉네임입니다."; // 닉네임이 이미 사용 중일 경우 메시지 반환
+        }
         user.setUsername(newUsername); // 닉네임 업데이트
         userMapper.updateUser(user);// DB 업데이트
         return "닉네임이 성공적으로 변경되었습니다.";

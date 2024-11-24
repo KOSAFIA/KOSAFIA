@@ -32,13 +32,13 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   const [deletePassword, setDeletePassword] = useState(""); // 회원탈퇴 시 입력할 비밀번호
   const [confirmDeletionInput, setConfirmDeletionInput] = useState(""); // 회원탈퇴 확인 입력 상태
 
+  const [isDuplicateUsernamePopupOpen, setIsDuplicateUsernamePopupOpen] =
+    useState(false); // 중복 닉네임 팝업 상태 관리
+
   const BASE_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate(); // 로그인 화면으로 이동하기 위해 navigate 설정
 
   // 사용자 정보를 서버에서 가져오는 함수
-  useEffect(() => {
-    console.log("마이페이지 컴포넌트 렌더링: OAuth 사용자 여부:", isOAuthUser);
-  }, [isOAuthUser]);
   useEffect(() => {
     console.log("isOAuthUser 상태가 변경되었습니다:", isOAuthUser);
   }, [isOAuthUser]);
@@ -83,37 +83,61 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   // 닉네임 저장 함수
   const handleUsernameSave = async () => {
     try {
-      const response = await fetch(
-        `${BASE_URL}/api/user/update-username`,
-
+      // 1. 닉네임 중복 확인
+      const duplicateCheckResponse = await fetch(
+        `${BASE_URL}/api/user/check-username?username=${username}`,
         {
-          method: "PUT",
+          method: "GET",
           headers: { "Content-Type": "application/json" },
-          credentials: "include", // 쿠키 등 인증 정보를 포함하여 서버에 요청
-          body: JSON.stringify({ username: username }), // 변경할 닉네임을 서버에 JSON 형식으로 전송
+          credentials: "include",
         }
       );
 
+      const duplicateCheckData = await duplicateCheckResponse.json();
+      console.log("중복 체크 데이터:", duplicateCheckData); // 데이터 확인용 로그
+
+      if (!duplicateCheckData.available) {
+        // 2. 중복된 닉네임이 있을 경우
+        setIsDuplicateUsernamePopupOpen(true); // 중복된 닉네임 팝업 열기
+        setMessage("닉네임이 중복됩니다. 다른 닉네임을 입력해주세요.");
+        return; // 더 이상 진행하지 않고 함수 종료
+      }
+
+      // 3. 중복되지 않으면 닉네임 변경 요청
+      const response = await fetch(`${BASE_URL}/api/user/update-username`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // 인증 정보 포함
+        body: JSON.stringify({ username: username }), // 변경할 닉네임
+      });
+
       if (response.ok) {
-        setMessage("setMessage 닉네임이 성공적으로 변경되었습니다.");
+        // 닉네임 변경 성공
+        setIsNicknameSuccessPopupOpen(true); // 성공 팝업 열기
+        setMessage("닉네임이 성공적으로 변경되었습니다.");
         setIsEditingUsername(false); // 편집 모드 종료
-        setUsername(username); // 상위 컴포넌트에서 전달된 setUsername 함수로 상태 업데이트
-        setIsNicknameSuccessPopupOpen(true); // 닉네임 변경 성공 팝업 열기
+        setUsername(username); // 상위 컴포넌트에서 전달된 setUsername으로 상태 업데이트
       } else {
-        setNicknameMessage("setNicknameMessage:닉네임 변경에 실패했습니다."); // 실패 메시지 설정
-        setMessage("setMessage:닉네임 변경에 실패했습니다.");
+        // 닉네임 변경 실패
+        const data = await response.json();
+        setMessage("닉네임 변경에 실패했습니다.");
+        if (data?.error === "duplicate") {
+          setIsDuplicateUsernamePopupOpen(true); // 중복 닉네임 오류 처리
+        }
       }
     } catch (error) {
       console.error("닉네임 수정 오류:", error);
-      setMessage("setMessage닉네임 변경 중 오류가 발생했습니다.");
-      setNicknameMessage(
-        "setNicknameMessage닉네임 변경 중 오류가 발생했습니다."
-      );
+      setMessage("닉네임 변경 중 오류가 발생했습니다.");
     }
   };
+
   useEffect(() => {
-    console.log("isNicknameSuccessPopupOpen 상태:", isNicknameSuccessPopupOpen);
-  }, [isNicknameSuccessPopupOpen]);
+    console.log(
+      "isDuplicateUsernamePopupOpen 상태:",
+      isDuplicateUsernamePopupOpen
+    );
+  }, [isDuplicateUsernamePopupOpen]);
+
   // 비밀번호 변경 함수
   const handlePasswordChange = async () => {
     if (newPassword !== confirmNewPassword) {
@@ -244,6 +268,10 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   const closeNicknameSuccessPopup = () => {
     setIsNicknameSuccessPopupOpen(false); // 닉네임 성공 팝업 닫기
   };
+  // 닉네임 중복 팝업 닫기 함수
+  const closeDuplicateUsernamePopup = () => {
+    setIsDuplicateUsernamePopupOpen(false); // 팝업 닫기
+  };
   return (
     <div>
       <h1>Mapage</h1>
@@ -289,16 +317,33 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
           </>
         )}
         {nicknameMessage && <p>{nicknameMessage}</p>}
+
+        {/* 닉네임 변경 성공 팝업 */}
         <Modal
           isOpen={isNicknameSuccessPopupOpen} // 닉네임 변경 성공 팝업 열림 여부
           onRequestClose={closeNicknameSuccessPopup} // 팝업 닫기 함수
           contentLabel="닉네임 변경 성공" // 팝업 설명
-          className="success-popup-modal" // 팝업 스타일 클래스
-          overlayClassName="success-popup-modal-overlay" // 팝업 오버레이 스타일 클래스
+          className="username-success-popup-modal" // 팝업 스타일 클래스
+          overlayClassName="username-success-popup-modal-overlay" // 팝업 오버레이 스타일 클래스
+          portalClassName="ReactModalPortal"
         >
           <h2>닉네임 변경 성공!</h2>
           <p>{message}</p> {/* 성공 메시지 표시 */}
           <button onClick={closeNicknameSuccessPopup}>닫기</button>
+        </Modal>
+
+        {/* 중복 닉네임 경고 팝업 */}
+        <Modal
+          isOpen={isDuplicateUsernamePopupOpen} // 중복 닉네임 팝업 열림 여부
+          onRequestClose={closeDuplicateUsernamePopup} // 팝업 닫기 함수
+          contentLabel="중복 닉네임 경고"
+          className="username-error-popup-modal"
+          overlayClassName="username-error-popup-modal-overlay"
+          portalClassName="ReactModalPortal"
+        >
+          <h2>닉네임이 중복되었습니다!</h2>
+          <p>사용할 수 없는 닉네임입니다. 다른 닉네임을 시도해주세요.</p>
+          <button onClick={closeDuplicateUsernamePopup}>닫기</button>
         </Modal>
       </div>
 
