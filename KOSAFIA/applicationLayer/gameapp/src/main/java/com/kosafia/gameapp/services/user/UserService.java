@@ -62,16 +62,52 @@ public class UserService {
         // 닉네임으로 사용자 검색, 결과가 없으면 true 반환
         return userMapper.findByUsername(username) == null;
     }
-
+    // ================================================================================
     // 로그인 메서드
-    public boolean loginUser(String email, String password, HttpSession session) {
+    // public boolean loginUser(String email, String password, HttpSession session)
+    // {
+    // User user = userMapper.findByEmail(email); // 이메일로 사용자 조회
+    // // 비밀번호 일치 확인 및 활성 사용자 여부 체크
+    // if (user != null && passwordEncoder.matches(password, user.getPassword()) &&
+    // user.getStatus() == 1) {
+    // session.setAttribute("user", user); // 세션에 사용자 정보 저장
+    // return true;// 로그인 성공
+    // }
+    // return false;// 로그인 실패
+    // }
+
+    // 로그인2222 메서드
+    public Map<String, Object> loginUser(String email, String password, HttpSession session) {
         User user = userMapper.findByEmail(email); // 이메일로 사용자 조회
-        // 비밀번호 일치 확인 및 활성 사용자 여부 체크
-        if (user != null && passwordEncoder.matches(password, user.getPassword()) && user.getStatus() == 1) {
-            session.setAttribute("user", user); // 세션에 사용자 정보 저장
-            return true;// 로그인 성공
+
+        Map<String, Object> response = new HashMap<>(); // 응답을 담을 Map
+
+        // 사용자 없거나 비밀번호 불일치 또는 탈퇴한 사용자 처리
+        if (user == null) {
+            response.put("status", 0); // 사용자 없음
+            response.put("message", "이메일 또는 비밀번호가 잘못되었습니다.");
+            return response;
         }
-        return false;// 로그인 실패
+
+        if (passwordEncoder.matches(password, user.getPassword())) {
+            // 탈퇴한 사용자인 경우
+            if (user.getStatus() == 0) {
+                response.put("status", 0); // 탈퇴된 사용자
+                response.put("message", "이미 탈퇴한 회원입니다.");
+                return response;
+            }
+
+            // 로그인 성공
+            session.setAttribute("user", user); // 세션에 사용자 정보 저장
+            response.put("status", 1); // 로그인 성공
+            response.put("message", "로그인 성공");
+            response.put("user", user); // 사용자 정보
+        } else {
+            response.put("status", 0); // 비밀번호 불일치
+            response.put("message", "이메일 또는 비밀번호가 잘못되었습니다.");
+        }
+
+        return response;
     }
 
     // 로그아웃 처리 메서드
@@ -99,7 +135,10 @@ public class UserService {
         User user = (User) session.getAttribute("user");
         if (user == null)
             return "로그인이 필요합니다.";// 로그인 상태가 아니면 메시지 반환
-
+        // 닉네임 중복 체크
+        if (!isUsernameAvailable(newUsername)) {
+            return "이미 사용 중인 닉네임입니다."; // 닉네임이 이미 사용 중일 경우 메시지 반환
+        }
         user.setUsername(newUsername); // 닉네임 업데이트
         userMapper.updateUser(user);// DB 업데이트
         return "닉네임이 성공적으로 변경되었습니다.";
@@ -115,7 +154,7 @@ public class UserService {
         if (user.getProvider() != null && !user.getProvider().isEmpty())
 
         {
-            return "OAuth 사용자 계정은 비밀번호를 변경할 수 없습니다.";
+            return "OAuth 사용자 계정은 비밀번호를 변경할 수 없습니다."; // OAuth 사용자에 대한 처리
         }
 
         // 현재 비밀번호와 입력된 비밀번호가 일치하는지 확인

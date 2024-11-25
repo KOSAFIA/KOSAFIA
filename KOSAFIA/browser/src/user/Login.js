@@ -53,13 +53,10 @@ function Login() {
 
   return (
     <MDBContainer className="my-login-background">
-  
       {/* 로그인 배경 컨테이너 */}
       <MDBCard className="common-card login-card d-flex flex-row">
-      
         {/* 로그인 카드 스타일 */}
         <MDBCol md="6">
-         
           {/* 왼쪽 이미지 영역 */}
           <MDBCardImage
             src={`${process.env.PUBLIC_URL}/img/loginmain.png`} // 이미지 경로 설정
@@ -68,27 +65,19 @@ function Login() {
           />
         </MDBCol>
         <MDBCol md="6" className="my-login-card-body">
-       
           {/* 오른쪽 로그인 폼 영역 */}
           <MDBCardBody className="d-flex flex-column align-items-center">
-      
             {/* 카드 내부 스타일 */}
             <div className="login-icon">
-             
               {/* 로고와 제목 영역 */}
               <img
-                src="/img/mafia_icon.png" // `public` 폴더 기준 경로
+                src="/img/login-icon.png" // `public` 폴더 기준 경로
                 alt="Mafia Icon"
-                style={{ width: "100px", height: "100px"}}
+                style={{ width: "100px", height: "100px" }}
               />
-              <span className="h1 fw-bold">Login</span> {/* 로그인 제목 */}
+              <span className="h1 fw-bold">Welcome</span> {/* 로그인 제목 */}
             </div>
-            <h5
-              className="fw-normal my-4 pb-3"
-              style={{ letterSpacing: "1px" }}
-            >
-              Sign into your account
-            </h5>
+            <h5 className="login-subtitle">마피아의 세계로 입장!</h5>
             {/* 로그인 폼 */}
             <form onSubmit={handleLogin} className="w-100">
               {/* 이메일 입력 필드 */}
@@ -96,7 +85,7 @@ function Login() {
                 wrapperClass="mb-4"
                 type="email" // 이메일 타입 지정
                 size="lg" // 입력 필드 크기 지정
-                placeholder="Email address" // 입력 필드에 나타날 텍스트
+                placeholder="이메일을 입력하세요" // 입력 필드에 나타날 텍스트
                 value={email} // 상태값
                 onChange={(e) => setEmail(e.target.value)} // 이메일 입력 시 상태 업데이트
                 required // 필수 입력 항목
@@ -105,7 +94,7 @@ function Login() {
                 wrapperClass="mb-4"
                 type="password" // 비밀번호 타입 지정
                 size="lg" // 입력 필드 크기
-                placeholder="Password" // 입력 필드에 나타날 텍스트
+                placeholder="비밀번호를 입력하세요" // 입력 필드에 나타날 텍스트
                 value={password} // 상태값
                 onChange={(e) => setPassword(e.target.value)} // 입력 값 변경 시 상태 업데이트
                 required // 필수 입력 항목
@@ -129,7 +118,7 @@ function Login() {
                 }}
                 onClick={handleLogin}
               >
-                Login
+                로그인
               </button>
               <hr />
             </form>
@@ -138,12 +127,12 @@ function Login() {
               href={`${BASE_URL}/oauth2/authorization/google`} // Google OAuth2 URL로 리디렉션
               className="google-login-btn"
             >
-              <i className="fab fa-google me-2"></i>Sign in with Google
+              <i className="fab fa-google me-2"></i>Google로 로그인
             </a>
             <p className="mt-3 mb-5">
-              Don't have an account?{" "}
+              계정이 없으신가요?
               <Link to="/register" className="text-muted">
-                Sign Up
+                회원가입
               </Link>
             </p>
           </MDBCardBody>
