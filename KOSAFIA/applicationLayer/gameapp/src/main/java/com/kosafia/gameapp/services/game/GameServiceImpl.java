@@ -100,10 +100,12 @@ public class GameServiceImpl implements GameService {
             player.setTarget(null);
         }
 
-        //승리조건 이미지 따오는 조건 뜨면 바로 그냥 엔드 처리리
+        //승리조건 이미지 따오는 조건 뜨면 바로 그냥 엔드 처리
         endingImageUrl = checkGameEnd(players, roomKey);
         if (endingImageUrl != null) {
+            log.info("게임 종료 조건 감지: {}", endingImageUrl);
             endingBroadcastGameStatus(roomKey, endingImageUrl);
+            
             return;
         }
 
@@ -125,7 +127,7 @@ public class GameServiceImpl implements GameService {
                         "/topic/game.sound." + roomKey,
                         Map.of("sound", "gun"));
 
-                interactionImageUrl = "/img/dead_by_mafia.png";
+                interactionImageUrl = "/img/dead_by-mafia.png";
                 interactionBroadcastGameStatus(roomKey, interactionImageUrl);
 
                 break;
@@ -228,9 +230,12 @@ public class GameServiceImpl implements GameService {
     @Override
     public void endingBroadcastGameStatus(Integer roomKey, String endingImageUrl) {
         Map<String, Object> message = new HashMap<>();
-
+        
         if (endingImageUrl != null) {
             message.put("endingImageUrl", endingImageUrl);
+            message.put("gameEnded", true);  // 게임 종료 플래그 추가
+            
+            log.info("엔딩 이미지 브로드캐스트: {}", endingImageUrl); // 로깅 추가
         }
 
         // WebSocket 메시지 브로드캐스트
