@@ -14,6 +14,9 @@ import com.kosafia.gameapp.models.gameroom.Player;
 import com.kosafia.gameapp.models.gameroom.Role;
 import com.kosafia.gameapp.repositories.gameroom.RoomRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class GameServiceImpl implements GameService {
 
@@ -162,6 +165,8 @@ public class GameServiceImpl implements GameService {
         long otherCount = players.stream()
                 .filter(player -> player.getRole() != Role.MAFIA && player.isAlive())
                 .count();
+
+        log.info("마피아 수: {}, 시민 수: {}", mafiaCount, otherCount);
 
         // 마피아 승리 조건
         if (mafiaCount >= otherCount) {
