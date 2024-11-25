@@ -99,7 +99,7 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
       if (!duplicateCheckData.available) {
         // 2. 중복된 닉네임이 있을 경우
         setIsDuplicateUsernamePopupOpen(true); // 중복된 닉네임 팝업 열기
-        setMessage("닉네임이 중복됩니다. 다른 닉네임을 입력해주세요.");
+
         return; // 더 이상 진행하지 않고 함수 종료
       }
 
@@ -142,10 +142,14 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   const handlePasswordChange = async () => {
     if (newPassword !== confirmNewPassword) {
       // 새 비밀번호와 확인 비밀번호가 다를 때
-      setPasswordMessage("setPasswordMessage 새 비밀번호가 일치하지 않습니다.");
-      setMessage("setMessage 새 비밀번호가 일치하지 않습니다.");
+      setPasswordMessage(
+        "setPasswordMessage 새 비밀번호가 일치하지 않습니다.handlePasswordChange"
+      );
+      setMessage(
+        "setMessage 새 비밀번호가 일치하지 않습니다.handlePasswordChange"
+      );
       setIsPasswordChangeSuccess(false); // 비밀번호 변경 실패 상태 설정
-      return; // 함수 종료 
+      return; // 함수 종료
     }
 
     try {
@@ -157,10 +161,10 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
       });
 
       if (response.ok) {
-        setMessage("setMessage비밀번호가 성공적으로 변경되었습니다."); // 성공 메시지 설정
-        setPasswordMessage(
-          "setPasswordMessage비밀번호가 성공적으로 변경되었습니다."
-        );
+        setMessage("팝업여기)setMessage비밀번호가 성공적으로 변경되었습니다."); // 성공 메시지 설정
+        //setPasswordMessage(
+        // "setPasswordMessage비밀번호가 성공적으로 변경되었습니다."
+        // );
         //   setIsPasswordChangeSuccess(true); // 비밀번호 변경 성공 상태 설정
         setIsPasswordModalOpen(false); // 비밀번호 변경 모달 닫기
         setIsSuccessPopupOpen(true); // 성공 팝업 열기
@@ -234,6 +238,7 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
     setNewPassword(""); // 새 비밀번호 초기화
     setConfirmNewPassword(""); // 새 비밀번호 확인 초기화
     setMessage(""); // 메시지 초기화
+    setPasswordMessage("");
   };
   // 회원탈퇴 모달 닫기
   const closeDeleteModal = () => {
@@ -267,6 +272,7 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
   // 닉네임 성공 팝업 닫기
   const closeNicknameSuccessPopup = () => {
     setIsNicknameSuccessPopupOpen(false); // 닉네임 성공 팝업 닫기
+    setMessage("");
   };
   // 닉네임 중복 팝업 닫기 함수
   const closeDuplicateUsernamePopup = () => {

@@ -195,7 +195,7 @@ function LoginOk() {
       >
         <Mypage
           setUsername={setUsername}
-          isOAuthUser={isOAuthUser} // 상태 전달
+          isOAuthUser={isOAuthUser}  // 구글 로그인 여부 상태 전달
           setIsOAuthUser={setIsOAuthUser} // 상태 업데이트 함수 전달
         />
         {/* isOAuthUser를 Mypage에 전달 */}

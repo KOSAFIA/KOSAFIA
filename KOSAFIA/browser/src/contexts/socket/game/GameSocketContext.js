@@ -300,8 +300,21 @@ export const GameSocketProvider = ({ roomKey, children }) => {
         clientRef.current.subscribe(
           `/topic/game.state.${roomKey}`,
           (socketMsg) => {
-            const {gameStatus, players, currentTime, turn: dayCount, success, message: systemMessage, imageUrl} = JSON.parse(socketMsg.body);
-            if (success) {setGameStatus(gameStatus);setPlayers(players);setGameTime(currentTime);setDayCount(dayCount);setImageUrl(imageUrl);
+            const {
+              gameStatus,
+              players,
+              currentTime,
+              turn: dayCount,
+              success,
+              message: systemMessage,
+              imageUrl,
+            } = JSON.parse(socketMsg.body);
+            if (success) {
+              setGameStatus(gameStatus);
+              setPlayers(players);
+              setGameTime(currentTime);
+              setDayCount(dayCount);
+              //    setImageUrl(imageUrl);
               // 시스템 메시지가 있다면 추가
               if (systemMessage) {
                 setMessages((prev) => [
@@ -428,14 +441,14 @@ export const GameSocketProvider = ({ roomKey, children }) => {
                 gameStatus: result.gameStatus,
                 roomKey: roomKey,
                 playerNumber: 0,
-                isSystemMessage: true
+                isSystemMessage: true,
               };
-              setMessages(prev => [...prev, systemMessage]);
+              setMessages((prev) => [...prev, systemMessage]);
             }
 
             // 이미지 URL 업데이트
             if (result.imageUrl) {
-              setImageUrl(result.imageUrl);
+              //    setImageUrl(result.imageUrl);
             }
           }
         )
@@ -443,17 +456,23 @@ export const GameSocketProvider = ({ roomKey, children }) => {
 
       // 시스템 메시지 구독 -> 채팅창에 등록해야겠지
       subscriptions.push(
-        clientRef.current.subscribe(`/topic/game.system.${roomKey}`, (message) => {
-          console.log("시스템 메시지 수신:", message.body);
-          const systemMessage = JSON.parse(message.body);
-          // 중복 메시지 체크
-          if (!messages.some(msg => 
-            msg.content === systemMessage.content && 
-            msg.timestamp === systemMessage.timestamp
-          )) {
-            setMessages(prev => [...prev, systemMessage]);
+        clientRef.current.subscribe(
+          `/topic/game.system.${roomKey}`,
+          (message) => {
+            console.log("시스템 메시지 수신:", message.body);
+            const systemMessage = JSON.parse(message.body);
+            // 중복 메시지 체크
+            if (
+              !messages.some(
+                (msg) =>
+                  msg.content === systemMessage.content &&
+                  msg.timestamp === systemMessage.timestamp
+              )
+            ) {
+              setMessages((prev) => [...prev, systemMessage]);
+            }
           }
-        })
+        )
       );
       //경찰만 받는 비밀 시스템 메시지 구독.
       if (currentPlayer.role === "POLICE") {
@@ -557,7 +576,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     try {
       console.log("투표 결과 전송 시도", {
         destination: `/fromapp/game.vote.result/${roomKey}`,
-        voteStatus
+        voteStatus,
       });
 
       clientRef.current?.publish({
@@ -594,7 +613,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
           // 투표 상태 업데이트를 위한 소켓 구독은 유지
         }
       } catch (error) {
-        console.error("최종 투표 실패:", error); 
+        console.error("최종 투표 실패:", error);
         throw error;
       }
     },
@@ -603,29 +622,29 @@ export const GameSocketProvider = ({ roomKey, children }) => {
 
   const processFinalVoteResult = useCallback(() => {
     console.log("최종 투표 결과 처리 시작", {
-        isHost,
-        roomKey,
-        currentPlayer: currentPlayer?.playerNumber
+      isHost,
+      roomKey,
+      currentPlayer: currentPlayer?.playerNumber,
     });
 
     if (!isHost || !clientRef.current) {
-        console.log("방장 권한 없음, 처리 중단");
-        return;  // throw 대신 조용히 리턴
+      console.log("방장 권한 없음, 처리 중단");
+      return; // throw 대신 조용히 리턴
     }
 
     try {
-        console.log("최종 투표 결과 요청 전송");
-        clientRef.current.publish({
-            destination: `/fromapp/game.finalvote.result/${roomKey}`,
-            body: JSON.stringify({
-                roomKey: roomKey,
-                playerNumber: currentPlayer?.playerNumber
-            })
-        });
-        setVoteStatus({});
-        console.log("최종 투표 결과 요청 완료");
+      console.log("최종 투표 결과 요청 전송");
+      clientRef.current.publish({
+        destination: `/fromapp/game.finalvote.result/${roomKey}`,
+        body: JSON.stringify({
+          roomKey: roomKey,
+          playerNumber: currentPlayer?.playerNumber,
+        }),
+      });
+      setVoteStatus({});
+      console.log("최종 투표 결과 요청 완료");
     } catch (error) {
-        console.error("최종 투표 결과 처리 중 오류:", error);
+      console.error("최종 투표 결과 처리 중 오류:", error);
     }
   }, [roomKey, isHost, currentPlayer]);
 
@@ -653,16 +672,19 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     [roomKey, currentPlayer, isHost]
   );
 
-    const canChat = useCallback(() => {
-        if (!currentPlayer || !currentPlayer.isAlive) return false;
-        // 밤에는 마피아만 채팅 가능
-        else if (gameStatus === GAME_STATUS.NIGHT) return currentPlayer.role === 'MAFIA';
-        // 낮에는 모든 살아있는 플레이어가 채팅 가능
-        else if (gameStatus === GAME_STATUS.DAY || gameStatus === GAME_STATUS.VOTE) return true;
-        // 투표 시간에는 모든 살아있는 플레이어가 채팅 가능
-        else if (gameStatus === GAME_STATUS.FINALVOTE) return currentPlayer.isVoteTarget;
-        else return false;
-      }, [currentPlayer, gameStatus]);
+  const canChat = useCallback(() => {
+    if (!currentPlayer || !currentPlayer.isAlive) return false;
+    // 밤에는 마피아만 채팅 가능
+    else if (gameStatus === GAME_STATUS.NIGHT)
+      return currentPlayer.role === "MAFIA";
+    // 낮에는 모든 살아있는 플레이어가 채팅 가능
+    else if (gameStatus === GAME_STATUS.DAY || gameStatus === GAME_STATUS.VOTE)
+      return true;
+    // 투표 시간에는 모든 살아있는 플레이어가 채팅 가능
+    else if (gameStatus === GAME_STATUS.FINALVOTE)
+      return currentPlayer.isVoteTarget;
+    else return false;
+  }, [currentPlayer, gameStatus]);
 
   const canVote = useCallback(() => {
     return currentPlayer?.isAlive && gameStatus === GAME_STATUS.VOTE;
