@@ -31,6 +31,7 @@ public class GameServiceImpl implements GameService {
         String policeMessage = null;
         String resultCase = "none";
         String stageImageUrl = null;
+        String endingImageUrl = null;
 
         for (Player player : players) {
             // 1. 마피아, 경찰, 의사의 행동을 정리
@@ -95,8 +96,13 @@ public class GameServiceImpl implements GameService {
 
             player.setTarget(null);
         }
-        // 승리조건 확인도 여기서 해야지 맞을듯요.
-        checkGameEnd(players, roomKey);
+
+        //승리조건 이미지 따오는 조건 뜨면 바로 그냥 엔드 처리리
+        endingImageUrl = checkGameEnd(players, roomKey);
+        if (endingImageUrl != null) {
+            endingBroadcastGameStatus(roomKey, endingImageUrl);
+            return;
+        }
 
         // 여기에 소켓 추가해야. players 반복문 횟수만큼 쏘는 현상을 방지함.
 
@@ -144,8 +150,9 @@ public class GameServiceImpl implements GameService {
     }
 
     // 게임 승리 조건을 체크하는 함수
+    // -> [김남영]조건 체크니까 이미지경로 널값으로 처리하고 밤이벤트 끝나면 하나만 보여주면 되지 않나나
     @Override
-    public void checkGameEnd(List<Player> players, Integer roomKey) {
+    public String checkGameEnd(List<Player> players, Integer roomKey) {
 
         String endingImageUrl = null;
 
@@ -159,13 +166,16 @@ public class GameServiceImpl implements GameService {
         // 마피아 승리 조건
         if (mafiaCount >= otherCount) {
             endingImageUrl = "/img/mafia_win.png";
+            return endingImageUrl;
         }
         // 시민 승리 조건
         else if (mafiaCount == 0) {
             endingImageUrl = "/img/citizen_win.png";
+            return endingImageUrl;
         }
-        // 브로드캐스트
-        endingBroadcastGameStatus(roomKey, endingImageUrl);
+        // // 브로드캐스트
+        // endingBroadcastGameStatus(roomKey, endingImageUrl);
+        return null;
     }
 
     // ===============김남영 추가=============

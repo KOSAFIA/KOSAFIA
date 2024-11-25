@@ -221,6 +221,8 @@ public class GameSocketController {
             @Payload GameStateUpdateRequest request) {
         log.info("게임 상태 업데이트 요청 - 방: {}, 상태: {}", roomKey, request.gameStatus());
 
+        String strMessage = null;
+
         try {
             Room room = roomRepository.getRoom(roomKey);
             if (room == null)
@@ -229,6 +231,24 @@ public class GameSocketController {
             GameStatus newStatus = GameStatus.valueOf(request.gameStatus());
 
             room.setGameStatus(newStatus);
+
+            switch (newStatus) {
+                case DAY:
+                    strMessage = newStatus.toString() + " 시간이 시작되었습니다.";
+                    break;
+                case NIGHT:
+                    strMessage = newStatus.toString() + " 시간이 시작되었습니다.";
+                    break;
+                case VOTE:
+                    strMessage = newStatus.toString() + " 시간이 시작되었습니다.";
+                    break;  
+                case FINALVOTE:
+                    strMessage = newStatus.toString() + " 시간이 시작되었습니다.";
+                    break;
+                default:
+                    strMessage = null;
+                    break;
+            }
 
             // 새로운 상태에 맞는 초기 시간 설정
             int initialTime = room.getDefaultTimes().get(newStatus);
@@ -250,10 +270,7 @@ public class GameSocketController {
                             initialTime,
                             room.getTurn(),
                             true,
-                            newStatus.toString() + " 시간이 시작되었습니다.", imageUrl));
-
-
-
+                            strMessage, imageUrl));
 
             startRoomTimer(roomKey);
 
@@ -450,6 +467,7 @@ public class GameSocketController {
     public void handleFinalVoteResult(
             @DestinationVariable("roomKey") Integer roomKey) {
         String imageUrl = null;
+        String endgameImgUrl = null;
 
         try {
             Room room = roomRepository.getRoom(roomKey);
@@ -485,6 +503,15 @@ public class GameSocketController {
             
             messagingTemplate.convertAndSend("/topic/game.finalvote.result." + roomKey, response);
             log.info("최종 투표 결과 전송 완료 - 방: {}, 현재 상태: {}", roomKey, room.getGameStatus());
+
+            // 승리조건 이미지 따오는 조건 뜨면 바로 그냥 엔드 처리리
+            endgameImgUrl = gameService.checkGameEnd(room.getPlayers(), roomKey);
+            if (endgameImgUrl != null) {
+                gameService.endingBroadcastGameStatus(roomKey, endgameImgUrl);
+                return;
+            }
+
+            gameService.stageBroadcastGameStatus(roomKey, imageUrl);
 
         } catch (Exception e) {
             log.error("최종 투표 결과 처리 실패:", e);
