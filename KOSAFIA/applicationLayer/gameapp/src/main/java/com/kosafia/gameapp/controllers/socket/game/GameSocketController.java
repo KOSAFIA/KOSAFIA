@@ -511,8 +511,6 @@ public class GameSocketController {
                 return;
             }
 
-            gameService.stageBroadcastGameStatus(roomKey, imageUrl);
-
         } catch (Exception e) {
             log.error("최종 투표 결과 처리 실패:", e);
         }

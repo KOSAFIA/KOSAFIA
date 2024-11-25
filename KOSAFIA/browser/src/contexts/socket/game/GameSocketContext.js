@@ -81,20 +81,20 @@ export const GameSocketProvider = ({ roomKey, children }) => {
     const gameStateSubscription = clientRef.current.subscribe(
       `/topic/game.state.${roomKey}`,
       (message) => {
-        const { stageImageUrl, interactionImageUrl, endingImageUrl } =
-          JSON.parse(message.body);
+        const data = JSON.parse(message.body);
+        console.log("이미지 상태 메시지 수신:", data);
+
+        const { stageImageUrl, interactionImageUrl, endingImageUrl } = data;
 
         if (endingImageUrl) {
-          setQueue([{ type: "ending", imageUrl: endingImageUrl }]); // 엔딩은 항상 최우선, 기존 큐를 대체
+          console.log("엔딩 이미지 설정:", endingImageUrl);
+          setQueue([{ type: "ending", imageUrl: endingImageUrl }]);
+          setCurrentImage(endingImageUrl);
         } else {
           setQueue((prevQueue) => [
             ...prevQueue,
-            ...(stageImageUrl
-              ? [{ type: "stage", imageUrl: stageImageUrl }]
-              : []),
-            ...(interactionImageUrl
-              ? [{ type: "interaction", imageUrl: interactionImageUrl }]
-              : []),
+            ...(stageImageUrl ? [{ type: "stage", imageUrl: stageImageUrl }] : []),
+            ...(interactionImageUrl ? [{ type: "interaction", imageUrl: interactionImageUrl }] : []),
           ]);
         }
       }
@@ -557,7 +557,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
 
     if (!isHost) {
       console.error("방장 권한 없음");
-      throw new Error("방장만 투표 결과를 처리할 수 있습니다.");
+      throw new Error("방��만 투표 결과를 처리할 수 있습니다.");
     }
 
     try {
