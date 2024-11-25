@@ -161,7 +161,9 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
       });
 
       if (response.ok) {
-        setMessage("팝업여기)setMessage비밀번호가 성공적으로 변경되었습니다."); // 성공 메시지 설정
+        setMessage(
+          "🎉 비밀번호 변경 완료! 새로운 비밀번호로 다시 로그인하세요 🔒 "
+        ); // 성공 메시지 설정
         //setPasswordMessage(
         // "setPasswordMessage비밀번호가 성공적으로 변경되었습니다."
         // );
@@ -208,9 +210,9 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
         navigate("/custom-login");
       } else {
         setAccountMessage(
-          "setAccountMessage 회원탈퇴에 실패했습니다. 다시 시도해주세요."
+          "비밀번호가 틀려 회원탈퇴에 실패했습니다. 다시 시도해주세요."
         );
-        setMessage("setMessage 회원탈퇴에 실패했습니다. 다시 시도해주세요.");
+        // setMessage("setMessage 회원탈퇴에 실패했습니다. 다시 시도해주세요.");
       }
     } catch (error) {
       console.error("회원탈퇴 오류:", error);
