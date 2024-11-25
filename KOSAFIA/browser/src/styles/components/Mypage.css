@@ -38,50 +38,60 @@
 }
 
 .username-text {
-  width: 200px!important; /* 텍스트박스의 너비를 200px로 설정 */
-  height: 40px!important; /* 높이 설정 */
+  width: 200px !important; /* 텍스트박스의 너비를 200px로 설정 */
+  height: 40px !important; /* 높이 설정 */
   font-size: 14px; /* 글자 크기 */
 
   box-sizing: border-box; /* 전체 박스 크기를 포함 */
 }
 
 .username-text:focus {
-  border-color: #0c0c03!important; /* 포커스 시 테두리 색상 */
-  box-shadow: 0 0 5px rgba(171, 169, 38, 0.7)!important; /* 포커스 시 그림자 효과 */
+  border-color: #0c0c03 !important; /* 포커스 시 테두리 색상 */
+  box-shadow: 0 0 5px rgba(171, 169, 38, 0.7) !important; /* 포커스 시 그림자 효과 */
   outline: none; /* 포커스 시 기본 테두리 제거 */
 }
 
 /* 버튼 컨테이너 스타일 (버튼을 나란히 배치) */
 .username-button-container {
-  display: flex!important;
-  justify-content: flex-end!important; /* 버튼들을 중앙 정렬 */
-  gap: 10px!important; /* 버튼 간격 */
- 
+  margin-top: 10px;
+  display: flex !important;
+  justify-content: flex-end !important; /* 버튼들을 중앙 정렬 */
+  gap: 10px !important; /* 버튼 간격 */
 }
-
-
 
 .username-save-button:hover {
-  background-color: #14317998!important; /* 호버 시 색상 */
+  background-color: #14317998 !important; /* 호버 시 색상 */
 }
-
 
 .username-edit-button,
 .username-save-button,
 .username-cancel-button {
-  padding: 5px 10px!important;
-  background: linear-gradient(to right, #0f1d6b96, #070e33a3)!important; /* 저장 버튼 스타일 */
-  color: rgb(209, 204, 204)!important;
-  border: none!important;
-  border-radius: 8px!important;
-  cursor: pointer!important;
-  margin: 0!important; /* 추가적인 마진 제거 */
+  padding: 5px 10px !important;
+  background: linear-gradient(
+    to right,
+    #0f1d6b96,
+    #070e33a3
+  ) !important; /* 저장 버튼 스타일 */
+  color: rgb(209, 204, 204) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  margin: 0 !important; /* 추가적인 마진 제거 */
 }
 
+/* Mypage.css에 추가 */
+.nickname-container {
+  display: flex;
+  align-items: center; /* 세로로 가운데 정렬 */
+}
 
+.nickname-container input {
+  margin-left: 10px; /* 텍스트와 입력칸 사이에 간격을 둡니다 */
+}
 
-
-
+.username-edit-button {
+  margin-left: 10px;
+}
 
 /* Mypage 입력 필드 */
 .mypage-modal input {
@@ -121,7 +131,6 @@
   cursor: pointer;
   margin-top: 15px;
   transition: transform 0.2s ease, box-shadow 0.3s ease; /* 부드러운 애니메이션 효과 */
-  
 }
 
 .mypage-modal button:hover {
@@ -279,8 +288,6 @@
   background: linear-gradient(145deg, #654e82, #5e275a); /* 버튼 배경 변경 */
 }
 
-
-
 /* 버튼 컨테이너 스타일 */
 .mypage-password-action-button-container {
   display: flex;
@@ -324,8 +331,87 @@
   max-width: 450px;
   width: 90%;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); /* 그림자 효과 */
+  position: absolute; /* 부모 요소로부터 절대 위치 */
+  text-align: center;
+  z-index: 6000; /* 모달 자체의 z-index */
+  margin: 0 auto; /* 수평 중앙 정렬 */
+  top: 50%; /* 수직 중앙 위치 */
+  left: 50%; /* 수평 중앙 위치 */
+  transform: translate(-50%, -50%); /* 정확히 중앙 정렬 */
+}
+/* 성공 팝업 오버레이 스타일 */
+.success-popup-modal-overlay {
+  position: fixed; /* 화면 고정 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(16, 19, 206, 0.696) !important; /* 어두운 반투명 배경 */
+  display: flex; /* 중앙 정렬 */
+  justify-content: center;
+  align-items: center;
+  z-index: 5000; /* 가장 높은 z-index */
+  backdrop-filter: blur(10px); /* 배경 블러 효과 */
+  -webkit-backdrop-filter: blur(
+    10px
+  ); /* Safari와 일부 브라우저에서 블러 필터 지원 */
+  overflow: hidden; /* 오버플로우 방지 */
+}
+
+/* 닉네임 오버레이 스타일 */
+.username-success-popup-modal-overlay {
+  position: fixed; /* 화면 고정 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(114, 110, 110, 0.703); /* 어두운 반투명 배경 */
+  display: flex; /* 중앙 정렬 */
+  justify-content: center;
+  align-items: center;
+  z-index: 3000; /* 가장 높은 z-index */
+  backdrop-filter: blur(10px); /* 배경 블러 효과 */
+}
+
+/* 닉네임 변경 모달 */
+.username-success-popup-modal {
+  background: rgb(161, 159, 159); /* 모달 배경 */
+  border-radius: 15px; /* 모서리 둥글게 */
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); /* 그림자 효과 */
   position: relative;
   animation: fadeInScale 0.4s ease; /* 등장 애니메이션 */
-  text-align: center;
+  text-align: center; /* 텍스트 중앙 정렬 */
+  z-index: 4000; /* 모달 자체의 z-index */
+}
+
+/* 닉네임공통 오버레이 스타일 */
+.username-error-popup-modal-overlay {
+  position: fixed; /* 화면 고정 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(114, 110, 110, 0.703); /* 어두운 반투명 배경 */
+  display: flex; /* 중앙 정렬 */
+  justify-content: center;
+  align-items: center;
+  z-index: 3000; /* 가장 높은 z-index */
+  backdrop-filter: blur(10px); /* 배경 블러 효과 */
+}
+
+/* 닉네임 변경 모달 */
+.username-error-popup-modal {
+  background: rgb(161, 159, 159); /* 모달 배경 */
+  border-radius: 15px; /* 모서리 둥글게 */
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); /* 그림자 효과 */
+  position: relative;
+  animation: fadeInScale 0.4s ease; /* 등장 애니메이션 */
+  text-align: center; /* 텍스트 중앙 정렬 */
   z-index: 4000; /* 모달 자체의 z-index */
 }

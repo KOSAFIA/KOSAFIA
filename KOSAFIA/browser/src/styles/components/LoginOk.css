@@ -17,7 +17,7 @@
 
 /* 로고 스타일 */
 .navbar h1 {
-  color: #530505;
+  color: #e01414;
   font-weight: bold;
   font-size: 1.8rem;
   letter-spacing: 1px;
@@ -64,7 +64,7 @@
   margin-top: 1rem; /* 텍스트를 아래로 조금 내리기 위해 여백 추가 */
   font-size: 1.2rem; /* 텍스트 크기를 조정 */
   line-height: 1.5; /* 텍스트 높이를 조정하여 보기 좋게 만듦 */
-  color: rgba(72, 77, 147, 0.941);
+  color: rgba(183, 187, 240, 0.941);
 }
 
 .content {

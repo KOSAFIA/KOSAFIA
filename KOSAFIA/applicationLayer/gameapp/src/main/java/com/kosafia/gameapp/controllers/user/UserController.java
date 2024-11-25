@@ -67,17 +67,18 @@ public class UserController {
         String email = loginData.get("email"); // loginData에서 "email" 키의 값을 가져옴
         String password = loginData.get("password"); // loginData에서 "password" 키의 값을 가져옴
 
+        // loginUser 메서드 호출하여 로그인 처리 결과를 변수에 저장
+        Map<String, Object> loginResponse = userService.loginUser(email, password, session);
         // 로그인 로직 처리 - userService의 loginUser 메서드 호출
-        // 로그인 성공 시, 세션에 사용자 정보를 저장하고 성공 메시지 반환
-        if (userService.loginUser(email, password, session)) { // 로그인 성공 시
-            // 200 OK 상태 코드와 함께 "로그인 성공" 메시지를 응답 본문에 포함하여 반환
-            // 김남영 수정 : 클라이언트에서 UserData를 반환하지 않으면 클라이언트는 평생모름
-            // return ResponseEntity.ok("로그인 성공");
+        // 로그인 성공 여부 확인 (status가 1이면 로그인 성공)
+        if ((int) loginResponse.get("status") == 1) {
+            // 로그인 성공 시, 세션에 사용자 정보가 저장되어 있으므로 UserData를 반환
             UserData userData = userService.getUserData(session);
-            return ResponseEntity.ok(userData);
-        } else { // 로그인 실패 시
-            // 401 Unauthorized 상태 코드와 함께 오류 메시지를 응답 본문에 포함하여 반환
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 실패: 이메일이나 비밀번호가 잘못되었습니다.");
+            return ResponseEntity.ok(userData); // 로그인 성공 시 UserData 반환
+        } else {
+            // 로그인 실패 시 (status가 0)
+            String errorMessage = (String) loginResponse.get("message"); // 실패 메시지
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMessage); // 실패 메시지와 함께 401 상태 반환
         }
     }
 
