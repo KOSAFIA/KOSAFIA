@@ -540,7 +540,6 @@ export const GameSocketProvider = ({ roomKey, children }) => {
   const sendVote = useCallback(
     (targetId) => {
       if (!clientRef.current || !currentPlayer) return;
-
       clientRef.current.publish({
         destination: `/fromapp/game.vote/${roomKey}`,
         body: JSON.stringify({
