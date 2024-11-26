@@ -57,30 +57,19 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(authz -> authz
                                                 .requestMatchers(
                                                                 "/", "/**", "/index.html", "/react", "/react/**",
-                                                                "/static/**", "/TestLobby", // 정적
-                                                                // 파일
-                                                                // 요청
-                                                                // 허용
+                                                                "/static/**", "/TestLobby", // 정적 파일 요청 허용
                                                                 "/css/**", "/js/**", "/css", "/js", // CSS 및 JS 파일 접근 허용
                                                                 "/api/user/register", "/api/user/login", "/api/**",
                                                                 "/api/user/profile", // 회원가입, 로그인, 프로필 조회
                                                                 "/api/user/logout", "/api/user/update-username",
-                                                                "/api/user/update-password", "/api/user/delete", // 사용자
-                                                                                                                 // 관련
-                                                                                                                 // API
-                                                                                                                 // 허용
+                                                                "/api/user/update-password", "/api/user/delete", // 사용자관련API허용
                                                                 "/img/**", "/img", "/custom-login" // 이미지 파일과 로그인 페이지 허용
                                                                 , "/api/room", "/api/rooms", "/api/room/**",
                                                                 "/api/rooms/**", "/TestLobby", "/api/game/**",
                                                                 "/api/game/", "/rooms", "/rooms/**",
-                                                                "/LoginOk", "/Login", "/LoginOk/**", "/Login/**", // LoginOk
-                                                                "/wstomp/**" // 경로를
-                                                // 인증 없이
-                                                // 접근
-                                                // 가능하도록
-                                                // 허용
+                                                                "/LoginOk", "/Login", "/LoginOk/**", "/Login/**", 
+                                                                "/wstomp/**" // 경로를 인증 없이 접근 가능하도록 허용
                                                 ).permitAll() // 위의 경로들에 대해 인증 없이 접근 허용
-
                                                 .anyRequest().authenticated() // 나머지 모든 요청은 인증 필요
                                 )
 
