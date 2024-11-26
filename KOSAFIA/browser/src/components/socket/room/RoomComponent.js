@@ -7,17 +7,15 @@ import '../../../lobby/TestRoom.css';
 
 
 const RoomComponent = ({ roomKey }) => {
-    const { isHost, setIsHost, messages, players, sendMessage, startGame, isConnected } = useRoomContext();
+    const { isHost, setIsHost, messages, 
+        players, sendMessage, startGame, isConnected } 
+        = useRoomContext();
     const [inputMessage, setInputMessage] = useState('');
-    const navigate = useNavigate();
- 
-
-
-
-
-    // 방 정보 상태
     const [roomName, setRoomName] = useState('테스트');
     const [maxPlayers, setMaxPlayers] = useState(8);
+    
+    
+    const navigate = useNavigate();
 
     // 방 정보를 서버에서 가져오는 함수
     useEffect(() => {

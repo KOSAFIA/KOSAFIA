@@ -58,7 +58,8 @@ export const RoomProvider = ({ roomKey, children }) => {
         });
 
         // 채팅 메시지 구독
-        const chatSubscription = client.subscribe(`/topic/room.chat.${roomKey}`, (message) => {
+        const chatSubscription = client.subscribe(
+            `/topic/room.chat.${roomKey}`, (message) => {
             console.log('채팅 메시지가 도착했어요:', message);
             try {
                 const chatMessage = JSON.parse(message.body);
