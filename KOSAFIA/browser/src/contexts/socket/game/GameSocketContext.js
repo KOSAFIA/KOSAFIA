@@ -108,7 +108,7 @@ export const GameSocketProvider = ({ roomKey, children }) => {
 
     const nextImage = queue[0];
     setCurrentImage(nextImage.imageUrl);
-
+    
     const displayTime = nextImage.type === "stage" ? 2000 : 3000; // 스테이지는 2초, 인터랙션은 3초
 
     const timer = setTimeout(() => {
