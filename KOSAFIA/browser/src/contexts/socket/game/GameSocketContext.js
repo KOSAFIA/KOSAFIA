@@ -12,9 +12,12 @@ import { Client } from "@stomp/stompjs"; // eslint-disable-line
 import { GAME_STATUS, STATUS_DURATION } from "../../../constants/GameStatus";
 import axios from "axios";
 import { useRouteLoaderData } from "react-router-dom";
+const baseUrl = process.env.REACT_APP_API_URL;
 
-const WEBSOCKET_URL = "http://localhost:8080/wstomp";
-const API_BASE_URL = "http://localhost:8080/api";
+// const WEBSOCKET_URL = "http://localhost:8080/wstomp";
+// const API_BASE_URL = "http://localhost:8080/api";
+const WEBSOCKET_URL = `${baseUrl}/wstomp`;
+const API_BASE_URL = `${baseUrl}/api`; 
 
 export const GameSocketContext = createContext();
 

@@ -19,7 +19,7 @@ export const RoomProvider = ({ roomKey, children }) => {
     const messageQueue = useRef([]); // 아직 보내지 못한 메시지를 임시로 보관하는 곳
     const navigate = useNavigate();
     const [isHost, setIsHost] = useState(false); // 웹소켓이 연결되었는지 확인하는 곳
-
+    const baseUrl = process.env.REACT_APP_API_URL;
     // 방에 들어왔을 때 다른 사람들에게 알려주는 함수예요
     const sendInitialplayer = useCallback((client, roomKey) => {
         const player = JSON.parse(sessionStorage.getItem('player'));
@@ -129,7 +129,7 @@ export const RoomProvider = ({ roomKey, children }) => {
     // 방에 처음 들어왔을 때 웹소켓 연결을 시작하는 부분이에요
     useEffect(() => {
         console.log('방에 입장했어요! 웹소켓 연결을 시작합니다...');
-        const socket = new SockJS('http://localhost:8080/wstomp');
+        const socket = new SockJS(`${baseUrl}/wstomp`);
         const client = new Client({
             webSocketFactory: () => socket,
             debug: (str) => console.log('STOMP 디버그:', str),
@@ -210,7 +210,7 @@ export const RoomProvider = ({ roomKey, children }) => {
         try {
             // 1. HTTP로 게임 시작 요청
             const response = await axios.post(
-                `http://localhost:8080/api/rooms/${roomKey}/start`,
+                `${baseUrl}/api/rooms/${roomKey}/start`,
                 {},
                 { withCredentials: true }
             );

@@ -88,6 +88,7 @@ const Chat = () => {
     const [socket, setSocket] = useState(null);
     const [connected, setConnected] = useState(false);
     const messagesEndRef = useRef(null);
+const baseUrl = process.env.REACT_APP_API_URL;
 
     // 웹소켓 연결
     useEffect(() => {
