@@ -99,7 +99,7 @@ function Mypage({ setUsername, isOAuthUser, setIsOAuthUser }) {
       if (!duplicateCheckData.available) {
         // 2. 중복된 닉네임이 있을 경우
         setIsDuplicateUsernamePopupOpen(true); // 중복된 닉네임 팝업 열기
-
+        setLocalUsername(username); 
         return; // 더 이상 진행하지 않고 함수 종료
       }
 
